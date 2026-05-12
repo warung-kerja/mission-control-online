@@ -1291,3 +1291,31 @@ Functional V1 criteria are met:
 - Make the sync bridge durable across restarts.
 - Add clearer bridge/offline status UI if needed.
 - Final acceptance review after Jen's sync-readiness pass.
+
+
+---
+
+## 30. Progress Update — 2026-05-12 12:02 AEST
+
+### Status
+
+V1 sync UX has been hardened after Jen review.
+
+### Completed
+
+- Jen completed V1 sync-readiness review.
+- Refresh Now now disables while a sync request is pending/running.
+- Dashboard auto-polls every 5 seconds while refresh is queued/running.
+- Invalid sync dates now safely render as `never` / `—`.
+- Validation passed:
+  - `npm run type-check`
+  - `npm run build`
+  - `npm run supabase:verify`
+
+### Current V1 caveat
+
+The sync bridge is running as a background process, not a durable service. If this host/session restarts, it needs to be restarted. Only one bridge process should run at a time for V1.
+
+### Next recommended step
+
+Add a bridge runbook and decide whether process-based bridge is acceptable for V1 completion, or whether V1 requires OpenClaw cron/service hardening.

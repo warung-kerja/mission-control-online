@@ -673,3 +673,54 @@ Risks/blockers:
 Next action:
 
 - Decide durability approach: OpenClaw cron/watchdog, Windows Task Scheduler, or documented manual start.
+
+
+---
+
+## 2026-05-12 12:02 AEST — Refresh Now UI hardening completed
+
+Agent: Noona + Jen review
+
+Task IDs: MCO-024, MCO-025
+
+Files changed:
+
+- `src/App.tsx`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Jen reviewed V1 sync readiness and confirmed the bridge is safe enough for V1 as a single local process.
+- Hardened the Refresh Now UI to prevent duplicate requests while a request is pending/running.
+- Added dashboard auto-polling every 5 seconds while a refresh request is active or newly queued, so request completion appears without manual reload.
+- Added invalid-date guards for sync timestamp formatting.
+
+Validation:
+
+```bash
+npm run type-check
+npm run build
+npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification result after bridge activity:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Sync runs: 5
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+Risks/blockers:
+
+- Bridge durability is still process-based, not service-managed.
+- Only run one bridge process for V1 because request claiming is not atomic yet.
+
+Next action:
+
+- Add/runbook for bridge operation, then decide whether V1 can be marked complete or needs durable service setup first.

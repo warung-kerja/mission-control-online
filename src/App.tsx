@@ -20,17 +20,25 @@ const emptyDashboard: DashboardData = {
   syncRequests: [],
 }
 
+function parseDate(value: string | null | undefined) {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 function formatDate(value: string | null | undefined) {
-  if (!value) return '—'
+  const date = parseDate(value)
+  if (!date) return '—'
   return new Intl.DateTimeFormat('en-AU', {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value))
+  }).format(date)
 }
 
 function formatRelative(value: string | null | undefined) {
-  if (!value) return 'never'
-  const diffMs = Date.now() - new Date(value).getTime()
+  const date = parseDate(value)
+  if (!date) return 'never'
+  const diffMs = Date.now() - date.getTime()
   const minutes = Math.max(0, Math.round(diffMs / 60_000))
   if (minutes < 1) return 'just now'
   if (minutes < 60) return `${minutes}m ago`
@@ -41,6 +49,10 @@ function formatRelative(value: string | null | undefined) {
 
 function getLatestSuccessfulSync(syncRuns: SyncRun[]) {
   return syncRuns.find((run) => run.status === 'success') ?? null
+}
+
+function hasActiveSyncRequest(syncRequests: SyncRequest[]) {
+  return syncRequests.some((request) => request.status === 'pending' || request.status === 'running')
 }
 
 function LoginScreen() {
@@ -105,7 +117,10 @@ function SyncPanel({ data, user, onRefreshRequested, requestState }: {
   const latestSuccess = getLatestSuccessfulSync(data.syncRuns)
   const latestRun = data.syncRuns[0] ?? null
   const latestRequest = data.syncRequests[0] ?? null
-  const isStale = latestSuccess ? Date.now() - new Date(latestSuccess.finished_at ?? latestSuccess.started_at).getTime() > 15 * 60_000 : true
+  const latestSyncDate = parseDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)
+  const isStale = latestSyncDate ? Date.now() - latestSyncDate.getTime() > 15 * 60_000 : true
+  const activeRequest = hasActiveSyncRequest(data.syncRequests)
+  const buttonDisabled = requestState === 'requesting' || activeRequest
 
   return (
     <section className="heroPanel">
@@ -127,8 +142,14 @@ function SyncPanel({ data, user, onRefreshRequested, requestState }: {
           <div><dt>Latest run</dt><dd>{latestRun ? latestRun.status : 'none'}</dd></div>
           <div><dt>Manual request</dt><dd>{latestRequest ? latestRequest.status : 'none'}</dd></div>
         </dl>
-        <button className="secondaryButton" type="button" onClick={onRefreshRequested} disabled={requestState === 'requesting'}>
-          {requestState === 'requesting' ? 'Requesting refresh…' : requestState === 'requested' ? 'Refresh queued' : 'Refresh now'}
+        <button className="secondaryButton" type="button" onClick={onRefreshRequested} disabled={buttonDisabled}>
+          {requestState === 'requesting'
+            ? 'Requesting refresh…'
+            : activeRequest
+              ? 'Refresh in progress…'
+              : requestState === 'requested'
+                ? 'Refresh queued'
+                : 'Refresh now'}
         </button>
       </div>
     </section>
@@ -209,8 +230,8 @@ function Dashboard({ user }: { user: User }) {
   const [requestState, setRequestState] = useState<'idle' | 'requesting' | 'requested' | 'error'>('idle')
   const [error, setError] = useState('')
 
-  async function loadDashboard() {
-    setLoadState('loading')
+  async function loadDashboard(options: { silent?: boolean } = {}) {
+    if (!options.silent) setLoadState('loading')
     setError('')
 
     const [projects, teamMembers, syncRuns, syncRequests] = await Promise.all([
@@ -227,12 +248,17 @@ function Dashboard({ user }: { user: User }) {
       return
     }
 
-    setData({
+    const nextData = {
       projects: (projects.data ?? []) as CanonicalProject[],
       teamMembers: (teamMembers.data ?? []) as CanonicalTeamMember[],
       syncRuns: (syncRuns.data ?? []) as SyncRun[],
       syncRequests: (syncRequests.data ?? []) as SyncRequest[],
-    })
+    }
+
+    setData(nextData)
+    if (!hasActiveSyncRequest(nextData.syncRequests) && requestState === 'requested') {
+      setRequestState('idle')
+    }
     setLoadState('ready')
   }
 
@@ -256,6 +282,16 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     void loadDashboard()
   }, [])
+
+  useEffect(() => {
+    if (!hasActiveSyncRequest(data.syncRequests) && requestState !== 'requested') return
+
+    const interval = window.setInterval(() => {
+      void loadDashboard({ silent: true })
+    }, 5_000)
+
+    return () => window.clearInterval(interval)
+  }, [data.syncRequests, requestState])
 
   return (
     <main className="dashboardShell">
