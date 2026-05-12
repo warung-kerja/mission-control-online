@@ -775,3 +775,47 @@ Risks/blockers:
 Next action:
 
 - Accept Jen durability review recommendation, then add bridge runbook or service hardening.
+
+
+---
+
+## 2026-05-12 21:45 AEST — V1 hardened and marked complete
+
+Agent: Noona + Jen review
+
+Task IDs: MCO-027, MCO-028
+
+Files changed:
+
+- `scripts/sync-bridge.ts`
+- `docs/SYNC_BRIDGE_RUNBOOK.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+- `docs/AGENT_HANDOFF.md`
+
+Summary:
+
+- Jen reviewed bridge durability options. Recommendation accepted: keep single-process bridge for V1, add runbook + PID lock; Windows Task Scheduler for V1.1.
+- Added single-instance lock via PID file so two bridges cannot run at once.
+- Added bridge runbook with start/stop/check/restart commands.
+- Cleaned stale tracker entries that still listed early setup tasks.
+- Marked V1 complete.
+
+Validation:
+
+```bash
+npm run type-check
+npm run build
+npm run supabase:verify
+```
+
+Result: passed.
+
+Risks/blockers:
+
+- Bridge is process-based, not reboot-proof. Documented in runbook; Windows Task Scheduler is V1.1.
+
+Next action:
+
+- V1.1: Windows Task Scheduler durability wrapper.

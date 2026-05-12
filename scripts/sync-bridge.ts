@@ -45,6 +45,40 @@ function loadLocalEnvFile(filePath: string) {
 
 loadLocalEnvFile(path.resolve(process.cwd(), '.env.sync'))
 
+// ---------------------------------------------------------------------------
+// Single-instance guard
+// ---------------------------------------------------------------------------
+const LOCK_FILE = path.join(os.tmpdir(), 'mission-control-online-sync-bridge.pid')
+
+function acquireLock(): boolean {
+  try {
+    if (fs.existsSync(LOCK_FILE)) {
+      const raw = fs.readFileSync(LOCK_FILE, 'utf8').trim()
+      const prevPid = Number(raw)
+      if (Number.isFinite(prevPid)) {
+        try {
+          process.kill(prevPid, 0)
+          console.error(`Another sync bridge is already running (PID ${prevPid}). If it is stale, delete ${LOCK_FILE} and restart.`)
+          return false
+        } catch {
+          // stale lock file
+        }
+      }
+    }
+    fs.writeFileSync(LOCK_FILE, String(process.pid))
+    return true
+  } catch {
+    return true
+  }
+}
+
+function releaseLock() {
+  try {
+    if (fs.existsSync(LOCK_FILE)) fs.unlinkSync(LOCK_FILE)
+  } catch { /* best-effort */ }
+}
+// ---------------------------------------------------------------------------
+
 const args = new Set(process.argv.slice(2))
 const dryRun = args.has('--dry-run')
 const once = args.has('--once') || dryRun
@@ -266,6 +300,10 @@ async function main() {
 
   console.log(`Mission Control Online sync bridge polling every ${pollSeconds}s and syncing every ${syncIntervalMinutes}m.`)
   let lastScheduledSync = 0
+  
+  process.on('SIGINT', releaseLock)
+  process.on('SIGTERM', releaseLock)
+  
   while (true) {
     await processPendingRequests()
     if (Date.now() - lastScheduledSync >= syncIntervalMinutes * 60_000) {
@@ -279,4 +317,4 @@ async function main() {
 main().catch((error) => {
   console.error(error)
   process.exitCode = 1
-})
+}).finally(releaseLock)

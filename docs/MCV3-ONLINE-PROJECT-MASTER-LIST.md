@@ -1347,3 +1347,43 @@ The bridge has continued syncing successfully. Supabase verification now sees 62
 ### Next recommended step
 
 Use Jen's durability review to choose and implement the safest bridge durability/runbook path.
+
+
+---
+
+## 32. V1 Complete — 2026-05-12 21:45 AEST
+
+### Status
+
+**V1 is complete.**
+
+Mission Control Online is a private, read-only, Vercel + Supabase mirror of the local project registry, team roster, and source health.
+
+### Completed V1 deliverables
+
+- Private Vercel URL accessible from any computer: `https://mission-control-online.vercel.app/`
+- Supabase magic-link auth restricted to `razifdjamaludin@gmail.com`
+- Row Level Security enforced on every table
+- Local sync bridge pushes Projects, Team, and Source Health snapshots every 10 minutes
+- Manual Refresh button with request queue and auto-polling
+- Source Health panel showing bridge read health of canonical files
+- Bridge runbook with start/stop/check/restart
+- Single-instance PID lock to prevent duplicate bridges
+- Full validation:
+  - `npm run type-check`
+  - `npm run build`
+  - `npm run supabase:verify`
+- All work logged in tracker, worklog, and master list
+
+### V1.1 roadmap
+
+- Windows Task Scheduler wrapper for reboot-proof bridge durability
+- Cron snapshot panel
+- Token usage panel
+- Workspace/git signal snapshots
+
+### V2 roadmap (future, after Raz approval)
+
+- Controlled allowlisted remote actions
+- Mobile dashboard polish
+- Multi-agent or client-safe view if needed

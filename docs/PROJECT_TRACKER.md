@@ -1,8 +1,8 @@
 # Project Tracker — Mission Control Online
 
-_Last updated: 2026-05-12 21:39 AEST_  
+_Last updated: 2026-05-12 21:45 AEST_  
 _Current phase: Documentation-first foundation + early scaffold_  
-_Current status: V1 functional online / durability hardening pending_
+_Current status: V1 complete_
 
 ## Current priority
 
@@ -21,7 +21,7 @@ Raz explicitly requested this repo be easy to open in Codex Desktop and continue
 | Supabase migration | Run successfully | Raz ran `supabase/migrations/001_initial_private_mirror.sql` in Supabase |
 | Frontend scaffold | Drafted | React/Vite shell exists |
 | Supabase env | Local only | `.env.local` contains URL + publishable key; not committed |
-| Sync bridge | Polling bridge running | `npm run sync:poll` running in background; scheduled sync and manual request processing verified |
+| Sync bridge | V1 hardened | Bridge runbook added; single-instance lock prevents duplicate processes; bridge currently running |
 | Validation | Passing | `npm run supabase:verify`, `npm run type-check`, `npm run build`, and `npm run sync:dry` passed |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
 | Vercel deploy | Online access verified | Raz confirmed page works from a different computer; magic-link login works |
@@ -81,12 +81,14 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-024 | 2026-05-12 | Jen | V1 sync-readiness review | Done | Recommended refresh UX hardening and single-bridge runbook |
 | MCO-025 | 2026-05-12 | Noona | Hardened Refresh Now UI | Done | Button disables during active requests; dashboard auto-polls every 5s until request settles |
 | MCO-026 | 2026-05-12 | Noona | Added Source Health panel to online dashboard | Done | `npm run type-check`, `npm run build`, `npm run supabase:verify` passed |
+| MCO-027 | 2026-05-12 | Jen | Bridge durability review | Done | Recommended runbook + single-instance guard for V1; Windows Task Scheduler for V1.1 |
+| MCO-028 | 2026-05-12 | Noona | Applied V1 hardening from Jen review | Done | Added bridge runbook, PID lock, stale doc cleanup, V1 marked complete |
 
 ## Next recommended tasks
 
-### Next task A — Supabase setup verification
+### V1.1 task — Windows Task Scheduler durability wrapper
 
-Owner: Raz + Noona
+Owner: Noona + Raz
 
 Steps:
 
