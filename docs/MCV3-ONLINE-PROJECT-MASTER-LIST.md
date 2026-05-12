@@ -1217,3 +1217,34 @@ http://localhost:5174
 ```
 
 Then request a fresh magic link.
+
+
+---
+
+## 28. Progress Update — 2026-05-12 11:53 AEST
+
+### Status
+
+V1 access milestone is complete.
+
+### Completed
+
+- Vercel production URL works: `https://mission-control-online.vercel.app/`.
+- Supabase magic-link redirect now works with the production URL.
+- Raz confirmed the page is viewable from a different computer.
+
+### What this means
+
+The core private online access path is working. This proves the Vercel + Supabase architecture is valid.
+
+### Not full V1 complete yet
+
+Full V1 still requires:
+
+1. Scheduled 10-minute sync configured and verified.
+2. Manual refresh button verified end-to-end with local bridge processing `sync_requests`.
+3. Final V1 acceptance pass after those two items.
+
+### Next recommended step
+
+Configure the local sync bridge to run every 10 minutes, then test the online **Refresh now** button.

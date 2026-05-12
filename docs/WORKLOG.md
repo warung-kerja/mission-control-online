@@ -593,3 +593,37 @@ Risks/blockers:
 Next action:
 
 - Set Supabase Site URL to `https://mission-control-online.vercel.app` and add it to Redirect URLs.
+
+
+---
+
+## 2026-05-12 11:53 AEST — Online access verified from another computer
+
+Agent: Raz + Noona record update
+
+Task ID: MCO-021
+
+Files changed:
+
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Raz confirmed Mission Control Online works from a different computer after updating Supabase redirect settings to the Vercel production URL.
+- Private online access via magic link is now verified.
+
+Validation:
+
+- User-tested production URL: `https://mission-control-online.vercel.app/`.
+- User confirmed page is viewable from another computer.
+
+Risks/blockers:
+
+- Full V1 still needs scheduled 10-minute sync configured.
+- Manual refresh request flow still needs end-to-end verification with the local bridge running.
+
+Next action:
+
+- Configure scheduled 10-minute sync and verify manual refresh completion.
