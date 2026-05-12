@@ -1248,3 +1248,46 @@ Full V1 still requires:
 ### Next recommended step
 
 Configure the local sync bridge to run every 10 minutes, then test the online **Refresh now** button.
+
+
+---
+
+## 29. Progress Update — 2026-05-12 11:56 AEST
+
+### Status
+
+Mission Control Online is now functionally V1 online, with durability hardening still pending.
+
+### Completed
+
+- Started local background sync bridge: `npm run sync:poll`.
+- Bridge performs scheduled sync every 10 minutes.
+- Bridge polls manual refresh requests every 30 seconds.
+- Verified manual refresh request processing from pending to completed.
+- Online app is accessible from another computer and reads Supabase data.
+
+### Current background process
+
+Process session: `tender-dune`
+
+Command:
+
+```bash
+npm run sync:poll
+```
+
+### V1 status
+
+Functional V1 criteria are met:
+
+- Private online access: done
+- Supabase data snapshots: done
+- Initial real sync: done
+- 10-minute sync loop: running
+- Manual refresh processing: verified
+
+### Remaining V1 hardening
+
+- Make the sync bridge durable across restarts.
+- Add clearer bridge/offline status UI if needed.
+- Final acceptance review after Jen's sync-readiness pass.

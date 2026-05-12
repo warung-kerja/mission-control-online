@@ -627,3 +627,49 @@ Risks/blockers:
 Next action:
 
 - Configure scheduled 10-minute sync and verify manual refresh completion.
+
+
+---
+
+## 2026-05-12 11:56 AEST — Background sync bridge and manual refresh verified
+
+Agent: Noona, with Jen review running in parallel
+
+Task IDs: MCO-022, MCO-023
+
+Files changed:
+
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Started the local sync bridge in polling mode.
+- Bridge is currently running in background process session `tender-dune`.
+- It performs scheduled sync every 10 minutes and polls for manual refresh requests every 30 seconds.
+- Verified pending manual refresh requests are processed to `completed`.
+
+Validation:
+
+```bash
+npm run sync:once
+npm run sync:poll
+```
+
+Bridge log showed successful syncs.
+
+Manual refresh verification:
+
+- Inserted/observed pending `sync_requests` rows.
+- Bridge processed latest requests to `completed`.
+- Last checked rows showed completed request statuses and no errors.
+
+Risks/blockers:
+
+- Current bridge is a background process, not yet an OS/OpenClaw durable startup service. If the host/session restarts, it must be started again.
+- Jen review is still pending for final V1 sync-readiness recommendations.
+
+Next action:
+
+- Decide durability approach: OpenClaw cron/watchdog, Windows Task Scheduler, or documented manual start.

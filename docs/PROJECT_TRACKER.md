@@ -1,8 +1,8 @@
 # Project Tracker — Mission Control Online
 
-_Last updated: 2026-05-12 11:53 AEST_  
+_Last updated: 2026-05-12 11:56 AEST_  
 _Current phase: Documentation-first foundation + early scaffold_  
-_Current status: Scaffold validated / Supabase setup pending_
+_Current status: V1 functional online / durability hardening pending_
 
 ## Current priority
 
@@ -21,10 +21,10 @@ Raz explicitly requested this repo be easy to open in Codex Desktop and continue
 | Supabase migration | Run successfully | Raz ran `supabase/migrations/001_initial_private_mirror.sql` in Supabase |
 | Frontend scaffold | Drafted | React/Vite shell exists |
 | Supabase env | Local only | `.env.local` contains URL + publishable key; not committed |
-| Sync bridge | Real sync validated | `npm run sync:once` wrote 8 projects, 9 team members, 2 source health records |
+| Sync bridge | Polling bridge running | `npm run sync:poll` running in background; scheduled sync and manual request processing verified |
 | Validation | Passing | `npm run supabase:verify`, `npm run type-check`, `npm run build`, and `npm run sync:dry` passed |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
-| Vercel deploy | Online access verified | Raz confirmed page works from a different computer |
+| Vercel deploy | Online access verified | Raz confirmed page works from a different computer; magic-link login works |
 
 ## Known blocker
 
@@ -76,6 +76,8 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-019 | 2026-05-12 | Noona | Switched Git remote to SSH and pushed latest docs | Done | `git push -u origin main` succeeded via SSH |
 | MCO-020 | 2026-05-12 | Raz | Created Vercel production deployment | Done | Live URL: `https://mission-control-online.vercel.app/` |
 | MCO-021 | 2026-05-12 | Raz | Verified online access from different computer | Done | Magic-link login works and page is viewable remotely |
+| MCO-022 | 2026-05-12 | Noona | Started background sync polling bridge | Done | `npm run sync:poll` running in background session `tender-dune` |
+| MCO-023 | 2026-05-12 | Noona | Verified manual refresh request processing | Done | Pending `sync_requests` row was processed to `completed`; latest web/request rows completed |
 
 ## Next recommended tasks
 
