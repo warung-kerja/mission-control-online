@@ -558,3 +558,38 @@ Risks/blockers:
 Next action:
 
 - Connect GitHub repo to Vercel.
+
+
+---
+
+## 2026-05-12 11:49 AEST — Vercel production URL received
+
+Agent: Raz + Noona record update
+
+Task ID: MCO-020
+
+Files changed:
+
+- `docs/SUPABASE_SETUP.md`
+- `docs/VERCEL_DEPLOY.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Raz provided the Vercel production URL: `https://mission-control-online.vercel.app/`.
+- First magic-link attempt redirected to `127.0.0.1`, which fails from a different computer.
+- Next step is updating Supabase Site URL/Redirect URLs to production Vercel URL and requesting a fresh link.
+
+Validation:
+
+- User-provided Vercel URL.
+
+Risks/blockers:
+
+- Supabase URL Configuration still needs production URL update.
+
+Next action:
+
+- Set Supabase Site URL to `https://mission-control-online.vercel.app` and add it to Redirect URLs.

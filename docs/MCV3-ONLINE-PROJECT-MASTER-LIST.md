@@ -1178,3 +1178,42 @@ GitHub push from Noona's terminal is now working via SSH.
 ### Next recommended step
 
 Connect GitHub repo to Vercel and configure browser-safe environment variables.
+
+
+---
+
+## 27. Progress Update — 2026-05-12 11:49 AEST
+
+### Status
+
+Vercel production deployment exists and needs final Supabase redirect configuration.
+
+### Production URL
+
+```text
+https://mission-control-online.vercel.app/
+```
+
+### Issue observed
+
+Magic link redirected to `127.0.0.1`, which only works on the same machine running local dev server. Raz tested from another computer, so browser showed `ERR_CONNECTION_REFUSED`.
+
+### Required fix
+
+Update Supabase Auth URL Configuration:
+
+Site URL:
+
+```text
+https://mission-control-online.vercel.app
+```
+
+Redirect URLs:
+
+```text
+https://mission-control-online.vercel.app
+http://127.0.0.1:5174
+http://localhost:5174
+```
+
+Then request a fresh magic link.

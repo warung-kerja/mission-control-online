@@ -65,3 +65,10 @@ http://127.0.0.1:5174
 ## Known limitation
 
 The SQL migration uses RLS/profile checks to block non-owner data access. Supabase Auth may still technically allow a non-Raz account to be created unless dashboard settings restrict signups. Those users should not be able to read dashboard data, but signup should still be restricted if Supabase allows it.
+
+
+## Production URL
+
+```text
+https://mission-control-online.vercel.app
+```

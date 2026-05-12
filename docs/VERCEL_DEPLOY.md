@@ -67,8 +67,8 @@ After Vercel creates the deployment URL:
 ```text
 http://127.0.0.1:5174
 http://localhost:5174
-https://YOUR-VERCEL-PRODUCTION-URL
-https://YOUR-VERCEL-PREVIEW-PATTERN
+https://mission-control-online.vercel.app
+https://mission-control-online-*.vercel.app
 ```
 
 The local app is pinned to port `5174` so it does not conflict with local Mission Control V3 on `5173`.
@@ -88,3 +88,10 @@ The local app is pinned to port `5174` so it does not conflict with local Missio
 - Local auth/login flow still needs browser verification.
 - GitHub repo has not been created/pushed yet.
 - Vercel project has not been connected yet.
+
+
+## Production URL
+
+```text
+https://mission-control-online.vercel.app
+```
