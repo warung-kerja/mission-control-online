@@ -1153,3 +1153,28 @@ GitHub repo has been published by Raz, but this terminal still cannot authentica
 ### Next recommended step
 
 Connect the GitHub repo to Vercel and add the Vercel environment variables documented in `docs/VERCEL_DEPLOY.md`.
+
+
+---
+
+## 26. Progress Update — 2026-05-12 11:34 AEST
+
+### Status
+
+GitHub push from Noona's terminal is now working via SSH.
+
+### Completed
+
+- Confirmed SSH GitHub auth works.
+- Switched remote to `git@github.com:warung-kerja/mission-control-online.git`.
+- Pushed latest local docs commit to GitHub.
+- Local branch `main` now tracks `origin/main`.
+
+### Current blockers
+
+- Vercel project has not been connected yet.
+- End-to-end login still needs browser verification.
+
+### Next recommended step
+
+Connect GitHub repo to Vercel and configure browser-safe environment variables.

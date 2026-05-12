@@ -1,6 +1,6 @@
 # Project Tracker — Mission Control Online
 
-_Last updated: 2026-05-12 11:31 AEST_  
+_Last updated: 2026-05-12 11:34 AEST_  
 _Current phase: Documentation-first foundation + early scaffold_  
 _Current status: Scaffold validated / Supabase setup pending_
 
@@ -23,7 +23,7 @@ Raz explicitly requested this repo be easy to open in Codex Desktop and continue
 | Supabase env | Local only | `.env.local` contains URL + publishable key; not committed |
 | Sync bridge | Real sync validated | `npm run sync:once` wrote 8 projects, 9 team members, 2 source health records |
 | Validation | Passing | `npm run supabase:verify`, `npm run type-check`, `npm run build`, and `npm run sync:dry` passed |
-| Git repo | Published by Raz / terminal auth unavailable | Raz reports repo published; local terminal still cannot fetch/push due missing GitHub credentials |
+| Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
 | Vercel deploy | Not started | Waiting for build/schema readiness |
 
 ## Known blocker
@@ -72,7 +72,8 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-015 | 2026-05-12 | Noona | Initialized local git and verified ignored secrets | Done | `.env.local` and `.env.sync` ignored; validation passed |
 | MCO-016 | 2026-05-12 | Noona | Created initial local commit | Done | Commit `82e8dfe` (`chore: scaffold mission control online`) |
 | MCO-017 | 2026-05-12 | Noona | Connected GitHub remote and attempted push | Blocked | Origin set; `git push -u origin main` failed: missing GitHub credentials |
-| MCO-018 | 2026-05-12 | Raz | Published repo to GitHub | Done - user reported | Local terminal still cannot fetch due missing GitHub credentials |
+| MCO-018 | 2026-05-12 | Raz | Published repo to GitHub | Done | Repo published and remote verified |
+| MCO-019 | 2026-05-12 | Noona | Switched Git remote to SSH and pushed latest docs | Done | `git push -u origin main` succeeded via SSH |
 
 ## Next recommended tasks
 

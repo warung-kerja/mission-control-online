@@ -517,3 +517,44 @@ Risks/blockers:
 Next action:
 
 - Create/connect Vercel project from `warung-kerja/mission-control-online`.
+
+
+---
+
+## 2026-05-12 11:34 AEST — GitHub SSH push verified
+
+Agent: Noona
+
+Task ID: MCO-019
+
+Files changed:
+
+- Git remote config
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Confirmed HTTPS auth was unavailable in this terminal, but SSH auth to GitHub works.
+- Switched remote from HTTPS to SSH.
+- Pushed latest local docs commit to GitHub successfully.
+
+Validation:
+
+```bash
+ssh -T git@github.com
+git remote set-url origin git@github.com:warung-kerja/mission-control-online.git
+git push -u origin main
+git status --short --branch
+```
+
+Result: push succeeded; local `main` now tracks `origin/main`.
+
+Risks/blockers:
+
+- None for GitHub push from this repo.
+
+Next action:
+
+- Connect GitHub repo to Vercel.
