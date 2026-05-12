@@ -1,0 +1,31 @@
+{
+  "name": "mission-control-online",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Private online read-only mirror for Mission Control V3, powered by Vercel and Supabase snapshots.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "sync:dry": "tsx scripts/sync-bridge.ts --dry-run",
+    "sync:once": "tsx scripts/sync-bridge.ts --once",
+    "sync:poll": "tsx scripts/sync-bridge.ts --poll",
+    "supabase:verify": "tsx scripts/verify-supabase.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.86.2",
+    "@vitejs/plugin-react": "^5.1.1",
+    "vite": "^7.2.6",
+    "typescript": "^5.9.3",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "tsx": "^4.21.0"
+  }
+}
