@@ -1095,3 +1095,39 @@ Initial local commit created.
 ### Next recommended step
 
 Create GitHub repo `mission-control-online`, connect remote, and push the local commit.
+
+
+---
+
+## 24. Progress Update — 2026-05-12 11:28 AEST
+
+### Status
+
+GitHub remote is connected, but push is blocked by local GitHub authentication.
+
+### Completed
+
+- Set `origin` remote to `https://github.com/warung-kerja/mission-control-online.git`.
+- Confirmed secrets remain ignored.
+- Attempted push to GitHub.
+
+### Blocker
+
+`git push -u origin main` failed because this terminal has no GitHub credentials available:
+
+```text
+fatal: could not read Username for 'https://github.com': No such device or address
+```
+
+### Current local commits ready to push
+
+- `82e8dfe` — `chore: scaffold mission control online`
+- `ea217b1` — `docs: record initial scaffold checkpoint`
+
+### Next recommended step
+
+Push from an authenticated GitHub terminal/GitHub Desktop, or configure credentials for this environment, then re-run:
+
+```bash
+git push -u origin main
+```

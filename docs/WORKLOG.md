@@ -437,3 +437,46 @@ Risks/blockers:
 Next action:
 
 - Commit docs status update, then create/connect GitHub remote.
+
+
+---
+
+## 2026-05-12 11:28 AEST — GitHub remote connected, push blocked by auth
+
+Agent: Noona
+
+Task ID: MCO-017
+
+Files changed:
+
+- Git remote config
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Connected GitHub remote: `https://github.com/warung-kerja/mission-control-online.git`.
+- Attempted to push `main`.
+- Push failed because the local terminal has no GitHub credentials available.
+
+Validation:
+
+```bash
+git remote -v
+git push -u origin main
+```
+
+Result:
+
+- Remote exists.
+- Push blocked: `fatal: could not read Username for 'https://github.com': No such device or address`.
+
+Risks/blockers:
+
+- Need authenticated GitHub push from Raz's environment, or configure GitHub auth for this terminal.
+- Local commits are safe and ready to push.
+
+Next action:
+
+- Raz runs `git push -u origin main` from an authenticated terminal/GitHub Desktop, or configures GitHub credentials for this environment.
