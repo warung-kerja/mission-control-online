@@ -59,3 +59,29 @@ export interface SourceHealthSnapshot {
   error: string | null
   synced_at: string
 }
+
+export interface CronJobSnapshot {
+  id: string
+  name: string | null
+  schedule: string | null
+  status: string | null
+  enabled: boolean | null
+  last_run_at: string | null
+  next_run_at: string | null
+  duration_ms: number | null
+  error: string | null
+  synced_at: string
+}
+
+export interface AgentTokenUsageDaily {
+  id: string
+  agent: string
+  date: string
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  cache_write_tokens: number
+  total_tokens: number
+  turns: number
+  synced_at: string
+}

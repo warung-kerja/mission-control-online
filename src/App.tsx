@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { allowedEmail, supabase } from './lib/supabase'
-import type { CanonicalProject, CanonicalTeamMember, SourceHealthSnapshot, SyncRequest, SyncRun } from './types/supabase'
+import type { AgentTokenUsageDaily, CanonicalProject, CanonicalTeamMember, CronJobSnapshot, SourceHealthSnapshot, SyncRequest, SyncRun } from './types/supabase'
 import './styles.css'
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error'
@@ -12,6 +12,8 @@ interface DashboardData {
   syncRuns: SyncRun[]
   syncRequests: SyncRequest[]
   sourceHealth: SourceHealthSnapshot[]
+  cronJobs: CronJobSnapshot[]
+  tokenUsage: AgentTokenUsageDaily[]
 }
 
 const emptyDashboard: DashboardData = {
@@ -20,6 +22,8 @@ const emptyDashboard: DashboardData = {
   syncRuns: [],
   syncRequests: [],
   sourceHealth: [],
+  cronJobs: [],
+  tokenUsage: [],
 }
 
 function parseDate(value: string | null | undefined) {
@@ -266,6 +270,126 @@ function TeamPanel({ teamMembers }: { teamMembers: CanonicalTeamMember[] }) {
   )
 }
 
+function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; syncRuns: SyncRun[] }) {
+  const latestSuccess = getLatestSuccessfulSync(syncRuns)
+  const visibleJobs = cronJobs.filter((job) => job.id !== 'openclaw-cron-adapter')
+  const adapterStatus = cronJobs.find((job) => job.id === 'openclaw-cron-adapter')
+  const failedJobs = visibleJobs.filter((job) => job.status === 'failure')
+  const runningJobs = visibleJobs.filter((job) => job.status === 'running')
+  const disabledJobs = visibleJobs.filter((job) => job.status === 'disabled' || job.enabled === false)
+  const hasProblems = Boolean(adapterStatus?.status === 'failure' || failedJobs.length > 0)
+
+  return (
+    <section className="panel">
+      <div className="panelHeader">
+        <div>
+          <p className="eyebrow">cron health</p>
+          <h2>Automation pulse</h2>
+          <p className="muted smallCopy">Read-only OpenClaw cron snapshots from the local bridge. This shows what was scheduled at the last sync, not a live browser connection to the gateway.</p>
+        </div>
+        <span className={hasProblems ? 'countBadge warningBadge' : 'countBadge okBadge'}>
+          {hasProblems ? 'Needs attention' : `${visibleJobs.length} jobs`}
+        </span>
+      </div>
+
+      <div className="cronSummaryGrid">
+        <div><strong>{visibleJobs.length}</strong><span>synced jobs</span></div>
+        <div><strong>{runningJobs.length}</strong><span>running</span></div>
+        <div><strong>{failedJobs.length}</strong><span>failed</span></div>
+        <div><strong>{disabledJobs.length}</strong><span>disabled</span></div>
+      </div>
+
+      {adapterStatus?.error && <p className="errorText">{adapterStatus.error}</p>}
+
+      <div className="cronGrid">
+        {visibleJobs.slice(0, 8).map((job) => (
+          <article className="cronCard" key={job.id}>
+            <div className="sourceCardHeader">
+              <span className={job.status === 'failure' ? 'miniStatus warning' : 'miniStatus ok'} />
+              <strong>{job.name ?? 'Unnamed job'}</strong>
+            </div>
+            <div className="cardTopline">
+              <span>{job.status ?? 'unknown'}</span>
+              <span>{job.enabled === false ? 'disabled' : 'enabled'}</span>
+            </div>
+            <p>{job.schedule || 'No schedule captured.'}</p>
+            <dl>
+              <div><dt>Last</dt><dd>{formatRelative(job.last_run_at)}</dd></div>
+              <div><dt>Next</dt><dd>{formatRelative(job.next_run_at)}</dd></div>
+              <div><dt>Duration</dt><dd>{job.duration_ms == null ? '-' : `${job.duration_ms}ms`}</dd></div>
+            </dl>
+            {job.error && <p className="errorText">{job.error}</p>}
+          </article>
+        ))}
+        {visibleJobs.length === 0 && !adapterStatus?.error && <p className="emptyState">No cron jobs synced yet.</p>}
+      </div>
+      <p className="muted smallCopy">Latest successful bridge sync: {formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}.</p>
+    </section>
+  )
+}
+
+function formatTokens(value: number) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1)}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}k`
+  return value.toLocaleString()
+}
+
+function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsageDaily[]; syncRuns: SyncRun[] }) {
+  const latestSuccess = getLatestSuccessfulSync(syncRuns)
+  const totals = useMemo(() => {
+    const byAgent = tokenUsage.reduce<Record<string, { agent: string; total: number; turns: number }>>((acc, row) => {
+      const current = acc[row.agent] ?? { agent: row.agent, total: 0, turns: 0 }
+      current.total += row.total_tokens
+      current.turns += row.turns
+      acc[row.agent] = current
+      return acc
+    }, {})
+    return Object.values(byAgent).sort((a, b) => b.total - a.total)
+  }, [tokenUsage])
+  const totalTokens = totals.reduce((sum, row) => sum + row.total, 0)
+  const totalTurns = totals.reduce((sum, row) => sum + row.turns, 0)
+  const maxTotal = Math.max(...totals.map((row) => row.total), 1)
+  const latestDate = tokenUsage.map((row) => row.date).sort().at(-1)
+
+  return (
+    <section className="panel">
+      <div className="panelHeader">
+        <div>
+          <p className="eyebrow">token usage</p>
+          <h2>Agent token burn</h2>
+          <p className="muted smallCopy">Daily aggregate tokens from local OpenClaw session logs. No raw transcripts or prompts are synced.</p>
+        </div>
+        <span className="countBadge">{formatTokens(totalTokens)} tokens</span>
+      </div>
+
+      <div className="cronSummaryGrid">
+        <div><strong>{formatTokens(totalTokens)}</strong><span>tokens</span></div>
+        <div><strong>{totalTurns}</strong><span>turns</span></div>
+        <div><strong>{totals[0]?.agent ?? '-'}</strong><span>top agent</span></div>
+        <div><strong>{latestDate ?? '-'}</strong><span>latest day</span></div>
+      </div>
+
+      <div className="usageList">
+        {totals.map((agent) => {
+          const width = maxTotal > 0 ? Math.max((agent.total / maxTotal) * 100, agent.total > 0 ? 3 : 0) : 0
+          return (
+            <div className="usageRow" key={agent.agent}>
+              <div>
+                <strong>{agent.agent}</strong>
+                <span>{agent.turns} turns</span>
+              </div>
+              <div className="usageBar"><span style={{ width: `${width}%` }} /></div>
+              <strong>{formatTokens(agent.total)}</strong>
+            </div>
+          )
+        })}
+        {totals.length === 0 && <p className="emptyState">No token usage rows synced yet. New OpenClaw runs will appear after session logs include usage data.</p>}
+      </div>
+      <p className="muted smallCopy">Latest successful bridge sync: {formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}.</p>
+    </section>
+  )
+}
+
 function Dashboard({ user }: { user: User }) {
   const [loadState, setLoadState] = useState<LoadState>('idle')
   const [data, setData] = useState<DashboardData>(emptyDashboard)
@@ -276,15 +400,17 @@ function Dashboard({ user }: { user: User }) {
     if (!options.silent) setLoadState('loading')
     setError('')
 
-    const [projects, teamMembers, syncRuns, syncRequests, sourceHealth] = await Promise.all([
+    const [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage] = await Promise.all([
       supabase.from('canonical_projects').select('*').order('priority', { ascending: true }),
       supabase.from('canonical_team_members').select('*').order('name', { ascending: true }),
       supabase.from('sync_runs').select('*').order('started_at', { ascending: false }).limit(8),
       supabase.from('sync_requests').select('*').order('requested_at', { ascending: false }).limit(5),
       supabase.from('source_health_snapshots').select('*').order('label', { ascending: true }),
+      supabase.from('cron_job_snapshots').select('*').order('name', { ascending: true }),
+      supabase.from('agent_token_usage_daily').select('*').order('date', { ascending: false }).limit(120),
     ])
 
-    const failed = [projects, teamMembers, syncRuns, syncRequests, sourceHealth].find((result) => result.error)
+    const failed = [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage].find((result) => result.error)
     if (failed?.error) {
       setLoadState('error')
       setError(failed.error.message)
@@ -297,6 +423,8 @@ function Dashboard({ user }: { user: User }) {
       syncRuns: (syncRuns.data ?? []) as SyncRun[],
       syncRequests: (syncRequests.data ?? []) as SyncRequest[],
       sourceHealth: (sourceHealth.data ?? []) as SourceHealthSnapshot[],
+      cronJobs: (cronJobs.data ?? []) as CronJobSnapshot[],
+      tokenUsage: (tokenUsage.data ?? []) as AgentTokenUsageDaily[],
     }
 
     setData(nextData)
@@ -344,6 +472,8 @@ function Dashboard({ user }: { user: User }) {
       {loadState === 'error' && <p className="errorText">{error}</p>}
       <ProjectsPanel projects={data.projects} />
       <SourceHealthPanel sources={data.sourceHealth} syncRuns={data.syncRuns} />
+      <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} />
+      <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />
       <TeamPanel teamMembers={data.teamMembers} />
       <section className="panel compactPanel">
         <div>

@@ -1,12 +1,12 @@
-# Agent Handoff — Mission Control Online
+# Agent Handoff - Mission Control Online
 
-_Last updated: 2026-05-12 22:20 AEST_
+_Last updated: 2026-05-13 07:43 AEST_
 
 ## Read this first
 
 This repo is the separate online/private mirror of Mission Control V3.
 
-Do **not** treat this as the local Mission Control V3 repo.
+Do not treat this as the local Mission Control V3 repo.
 
 ## Project path
 
@@ -14,11 +14,13 @@ Do **not** treat this as the local Mission Control V3 repo.
 /mnt/d/Warung Kerja 1.0/03_Active_Projects/Mission Control/mission-control-online
 ```
 
-## Local Mission Control V3 path — do not touch unless explicitly requested
+## Local Mission Control V3 path - do not modify unless explicitly requested
 
 ```text
 /mnt/d/Warung Kerja 1.0/03_Active_Projects/Mission Control/mission-control-v2
 ```
+
+Reading local V3 for reference is acceptable when porting panels, but do not write to it from this repo.
 
 ## Required reading order
 
@@ -30,34 +32,38 @@ Before working:
 4. `docs/EPICS.md`
 5. `docs/PROJECT_TRACKER.md`
 6. `docs/WORKLOG.md`
-
-For big-picture plan:
-
 7. `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
 
 ## Current user intent
 
-Raz wants this repo to be usable manually in Codex Desktop and by multiple agents over time.
+Raz wants this repo to stay easy for Codex Desktop and other agents to continue. Every meaningful work session must update the master list, tracker, worklog, and this handoff when context changes.
 
-Priority is:
+Current priority is V1.1 operational visibility:
 
-1. brief
-2. PRD
-3. epics
-4. user journey
-5. detailed project tracker
-6. clear work records
-7. only then implementation
+1. Finish real Cron Health by adding local gateway credentials
+2. Workspace/Git signal snapshots
+3. Reboot-proof bridge durability
+5. No V2 remote actions until Raz explicitly approves
 
 ## Current technical state
 
-A draft app scaffold exists.
+V1 is complete and live as a private read-only Vercel + Supabase mirror.
+
+Current online panels:
+
+- Projects
+- Team
+- Source Health
+- Sync history / Manual Refresh
+- Cron Health shell from `cron_job_snapshots`
+- Token Usage from `agent_token_usage_daily`
 
 Important files:
 
 - `package.json`
 - `.env.example`
-- `.env.local` — local only, do not commit
+- `.env.local` - local only, do not commit
+- `.env.sync` - local only, do not commit
 - `src/App.tsx`
 - `src/lib/supabase.ts`
 - `src/types/supabase.ts`
@@ -65,23 +71,26 @@ Important files:
 - `scripts/sync-bridge.ts`
 - `supabase/migrations/001_initial_private_mirror.sql`
 
-## Current blocker
+## Current caveats
 
-No TypeScript/build blocker currently open.
+No TypeScript/build blocker is currently open.
 
-Latest validation passed:
+Latest validation passed from WSL:
 
 ```bash
+npm run sync:dry
 npm run type-check
 npm run build
-npm run sync:dry
+npm run sync:once
+npm run supabase:verify
 ```
 
-Current setup blockers:
+Current caveats:
 
-- Supabase SQL migration still needs to be run in the Supabase project.
-- Service-role key is not configured locally, so real sync writes are not enabled yet.
-- GitHub/Vercel setup has not started yet.
+- `cron_job_snapshots` plumbing and UI exist, but the current synced row is a diagnostic failure row because the OpenClaw cron CLI call needs explicit gateway credentials in `.env.sync`.
+- `agent_token_usage_daily` plumbing and UI exist. Current Supabase count is 21 aggregate rows.
+- The bridge is process-based and not reboot-proof. Windows Task Scheduler or equivalent is still V1.1 work.
+- Run validation from WSL. The current `node_modules` native packages are Linux-flavored; Windows Node can type-check, but Vite/Rollup/esbuild native binaries fail from PowerShell.
 
 ## Supabase details
 
@@ -93,15 +102,16 @@ https://mqvscznkgqoajirbkcrj.supabase.co
 
 Publishable key is stored locally in `.env.local`.
 
-Do not ask Raz to paste service-role key into chat. When needed, use local `.env.sync` / secure local setup.
+Do not ask Raz to paste service-role keys or OpenClaw gateway tokens into chat. Use local `.env.sync` / secure local setup.
 
 ## Security rules
 
-- Never commit `.env.local` or service-role keys.
+- Never commit `.env.local`, `.env.sync`, service-role keys, or gateway tokens.
 - Never expose Supabase service-role key to Vercel/browser.
 - V1 is read-only.
 - Manual refresh should only request a sync, not execute arbitrary commands.
 - Do not sync raw memories, transcripts, secrets, or gateway tokens.
+- Do not add remote command execution or browser-triggered local actions until Raz explicitly approves V2 scope.
 
 ## Required work logging
 
@@ -127,12 +137,12 @@ Next action:
 
 ## Recommended next task
 
-Run Supabase setup verification.
+Finish Cron Health V1.1.
 
 Steps:
 
-1. Run `supabase/migrations/001_initial_private_mirror.sql` in the Supabase SQL editor.
-2. Configure Supabase Auth for Raz-only magic link access.
-3. Create local `.env.sync` with service-role key when ready.
-4. Run real sync via `npm run sync:once`.
-5. Update master list, project tracker, and worklog.
+1. Add valid `OPENCLAW_GATEWAY_TOKEN` or required gateway credentials to local `.env.sync`.
+2. Run `npm run sync:dry` from WSL and confirm real cron jobs appear instead of the `openclaw-cron-adapter` diagnostic row.
+3. Run `npm run sync:once` from WSL.
+4. Verify the online Cron Health panel shows real jobs.
+5. Then decide whether to implement Workspace/Git Signals or Windows Task Scheduler durability next.

@@ -1,6 +1,6 @@
 # Epics — Mission Control Online
 
-_Last updated: 2026-05-12 22:20 AEST_
+_Last updated: 2026-05-13 07:43 AEST_
 
 ## Epic 0 — Project foundation and documentation
 
@@ -155,10 +155,13 @@ Goal: add more Mission Control runtime data.
 
 Tasks:
 
-- [ ] Cron snapshots
-- [ ] Token usage daily snapshots
+- [x] Cron snapshot plumbing / adapter diagnostic row
+- [x] Cron Health panel shell
+- [ ] Real cron job rows after local gateway credentials are configured
+- [x] Token usage daily snapshots
+- [x] Token Usage panel
 - [ ] Workspace/git signal snapshots
-- [ ] Source health details
+- [x] Source health details
 
 Acceptance criteria:
 

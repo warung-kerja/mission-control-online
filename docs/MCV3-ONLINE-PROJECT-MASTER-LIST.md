@@ -1,10 +1,53 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-12 07:20 AEST_  
-_Owner: Raz_  
-_Tech lead: Noona_  
-_Status: Planning / ready for setup_  
+_Last updated: 2026-05-13 07:43 AEST_
+_Owner: Raz_
+_Tech lead: Noona_
+_Status: V1 complete / V1.1 operational panels in progress_
 _Mode: Private, read-only V1 online mirror_
+
+---
+
+## 0. Master Checklist
+
+Use this section as the fast truth source for what is done and what is next. Detailed evidence remains in the progress updates below.
+
+### ✅ Completed / shipped
+
+- [x] Separate `mission-control-online` project created so local Mission Control V3 remains untouched.
+- [x] Vite + React + Supabase app scaffold built.
+- [x] Supabase schema/RLS migration created and run.
+- [x] Raz-only magic-link auth configured for `razifdjamaludin@gmail.com`.
+- [x] Local `.env.sync` service-role flow configured without committing secrets.
+- [x] First real Supabase sync completed.
+- [x] Private Vercel production URL works: `https://mission-control-online.vercel.app/`.
+- [x] Dashboard reads synced data from Supabase.
+- [x] Projects panel online.
+- [x] Team panel online.
+- [x] Source Health panel online.
+- [x] Cron Health panel shell online.
+- [x] Bridge writes `cron_job_snapshots` diagnostic/job rows.
+- [x] Token Usage panel online.
+- [x] Bridge writes `agent_token_usage_daily` aggregate rows.
+- [x] Manual Refresh button works through `sync_requests`.
+- [x] Local sync bridge runs scheduled 10-minute syncs.
+- [x] Bridge runbook added.
+- [x] Single-instance PID lock added to prevent duplicate bridge processes.
+- [x] Validation passed: `npm run type-check`, `npm run build`, `npm run supabase:verify`.
+- [x] Project docs refreshed to reflect V1-complete status.
+
+### 🔜 Next / not done yet
+
+- [ ] Configure local OpenClaw gateway credentials so real cron jobs sync instead of the adapter diagnostic row.
+- [ ] Add Workspace/Git signal snapshots.
+- [ ] Add Windows Task Scheduler wrapper or equivalent reboot-proof bridge durability.
+- [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
+- [ ] Do not start V2 remote actions until Raz explicitly approves.
+
+### ⚠️ Current caveat
+
+- [ ] The bridge is functional, but not yet reboot-proof. If the host/session restarts, restart it using the bridge runbook.
+- [ ] Cron Health plumbing is present, but live cron job fetch currently needs gateway credentials in local `.env.sync`.
 
 ---
 
@@ -44,9 +87,10 @@ V1 should not yet answer:
 | Allowed login email | `razifdjamaludin@gmail.com` |
 | V1 mode | Read-only |
 | Default sync cadence | Every 10 minutes |
-| Manual refresh | Yes, planned |
+| Manual refresh | Yes, working via `sync_requests` |
 | Local Mission Control V3 safety | Must not break existing local app |
-| Repo strategy | Recommended: separate online repo/project |
+| Production URL | `https://mission-control-online.vercel.app/` |
+| Repo strategy | Separate online repo/project (done) |
 
 ---
 
@@ -545,7 +589,7 @@ MISSION_CONTROL_LOCAL_REPO=/mnt/d/Warung Kerja 1.0/03_Active_Projects/Mission Co
 
 ---
 
-## 11. Build Phases
+## 11. Build Phases — Checkbox Tracker
 
 ## Phase 0 — Project separation and safety
 
@@ -553,18 +597,18 @@ Goal: protect local Mission Control V3.
 
 Tasks:
 
-- Create local folder for new online project.
-- Create new GitHub repo: `mission-control-online`.
-- Add README explaining relation to local Mission Control V3.
-- Add `.env.example` files.
-- Add initial project master list.
-- Do not modify local V3 source except docs/planning.
+- [x] Create local folder for new online project.
+- [x] Create/connect GitHub repo: `mission-control-online`.
+- [x] Add README explaining relation to local Mission Control V3.
+- [x] Add `.env.example` / `.env.sync.example` files.
+- [x] Add initial project master list.
+- [x] Avoid modifying local V3 source for online setup work.
 
 Acceptance criteria:
 
-- Local Mission Control V3 still runs unchanged.
-- New online repo exists separately.
-- No secrets committed.
+- [x] Local Mission Control V3 still runs unchanged.
+- [x] New online repo exists separately.
+- [x] No secrets committed.
 
 ## Phase 1 — Supabase project setup
 
@@ -572,19 +616,19 @@ Goal: create cloud data layer.
 
 Tasks:
 
-- Create Supabase project.
-- Configure auth.
-- Add Raz-only access.
-- Create tables.
-- Enable RLS.
-- Add read policies.
-- Add sync request insert policy.
+- [x] Create Supabase project.
+- [x] Configure auth.
+- [x] Add Raz-only access.
+- [x] Create tables.
+- [x] Enable RLS.
+- [x] Add read policies.
+- [x] Add sync request insert policy.
 
 Acceptance criteria:
 
-- Raz can log in.
-- Unauthenticated users cannot read tables.
-- Tables are ready for sync.
+- [x] Raz can log in.
+- [x] Unauthenticated users cannot read tables.
+- [x] Tables are ready for sync.
 
 ## Phase 2 — Online frontend shell
 
@@ -592,19 +636,19 @@ Goal: deploy a private dashboard shell.
 
 Tasks:
 
-- Create Vite/React frontend or copy minimal UI shell from V3.
-- Add Supabase client.
-- Add login screen.
-- Add protected routes.
-- Add Control Room placeholder.
-- Add sync status card.
+- [x] Create Vite/React frontend shell.
+- [x] Add Supabase client.
+- [x] Add login screen.
+- [x] Add protected routes.
+- [x] Add Control Room dashboard.
+- [x] Add sync status card.
 
 Acceptance criteria:
 
-- App runs locally.
-- Login works.
-- Logged-out users cannot see dashboard.
-- Build passes.
+- [x] App runs locally.
+- [x] Login works.
+- [x] Logged-out users cannot see dashboard.
+- [x] Build passes.
 
 ## Phase 3 — Local sync bridge MVP
 
@@ -612,20 +656,20 @@ Goal: push Projects + Team to Supabase.
 
 Tasks:
 
-- Create sync bridge script.
-- Read local `projects.json`.
-- Read local `AGENTS_ROSTER.md`.
-- Transform to Supabase rows.
-- Upsert into Supabase.
-- Insert `sync_runs` record.
-- Add dry-run mode.
+- [x] Create sync bridge script.
+- [x] Read local `projects.json`.
+- [x] Read local agent roster.
+- [x] Transform to Supabase rows.
+- [x] Upsert into Supabase.
+- [x] Insert `sync_runs` record.
+- [x] Add dry-run mode.
 
 Acceptance criteria:
 
-- Dry-run prints safe payload.
-- Real sync updates Supabase.
-- Projects and Team visible in database.
-- No sensitive data uploaded.
+- [x] Dry-run prints safe payload.
+- [x] Real sync updates Supabase.
+- [x] Projects and Team visible in database.
+- [x] No sensitive data uploaded.
 
 ## Phase 4 — Projects + Team online views
 
@@ -633,16 +677,16 @@ Goal: first usable online mirror.
 
 Tasks:
 
-- Build Projects page from Supabase.
-- Build Team page from Supabase.
-- Add stale-data states.
-- Add source/sync timestamps.
+- [x] Build Projects page/panel from Supabase.
+- [x] Build Team page/panel from Supabase.
+- [x] Add stale-data states.
+- [x] Add source/sync timestamps.
 
 Acceptance criteria:
 
-- Raz can view Projects and Team from another computer.
-- Data matches local source snapshots.
-- Staleness is visible.
+- [x] Raz can view Projects and Team from another computer.
+- [x] Data matches local source snapshots.
+- [x] Staleness is visible.
 
 ## Phase 5 — Vercel deployment
 
@@ -650,18 +694,18 @@ Goal: access from real online URL.
 
 Tasks:
 
-- Connect GitHub repo to Vercel.
-- Add environment variables.
-- Deploy preview.
-- Test login and protected routes.
-- Promote production.
+- [x] Connect GitHub repo to Vercel.
+- [x] Add environment variables.
+- [x] Deploy preview/production.
+- [x] Test login and protected routes.
+- [x] Promote/use production.
 
 Acceptance criteria:
 
-- URL works from another computer.
-- Login uses `razifdjamaludin@gmail.com`.
-- Dashboard data loads from Supabase.
-- No local API required.
+- [x] URL works from another computer.
+- [x] Login uses `razifdjamaludin@gmail.com`.
+- [x] Dashboard data loads from Supabase.
+- [x] No local API required by the browser.
 
 ## Phase 6 — Scheduled sync every 10 minutes
 
@@ -669,16 +713,17 @@ Goal: keep online data fresh.
 
 Tasks:
 
-- Add local scheduled runner.
-- Recommended: OpenClaw cron every 10 minutes.
-- Alternative: OS cron / Windows Task Scheduler.
-- Write sync health to Supabase.
+- [x] Add local scheduled bridge runner.
+- [x] Run bridge every 10 minutes while process is active.
+- [x] Write sync health to Supabase.
+- [ ] Make bridge reboot-proof via Windows Task Scheduler or equivalent service wrapper.
 
 Acceptance criteria:
 
-- Sync runs every 10 minutes.
-- Dashboard shows last sync.
-- Failed syncs are visible.
+- [x] Sync runs every 10 minutes while bridge is running.
+- [x] Dashboard shows last sync.
+- [x] Failed syncs are visible in sync state/logs.
+- [ ] Sync automatically resumes after host/session restart.
 
 ## Phase 7 — Manual refresh button
 
@@ -686,18 +731,19 @@ Goal: allow Raz to request immediate refresh.
 
 Tasks:
 
-- Add `Refresh now` button.
-- Insert row into `sync_requests`.
-- Bridge polls for pending requests every 30 seconds.
-- Bridge runs sync on pending request.
-- Dashboard shows request status.
+- [x] Add `Refresh now` button.
+- [x] Insert row into `sync_requests`.
+- [x] Bridge polls for pending requests every 30 seconds.
+- [x] Bridge runs sync on pending request.
+- [x] Dashboard shows request status.
+- [x] Dashboard auto-polls while request is queued/running.
 
 Acceptance criteria:
 
-- Button creates request.
-- Bridge picks it up.
-- Dashboard updates after sync.
-- If bridge offline, request shows queued/offline state.
+- [x] Button creates request.
+- [x] Bridge picks it up.
+- [x] Dashboard updates after sync.
+- [x] If bridge is offline, request shows queued/offline state.
 
 ## Phase 8 — Operational panels
 
@@ -705,18 +751,22 @@ Goal: bring Mission Control's useful runtime panels online.
 
 Tasks:
 
-- Sync cron job snapshots.
-- Sync OpenClaw runtime summaries.
-- Sync token usage aggregates.
-- Sync workspace/git source health.
-- Build corresponding UI panels.
+- [x] Sync cron job snapshots / adapter diagnostic row.
+- [ ] Sync OpenClaw runtime summaries.
+- [x] Sync token usage aggregates.
+- [x] Sync workspace/source health.
+- [x] Build Source Health UI panel.
+- [x] Build Cron Health UI panel.
+- [x] Build Token Usage UI panel.
+- [ ] Build Workspace/Git Signals UI panel.
 
 Acceptance criteria:
 
-- Cron health visible online.
-- Token usage visible online.
-- Workspace/source health visible online.
-- All panels clearly show sync freshness.
+- [ ] Real cron health visible online.
+- [x] Token usage visible online.
+- [x] Source health visible online.
+- [ ] Workspace/git signal health visible online.
+- [x] Completed panels clearly show sync freshness.
 
 ## Phase 9 — Hardening
 
@@ -724,56 +774,65 @@ Goal: make it dependable.
 
 Tasks:
 
-- Add error boundary.
-- Add empty states.
-- Add stale-data warnings.
-- Add sync failure diagnostics.
-- Add Supabase backup/export notes.
-- Add privacy review checklist.
+- [x] Add invalid-date safe rendering.
+- [x] Add bridge runbook.
+- [x] Add single-instance PID lock.
+- [x] Add clearer pending/running refresh states.
+- [x] Add stale-data/sync freshness indicators for completed panels.
+- [ ] Add reboot-proof bridge runner.
+- [ ] Add final privacy review checklist before V2/action features.
+- [ ] Add Supabase backup/export notes.
 
 Acceptance criteria:
 
-- Online dashboard does not imply data is live when stale.
-- Failures are readable by non-technical Raz.
-- No known secret exposure.
+- [x] Online dashboard does not imply data is live when stale.
+- [x] Common bridge failures are documented in the runbook.
+- [x] No known secret exposure.
+- [ ] Bridge survives normal host/session restarts.
 
 ---
 
-## 12. Future Roadmap
+## 12. Future Roadmap — Checkbox Tracker
 
-### V1.1 — Better manual refresh
+### V1.1 — Operational visibility and durability
 
-- Supabase Realtime trigger instead of polling.
-- Faster manual refresh response.
-- More detailed sync progress.
+- [ ] Windows Task Scheduler wrapper for reboot-proof bridge durability.
+- [x] Cron snapshot sync plumbing.
+- [x] Cron Health panel shell.
+- [ ] Live cron job credential fix.
+- [x] Token usage snapshot sync.
+- [x] Token Usage panel.
+- [ ] Workspace/git signal snapshots.
+- [ ] Optional: Supabase Realtime trigger instead of polling.
+- [ ] Optional: More detailed sync progress.
 
 ### V1.2 — Memory metadata
 
-- Sync memory file metadata only.
-- Do not sync full memory content by default.
-- Show memory file freshness and categories.
+- [ ] Sync memory file metadata only.
+- [ ] Do not sync full memory content by default.
+- [ ] Show memory file freshness and categories.
 
 ### V1.3 — Mobile-friendly view
 
-- Simplified phone dashboard.
-- Big sync/status cards.
-- Quick project next-step view.
+- [ ] Simplified phone dashboard.
+- [ ] Big sync/status cards.
+- [ ] Quick project next-step view.
 
 ### V2 — Controlled actions
 
-Only after V1 is stable.
+Only after V1 is stable and Raz explicitly approves.
 
 Possible features:
 
-- Trigger selected safe OpenClaw cron jobs.
-- Start predefined sync tasks.
-- Request local diagnostics.
+- [ ] Trigger selected safe OpenClaw cron jobs.
+- [ ] Start predefined sync tasks.
+- [ ] Request local diagnostics.
 
 Security requirement:
 
-- Every action must be allowlisted.
-- No arbitrary shell commands from browser.
-- All actions logged.
+- [ ] Every action must be allowlisted.
+- [ ] No arbitrary shell commands from browser.
+- [ ] All actions logged.
 
 ### V3 — Multi-agent/team access
 
@@ -781,64 +840,66 @@ Only if Raz wants it later.
 
 Possible features:
 
-- Baro view
-- designer-friendly status page
-- client-safe project status pages
+- [ ] Baro view.
+- [ ] Designer-friendly status page.
+- [ ] Client-safe project status pages.
 
 Not planned for now.
 
 ---
 
-## 13. Immediate Next Actions
+## 13. Immediate Next Actions — Current Checklist
 
-1. Raz creates Supabase project.
-2. Raz confirms project name.
-3. Noona scaffolds `mission-control-online` locally.
-4. Noona creates Supabase SQL migration.
-5. Raz provides Supabase URL + anon key + service role key via secure local `.env` flow.
-6. Noona builds sync bridge dry-run.
-7. Noona builds login/dashboard shell.
-8. Raz creates/approves GitHub repo + Vercel project connection.
+### Done
 
----
+- [x] Raz created Supabase project.
+- [x] Supabase project name confirmed/used.
+- [x] Noona scaffolded `mission-control-online` locally.
+- [x] Noona created Supabase SQL migration.
+- [x] Raz provided Supabase credentials through local non-committed env flow.
+- [x] Noona built sync bridge dry-run.
+- [x] Noona built login/dashboard shell.
+- [x] GitHub repo exists and is connected.
+- [x] Vercel project exists and production URL works.
+- [x] V1 private read-only mirror is complete.
 
-## 14. Open Questions
+### Next
 
-1. Supabase project name:
-   - Suggested: `mission-control-online`
-
-2. GitHub repo owner/name:
-   - Suggested: `warung-kerja/mission-control-online`
-
-3. Vercel project name:
-   - Suggested: `mission-control-online`
-
-4. Domain:
-   - Start with Vercel default URL.
-   - Custom domain later if needed.
-
-5. Local bridge runner:
-   - Recommended: OpenClaw cron every 10 minutes.
-   - Alternative: OS cron / Windows Task Scheduler.
+- [x] Port cron health panel from local V3 to online.
+- [x] Add `cron_job_snapshots` upsert during `runSync()`.
+- [x] Validate cron snapshot sync with `npm run type-check`, `npm run build`, and `npm run supabase:verify`.
+- [ ] Add/check local OpenClaw gateway credentials so real cron jobs sync.
+- [ ] Decide and implement reboot-proof bridge durability path.
 
 ---
 
-## 15. Noona Recommendation
+## 14. Open Questions — Current Checklist
 
-Yes, create a brand new project/repo for the online version.
+- [x] Supabase project name: `mission-control-online`.
+- [x] GitHub repo owner/name: `warung-kerja/mission-control-online`.
+- [x] Vercel project name/URL: `mission-control-online` / `https://mission-control-online.vercel.app/`.
+- [x] Domain: start with Vercel default URL.
+- [x] Local bridge runner for V1: process-based `npm run sync:poll` with runbook + PID lock.
+- [ ] Local bridge runner for durable V1.1: Windows Task Scheduler or equivalent.
+- [ ] Whether to upgrade manual refresh from polling to Supabase Realtime.
 
-This is the safest path because it protects the current local Mission Control V3 while letting us design the online version properly around Supabase snapshots.
+---
 
-Build order:
+## 15. Noona Recommendation — Current
 
-1. New repo.
-2. Supabase schema/auth.
-3. Local sync bridge for Projects + Team.
-4. Vercel private frontend.
-5. Manual refresh request system.
-6. Cron/token/workspace operational panels.
+V1 is done. The safest next move is **V1.1 operational visibility**, not V2 actions yet.
 
-Do not migrate or replace the local Mission Control V3 until the online mirror has proven itself.
+Recommended build order:
+
+1. [x] Port Cron Health panel from local V3.
+2. [x] Add bridge-side `cron_job_snapshots` sync.
+3. [ ] Add/check OpenClaw gateway credentials for real cron rows.
+4. [x] Add Token Usage panel.
+5. [ ] Add Workspace/Git Signals panel.
+6. [ ] Make the bridge reboot-proof.
+7. [ ] Only then discuss V2 controlled actions.
+
+Do not add remote command execution or browser-triggered local actions until Raz explicitly approves V2 scope.
 
 
 ---
@@ -1417,3 +1478,99 @@ All project documentation has been refreshed to reflect V1-complete reality afte
 ### Next milestone
 
 Port cron health panel from local V3 to online version.
+
+
+---
+
+## 34. Cron Health Plumbing - 2026-05-13 07:30 AEST
+
+### Status
+
+Cron Health V1.1 is partially online.
+
+### Completed
+
+- Added read-only OpenClaw cron CLI mapping to `scripts/sync-bridge.ts`.
+- Added bridge upsert into `cron_job_snapshots`.
+- Added Cron Health panel to the online dashboard.
+- Added `cron_job_snapshots` to Supabase verification counts.
+- Ran a one-shot sync so Supabase now has one cron diagnostic row.
+- Cleaned stale `docs/AGENT_HANDOFF.md` setup-blocker text.
+
+### Validation evidence
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run build
+wsl npm run sync:once
+wsl npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 1
+- Sync runs: 81
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+### Current blocker
+
+The current cron snapshot is the `openclaw-cron-adapter` diagnostic row. The OpenClaw CLI reports that the gateway URL override requires explicit credentials, so real cron job rows will not sync until local `.env.sync` has the needed gateway credential.
+
+### Next recommended step
+
+Add/check local OpenClaw gateway credentials, rerun `wsl npm run sync:dry`, then run `wsl npm run sync:once` once real cron jobs appear.
+
+
+---
+
+## 35. Token Usage Panel - 2026-05-13 07:43 AEST
+
+### Status
+
+Token Usage V1.1 is online.
+
+### Completed
+
+- Added safe aggregate token usage parsing to `scripts/sync-bridge.ts`.
+- Synced daily aggregate rows into `agent_token_usage_daily`.
+- Added Token Usage panel to the online dashboard.
+- Added `agent_token_usage_daily` to Supabase verification counts.
+- Added token usage env knobs to `.env.sync.example`.
+
+### Validation evidence
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run sync:once
+wsl npm run build
+wsl npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 1
+- Agent token usage daily rows: 21
+- Sync runs: 82
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+### Safety note
+
+Token Usage syncs aggregate counts only: input/output/cache/total token numbers and turn counts by agent/date. It does not upload raw prompts, transcripts, message text, or session files.
+
+### Next recommended step
+
+Add Workspace/Git signal snapshots or implement Windows Task Scheduler bridge durability.

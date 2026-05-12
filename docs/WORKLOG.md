@@ -855,3 +855,129 @@ Validation:
 Next action:
 
 - Add cron snapshot data source to sync bridge, then port cron pulse UI panel.
+
+
+---
+
+## 2026-05-13 07:30 AEST - Cron Health snapshot plumbing added
+
+Agent: Codex
+
+Task ID: MCO-031
+
+Files changed:
+
+- `scripts/sync-bridge.ts`
+- `scripts/verify-supabase.ts`
+- `src/App.tsx`
+- `src/styles.css`
+- `src/types/supabase.ts`
+- `docs/EPICS.md`
+- `docs/AGENT_HANDOFF.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Ported the read-only OpenClaw cron list shape from local Mission Control V3 into the online sync bridge.
+- Added `cron_job_snapshots` upsert support during `runSync()`.
+- Added a Cron Health panel to the online dashboard.
+- Added Supabase verification count for `cron_job_snapshots`.
+- Cleaned stale agent handoff context that still described early setup blockers.
+
+Validation:
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run build
+wsl npm run sync:once
+wsl npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification after sync:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 1
+- Sync runs: 81
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+Risks/blockers:
+
+- The synced cron row is currently the `openclaw-cron-adapter` diagnostic row. Live cron job fetch needs valid local OpenClaw gateway credentials in `.env.sync`.
+- The bridge is still not reboot-proof.
+- Validation should run from WSL because current `node_modules` native packages are Linux-flavored.
+
+Next action:
+
+- Add/check local OpenClaw gateway credentials, rerun dry-run, then sync real cron jobs into Supabase.
+
+
+---
+
+## 2026-05-13 07:43 AEST - Token Usage panel added
+
+Agent: Codex
+
+Task ID: MCO-032
+
+Files changed:
+
+- `.env.sync.example`
+- `scripts/sync-bridge.ts`
+- `scripts/verify-supabase.ts`
+- `src/App.tsx`
+- `src/styles.css`
+- `src/types/supabase.ts`
+- `docs/AGENT_HANDOFF.md`
+- `docs/EPICS.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Ported safe aggregate token usage parsing from local Mission Control V3.
+- Bridge now reads OpenClaw agent session JSONL usage fields and syncs daily aggregate rows into `agent_token_usage_daily`.
+- Added Token Usage panel to the online dashboard.
+- Added verification count for `agent_token_usage_daily`.
+- Added token usage env knobs to `.env.sync.example`.
+
+Validation:
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run sync:once
+wsl npm run build
+wsl npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification after sync:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 1
+- Agent token usage daily rows: 21
+- Sync runs: 82
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+Risks/blockers:
+
+- Token Usage syncs aggregate counts only; no raw prompts, transcripts, or session text are uploaded.
+- Cron Health still needs local OpenClaw gateway credentials for real job rows.
+- Bridge is still not reboot-proof.
+
+Next action:
+
+- Add Workspace/Git signal snapshots or implement Windows Task Scheduler bridge durability.

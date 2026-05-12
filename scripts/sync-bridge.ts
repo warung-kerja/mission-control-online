@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -27,6 +28,64 @@ interface CanonicalTeamMember {
   agent_group: string | null
   parent_agent: string | null
   synced_at: string
+}
+
+interface CronJobSnapshot {
+  id: string
+  name: string
+  schedule: string
+  status: string
+  enabled: boolean
+  last_run_at: string | null
+  next_run_at: string | null
+  duration_ms: number | null
+  error: string | null
+  synced_at: string
+}
+
+interface TokenUsageDailySnapshot {
+  id: string
+  agent: string
+  date: string
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  cache_write_tokens: number
+  total_tokens: number
+  turns: number
+  synced_at: string
+}
+
+interface RawCronState {
+  lastRunStatus?: string
+  lastStatus?: string
+  lastRunAtMs?: number
+  nextRunAtMs?: number
+  lastDurationMs?: number
+  lastError?: string
+  error?: string
+}
+
+interface RawCronSchedule {
+  expr?: string
+  kind?: string
+  everyMs?: number
+}
+
+interface RawCronJob {
+  id?: unknown
+  name?: unknown
+  enabled?: boolean
+  schedule?: string | RawCronSchedule
+  state?: RawCronState
+  tags?: unknown[]
+  agentId?: unknown
+}
+
+interface ExecFailure {
+  message?: string
+  stdout?: string | Buffer
+  stderr?: string | Buffer
 }
 
 function loadLocalEnvFile(filePath: string) {
@@ -89,9 +148,20 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const workspaceRoot = process.env.WARUNG_KERJA_ROOT ?? '/mnt/d/Warung Kerja 1.0'
 const pollSeconds = Number(process.env.SYNC_REQUEST_POLL_SECONDS ?? 30)
 const syncIntervalMinutes = Number(process.env.SYNC_INTERVAL_MINUTES ?? 10)
+const tokenUsageDays = Math.min(Math.max(Number(process.env.TOKEN_USAGE_DAYS ?? 7), 1), 60)
+const tokenUsageTimeZone = process.env.TOKEN_USAGE_TIMEZONE ?? 'Australia/Sydney'
+const openClawAgentsDir = process.env.OPENCLAW_AGENTS_DIR ?? path.join(os.homedir(), '.openclaw', 'agents')
+const openClawGatewayUrl = process.env.OPENCLAW_GATEWAY_URL?.trim()
+const openClawGatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN?.trim()
 
 const projectRegistryPath = path.join(workspaceRoot, '03_Active_Projects/_registry/projects.json')
 const teamRosterPath = path.join(workspaceRoot, '06_Agents/_Shared_Memory/AGENTS_ROSTER.md')
+const OPENCLAW_BINARY_CANDIDATES = [
+  '/home/baro/.npm-global/bin/openclaw',
+  '/usr/local/bin/openclaw',
+  '/usr/bin/openclaw',
+]
+const CRON_ADAPTER_STATUS_ID = 'openclaw-cron-adapter'
 
 function slug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -201,6 +271,230 @@ function readSourceHealth(syncedAt: string) {
   })
 }
 
+function findOpenClawBinary(): string | null {
+  for (const candidate of OPENCLAW_BINARY_CANDIDATES) {
+    if (fs.existsSync(candidate)) return candidate
+  }
+  return null
+}
+
+function formatCronSchedule(schedule: RawCronJob['schedule']) {
+  if (!schedule) return '-'
+  if (typeof schedule === 'string') return schedule
+  if (schedule.expr) return schedule.expr
+  if (schedule.kind === 'every' && schedule.everyMs) {
+    const hours = schedule.everyMs / 3_600_000
+    return Number.isInteger(hours) ? `every ${hours}h` : `every ${schedule.everyMs}ms`
+  }
+  return '-'
+}
+
+function normalizeCronStatus(rawStatus: string | undefined, enabled: boolean) {
+  if (!enabled) return 'disabled'
+  if (rawStatus === 'ok') return 'success'
+  if (rawStatus === 'error') return 'failure'
+  return rawStatus || 'pending'
+}
+
+function normalizeCronJob(raw: RawCronJob, syncedAt: string): CronJobSnapshot {
+  const state = raw.state || {}
+  const enabled = raw.enabled !== false
+
+  return {
+    id: String(raw.id || raw.name || 'unknown-cron-job'),
+    name: String(raw.name || 'Unnamed cron job'),
+    schedule: formatCronSchedule(raw.schedule),
+    status: normalizeCronStatus(state.lastRunStatus || state.lastStatus, enabled),
+    enabled,
+    last_run_at: state.lastRunAtMs ? new Date(state.lastRunAtMs).toISOString() : null,
+    next_run_at: state.nextRunAtMs ? new Date(state.nextRunAtMs).toISOString() : null,
+    duration_ms: state.lastDurationMs != null ? Number(state.lastDurationMs) : null,
+    error: state.lastError || state.error || null,
+    synced_at: syncedAt,
+  }
+}
+
+function cronAdapterStatus(status: 'success' | 'failure', syncedAt: string, error: string | null): CronJobSnapshot {
+  return {
+    id: CRON_ADAPTER_STATUS_ID,
+    name: 'OpenClaw cron adapter',
+    schedule: 'bridge check',
+    status,
+    enabled: status === 'success',
+    last_run_at: syncedAt,
+    next_run_at: null,
+    duration_ms: null,
+    error,
+    synced_at: syncedAt,
+  }
+}
+
+function errorMessage(error: unknown) {
+  const failure = error as ExecFailure
+  const stderr = typeof failure.stderr === 'string' ? failure.stderr.trim() : ''
+  const raw = stderr || failure.message || 'unknown error'
+  return raw
+    .replace(/--token\s+\S+/gi, '--token [redacted]')
+    .replace(/--password\s+\S+/gi, '--password [redacted]')
+    .slice(0, 700)
+}
+
+function readCronJobs(syncedAt: string): CronJobSnapshot[] {
+  if (!openClawGatewayUrl) {
+    return [cronAdapterStatus('failure', syncedAt, 'OPENCLAW_GATEWAY_URL is not set in .env.sync.')]
+  }
+
+  const binary = findOpenClawBinary()
+  if (!binary) {
+    return [cronAdapterStatus('failure', syncedAt, 'OpenClaw CLI binary was not found on this host.')]
+  }
+
+  const wsUrl = openClawGatewayUrl.replace(/^http/, 'ws')
+  const args = [
+    'cron',
+    'list',
+    '--all',
+    '--json',
+    '--timeout',
+    '30000',
+    '--url',
+    wsUrl,
+    ...(openClawGatewayToken ? ['--token', openClawGatewayToken] : []),
+  ]
+
+  try {
+    const stdout = execFileSync(binary, args, {
+      encoding: 'utf8',
+      timeout: 40_000,
+      maxBuffer: 5 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    const payload = JSON.parse(stdout) as { jobs?: RawCronJob[] }
+    const jobs = Array.isArray(payload.jobs) ? payload.jobs.map((job) => normalizeCronJob(job, syncedAt)) : []
+    return jobs.length > 0 ? jobs : [cronAdapterStatus('success', syncedAt, null)]
+  } catch (error) {
+    return [cronAdapterStatus('failure', syncedAt, `Failed to fetch cron jobs via CLI: ${errorMessage(error)}`)]
+  }
+}
+
+function formatDateInZone(date: Date, timeZone = tokenUsageTimeZone) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${lookup.year}-${lookup.month}-${lookup.day}`
+}
+
+function buildDateWindow(days: number) {
+  const dates: string[] = []
+  const seen = new Set<string>()
+
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+    const key = formatDateInZone(date)
+    if (!seen.has(key)) {
+      seen.add(key)
+      dates.push(key)
+    }
+  }
+
+  return dates
+}
+
+function addTokenUsageEntry(usage: Map<string, Map<string, TokenUsageDailySnapshot>>, agent: string, date: string, syncedAt: string) {
+  const agentUsage = usage.get(agent) ?? new Map<string, TokenUsageDailySnapshot>()
+  const entry = agentUsage.get(date) ?? {
+    id: `${agent}:${date}`,
+    agent,
+    date,
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_read_tokens: 0,
+    cache_write_tokens: 0,
+    total_tokens: 0,
+    turns: 0,
+    synced_at: syncedAt,
+  }
+  usage.set(agent, agentUsage)
+  agentUsage.set(date, entry)
+  return entry
+}
+
+function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
+  const dates = buildDateWindow(tokenUsageDays)
+  const allowedDates = new Set(dates)
+  const usageByAgent = new Map<string, Map<string, TokenUsageDailySnapshot>>()
+
+  let agentDirs: string[] = []
+  try {
+    agentDirs = fs.readdirSync(openClawAgentsDir)
+  } catch {
+    return []
+  }
+
+  for (const agentId of agentDirs) {
+    const sessionsDir = path.join(openClawAgentsDir, agentId, 'sessions')
+    let files: string[] = []
+    try {
+      files = fs.readdirSync(sessionsDir)
+    } catch {
+      continue
+    }
+
+    for (const file of files) {
+      if (!file.endsWith('.jsonl') || file.endsWith('.trajectory.jsonl')) continue
+
+      let body = ''
+      try {
+        body = fs.readFileSync(path.join(sessionsDir, file), 'utf8')
+      } catch {
+        continue
+      }
+
+      for (const line of body.split('\n')) {
+        if (!line.includes('"usage"')) continue
+
+        try {
+          const record = JSON.parse(line)
+          const message = record?.message
+          const usage = message?.usage
+          if (!usage) continue
+
+          const rawTimestamp = message.timestamp ?? record.timestamp
+          const timestamp = typeof rawTimestamp === 'number' ? new Date(rawTimestamp) : new Date(String(rawTimestamp))
+          if (Number.isNaN(timestamp.getTime())) continue
+
+          const date = formatDateInZone(timestamp)
+          if (!allowedDates.has(date)) continue
+
+          const entry = addTokenUsageEntry(usageByAgent, agentId, date, syncedAt)
+          const input = Number(usage.input ?? usage.inputTokens ?? 0)
+          const output = Number(usage.output ?? usage.outputTokens ?? 0)
+          const cacheRead = Number(usage.cacheRead ?? usage.cache_read ?? 0)
+          const cacheWrite = Number(usage.cacheWrite ?? usage.cache_write ?? 0)
+          const totalTokens = Number(usage.totalTokens ?? usage.total ?? (input + output + cacheRead + cacheWrite))
+
+          entry.input_tokens += Number.isFinite(input) ? input : 0
+          entry.output_tokens += Number.isFinite(output) ? output : 0
+          entry.cache_read_tokens += Number.isFinite(cacheRead) ? cacheRead : 0
+          entry.cache_write_tokens += Number.isFinite(cacheWrite) ? cacheWrite : 0
+          entry.total_tokens += Number.isFinite(totalTokens) ? totalTokens : 0
+          entry.turns += 1
+        } catch {
+          // Ignore malformed historical log lines.
+        }
+      }
+    }
+  }
+
+  return [...usageByAgent.values()]
+    .flatMap((agentUsage) => [...agentUsage.values()])
+    .filter((entry) => entry.turns > 0 || entry.total_tokens > 0)
+}
+
 async function createSyncRun(client: SupabaseBridgeClient, trigger: 'scheduled' | 'manual' | 'dry_run') {
   const { data, error } = await client
     .from('sync_runs')
@@ -225,10 +519,12 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
   const projects = readProjects(syncedAt)
   const team = readTeam(syncedAt)
   const sourceHealth = readSourceHealth(syncedAt)
-  const summary = { projects: projects.length, teamMembers: team.length, sourceHealth: sourceHealth.length, syncedAt }
+  const cronJobs = readCronJobs(syncedAt)
+  const tokenUsage = readTokenUsage(syncedAt)
+  const summary = { projects: projects.length, teamMembers: team.length, sourceHealth: sourceHealth.length, cronJobs: cronJobs.length, tokenUsageRows: tokenUsage.length, syncedAt }
 
   if (dryRun || trigger === 'dry_run') {
-    console.log(JSON.stringify({ dryRun: true, summary, samples: { projects: projects.slice(0, 2), team: team.slice(0, 2), sourceHealth } }, null, 2))
+    console.log(JSON.stringify({ dryRun: true, summary, samples: { projects: projects.slice(0, 2), team: team.slice(0, 2), sourceHealth, cronJobs: cronJobs.slice(0, 3), tokenUsage: tokenUsage.slice(0, 5) } }, null, 2))
     return
   }
 
@@ -246,6 +542,8 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
       client.from('canonical_projects').upsert(projects),
       client.from('canonical_team_members').upsert(team),
       client.from('source_health_snapshots').upsert(sourceHealth),
+      client.from('cron_job_snapshots').upsert(cronJobs),
+      client.from('agent_token_usage_daily').upsert(tokenUsage),
     ])
 
     const failed = writes.find((result) => result.error)

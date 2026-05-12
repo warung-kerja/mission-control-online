@@ -46,6 +46,8 @@ async function main() {
     canonical_projects: await countRows('canonical_projects'),
     canonical_team_members: await countRows('canonical_team_members'),
     source_health_snapshots: await countRows('source_health_snapshots'),
+    cron_job_snapshots: await countRows('cron_job_snapshots'),
+    agent_token_usage_daily: await countRows('agent_token_usage_daily'),
     sync_runs: await countRows('sync_runs'),
   }
 
