@@ -1071,3 +1071,27 @@ Local git repository initialized safely.
 ### Next recommended step
 
 Create the first local commit, then create/connect the GitHub repo `mission-control-online`.
+
+
+---
+
+## 23. Progress Update — 2026-05-12 11:24 AEST
+
+### Status
+
+Initial local commit created.
+
+### Completed
+
+- Created local git commit `82e8dfe` with message `chore: scaffold mission control online`.
+- Verified secrets were not included in the commit.
+
+### Current blockers
+
+- GitHub remote has not been created/connected yet.
+- Vercel project has not been created/connected yet.
+- Local browser login still needs end-to-end verification.
+
+### Next recommended step
+
+Create GitHub repo `mission-control-online`, connect remote, and push the local commit.

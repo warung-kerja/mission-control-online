@@ -402,3 +402,38 @@ Risks/blockers:
 Next action:
 
 - Create initial local commit, then connect GitHub when Raz is ready.
+
+
+---
+
+## 2026-05-12 11:24 AEST — Initial local commit created
+
+Agent: Noona
+
+Task ID: MCO-016
+
+Files changed:
+
+- Local git history
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Configured repo-local git author as `Noona <noona@warung-kerja.local>`.
+- Created first local commit for the validated scaffold.
+
+Validation:
+
+- Commit created: `82e8dfe` — `chore: scaffold mission control online`.
+- `.env.local` and `.env.sync` were not committed.
+
+Risks/blockers:
+
+- Tracker/worklog/master-list updates after the commit are currently uncommitted and need a follow-up docs commit.
+- GitHub remote still needs to be created/connected.
+
+Next action:
+
+- Commit docs status update, then create/connect GitHub remote.

@@ -1,6 +1,6 @@
 # Project Tracker — Mission Control Online
 
-_Last updated: 2026-05-12 11:22 AEST_  
+_Last updated: 2026-05-12 11:24 AEST_  
 _Current phase: Documentation-first foundation + early scaffold_  
 _Current status: Scaffold validated / Supabase setup pending_
 
@@ -23,7 +23,7 @@ Raz explicitly requested this repo be easy to open in Codex Desktop and continue
 | Supabase env | Local only | `.env.local` contains URL + publishable key; not committed |
 | Sync bridge | Real sync validated | `npm run sync:once` wrote 8 projects, 9 team members, 2 source health records |
 | Validation | Passing | `npm run supabase:verify`, `npm run type-check`, `npm run build`, and `npm run sync:dry` passed |
-| Git repo | Local initialized | Branch `main`; secrets ignored; GitHub remote not connected yet |
+| Git repo | Initial local commit done | Commit `82e8dfe`; GitHub remote not connected yet |
 | Vercel deploy | Not started | Waiting for build/schema readiness |
 
 ## Known blocker
@@ -70,6 +70,7 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-013 | 2026-05-12 | Noona | Added Supabase verification script and setup doc | Done | `npm run supabase:verify`, `npm run type-check`, `npm run build` passed |
 | MCO-014 | 2026-05-12 | Raz | Configured Supabase local auth URLs | Done | Site URL and redirect URLs set to local `5174` values |
 | MCO-015 | 2026-05-12 | Noona | Initialized local git and verified ignored secrets | Done | `.env.local` and `.env.sync` ignored; validation passed |
+| MCO-016 | 2026-05-12 | Noona | Created initial local commit | Done | Commit `82e8dfe` (`chore: scaffold mission control online`) |
 
 ## Next recommended tasks
 
