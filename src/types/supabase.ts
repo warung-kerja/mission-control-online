@@ -46,3 +46,16 @@ export interface SyncRequest {
   handled_by: string | null
   error: string | null
 }
+
+export interface SourceHealthSnapshot {
+  id: string
+  label: string
+  source_type: string | null
+  exists: boolean | null
+  readable: boolean | null
+  modified_at: string | null
+  age_hours: number | null
+  status: string | null
+  error: string | null
+  synced_at: string
+}

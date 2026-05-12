@@ -724,3 +724,54 @@ Risks/blockers:
 Next action:
 
 - Add/runbook for bridge operation, then decide whether V1 can be marked complete or needs durable service setup first.
+
+
+---
+
+## 2026-05-12 21:39 AEST — Source Health panel added
+
+Agent: Noona; Jen bridge durability review running in parallel
+
+Task ID: MCO-026
+
+Files changed:
+
+- `src/App.tsx`
+- `src/styles.css`
+- `src/types/supabase.ts`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Added a Source Health panel to the online dashboard.
+- The panel reads `source_health_snapshots` from Supabase and shows whether the local bridge can read the canonical project registry and agent roster.
+- Added clear healthy/needs-attention badges and latest bridge sync timestamp.
+
+Validation:
+
+```bash
+npm run type-check
+npm run build
+npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification result:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Sync runs: 62
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+Risks/blockers:
+
+- Bridge durability still needs the next decision/runbook.
+
+Next action:
+
+- Accept Jen durability review recommendation, then add bridge runbook or service hardening.

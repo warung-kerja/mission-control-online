@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { allowedEmail, supabase } from './lib/supabase'
-import type { CanonicalProject, CanonicalTeamMember, SyncRequest, SyncRun } from './types/supabase'
+import type { CanonicalProject, CanonicalTeamMember, SourceHealthSnapshot, SyncRequest, SyncRun } from './types/supabase'
 import './styles.css'
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error'
@@ -11,6 +11,7 @@ interface DashboardData {
   teamMembers: CanonicalTeamMember[]
   syncRuns: SyncRun[]
   syncRequests: SyncRequest[]
+  sourceHealth: SourceHealthSnapshot[]
 }
 
 const emptyDashboard: DashboardData = {
@@ -18,6 +19,7 @@ const emptyDashboard: DashboardData = {
   teamMembers: [],
   syncRuns: [],
   syncRequests: [],
+  sourceHealth: [],
 }
 
 function parseDate(value: string | null | undefined) {
@@ -187,6 +189,46 @@ function ProjectsPanel({ projects }: { projects: CanonicalProject[] }) {
   )
 }
 
+function SourceHealthPanel({ sources, syncRuns }: { sources: SourceHealthSnapshot[]; syncRuns: SyncRun[] }) {
+  const latestSuccess = getLatestSuccessfulSync(syncRuns)
+  const latestSyncDate = latestSuccess?.finished_at ?? latestSuccess?.started_at ?? null
+  const hasProblems = sources.some((source) => source.status !== 'healthy' || !source.exists || !source.readable)
+
+  return (
+    <section className="panel">
+      <div className="panelHeader">
+        <div>
+          <p className="eyebrow">source health</p>
+          <h2>Bridge truth sources</h2>
+          <p className="muted smallCopy">The online dashboard is a snapshot mirror. This panel shows whether the local bridge can still read the source files it syncs from.</p>
+        </div>
+        <span className={hasProblems ? 'countBadge warningBadge' : 'countBadge okBadge'}>
+          {hasProblems ? 'Needs attention' : 'Healthy'}
+        </span>
+      </div>
+      <div className="sourceGrid">
+        {sources.map((source) => (
+          <article className="sourceCard" key={source.id}>
+            <div className="sourceCardHeader">
+              <span className={source.status === 'healthy' ? 'miniStatus ok' : 'miniStatus warning'} />
+              <strong>{source.label}</strong>
+            </div>
+            <dl>
+              <div><dt>Status</dt><dd>{source.status ?? 'unknown'}</dd></div>
+              <div><dt>Readable</dt><dd>{source.readable ? 'yes' : 'no'}</dd></div>
+              <div><dt>Modified</dt><dd>{formatRelative(source.modified_at)}</dd></div>
+              <div><dt>Synced</dt><dd>{formatRelative(source.synced_at)}</dd></div>
+            </dl>
+            {source.error && <p className="errorText">{source.error}</p>}
+          </article>
+        ))}
+        {sources.length === 0 && <p className="emptyState">No source health records synced yet.</p>}
+      </div>
+      <p className="muted smallCopy">Latest successful bridge sync: {formatDate(latestSyncDate)}.</p>
+    </section>
+  )
+}
+
 function TeamPanel({ teamMembers }: { teamMembers: CanonicalTeamMember[] }) {
   const grouped = useMemo(() => {
     return teamMembers.reduce<Record<string, CanonicalTeamMember[]>>((acc, member) => {
@@ -234,14 +276,15 @@ function Dashboard({ user }: { user: User }) {
     if (!options.silent) setLoadState('loading')
     setError('')
 
-    const [projects, teamMembers, syncRuns, syncRequests] = await Promise.all([
+    const [projects, teamMembers, syncRuns, syncRequests, sourceHealth] = await Promise.all([
       supabase.from('canonical_projects').select('*').order('priority', { ascending: true }),
       supabase.from('canonical_team_members').select('*').order('name', { ascending: true }),
       supabase.from('sync_runs').select('*').order('started_at', { ascending: false }).limit(8),
       supabase.from('sync_requests').select('*').order('requested_at', { ascending: false }).limit(5),
+      supabase.from('source_health_snapshots').select('*').order('label', { ascending: true }),
     ])
 
-    const failed = [projects, teamMembers, syncRuns, syncRequests].find((result) => result.error)
+    const failed = [projects, teamMembers, syncRuns, syncRequests, sourceHealth].find((result) => result.error)
     if (failed?.error) {
       setLoadState('error')
       setError(failed.error.message)
@@ -253,6 +296,7 @@ function Dashboard({ user }: { user: User }) {
       teamMembers: (teamMembers.data ?? []) as CanonicalTeamMember[],
       syncRuns: (syncRuns.data ?? []) as SyncRun[],
       syncRequests: (syncRequests.data ?? []) as SyncRequest[],
+      sourceHealth: (sourceHealth.data ?? []) as SourceHealthSnapshot[],
     }
 
     setData(nextData)
@@ -299,6 +343,7 @@ function Dashboard({ user }: { user: User }) {
       {loadState === 'loading' && <p className="muted">Loading private dashboard snapshot…</p>}
       {loadState === 'error' && <p className="errorText">{error}</p>}
       <ProjectsPanel projects={data.projects} />
+      <SourceHealthPanel sources={data.sourceHealth} syncRuns={data.syncRuns} />
       <TeamPanel teamMembers={data.teamMembers} />
       <section className="panel compactPanel">
         <div>

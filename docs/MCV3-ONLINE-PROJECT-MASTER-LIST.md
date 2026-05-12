@@ -1319,3 +1319,31 @@ The sync bridge is running as a background process, not a durable service. If th
 ### Next recommended step
 
 Add a bridge runbook and decide whether process-based bridge is acceptable for V1 completion, or whether V1 requires OpenClaw cron/service hardening.
+
+
+---
+
+## 31. Progress Update — 2026-05-12 21:39 AEST
+
+### Status
+
+Mission Control Online continued past functional V1 into operational visibility polish.
+
+### Completed
+
+- Added Source Health panel to the dashboard.
+- Online dashboard now displays whether the local bridge can still read key truth sources:
+  - Project registry
+  - Agent roster
+- Validation passed:
+  - `npm run type-check`
+  - `npm run build`
+  - `npm run supabase:verify`
+
+### Current sync state
+
+The bridge has continued syncing successfully. Supabase verification now sees 62 sync runs.
+
+### Next recommended step
+
+Use Jen's durability review to choose and implement the safest bridge durability/runbook path.

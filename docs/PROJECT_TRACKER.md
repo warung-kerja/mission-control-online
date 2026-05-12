@@ -1,6 +1,6 @@
 # Project Tracker — Mission Control Online
 
-_Last updated: 2026-05-12 12:02 AEST_  
+_Last updated: 2026-05-12 21:39 AEST_  
 _Current phase: Documentation-first foundation + early scaffold_  
 _Current status: V1 functional online / durability hardening pending_
 
@@ -80,6 +80,7 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-023 | 2026-05-12 | Noona | Verified manual refresh request processing | Done | Pending `sync_requests` row was processed to `completed`; latest web/request rows completed |
 | MCO-024 | 2026-05-12 | Jen | V1 sync-readiness review | Done | Recommended refresh UX hardening and single-bridge runbook |
 | MCO-025 | 2026-05-12 | Noona | Hardened Refresh Now UI | Done | Button disables during active requests; dashboard auto-polls every 5s until request settles |
+| MCO-026 | 2026-05-12 | Noona | Added Source Health panel to online dashboard | Done | `npm run type-check`, `npm run build`, `npm run supabase:verify` passed |
 
 ## Next recommended tasks
 
