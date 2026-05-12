@@ -480,3 +480,40 @@ Risks/blockers:
 Next action:
 
 - Raz runs `git push -u origin main` from an authenticated terminal/GitHub Desktop, or configures GitHub credentials for this environment.
+
+
+---
+
+## 2026-05-12 11:31 AEST — GitHub repo published by Raz
+
+Agent: Raz + Noona record update
+
+Task ID: MCO-018
+
+Files changed:
+
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Raz reported that the GitHub repo has been published.
+- Noona attempted to verify via `git fetch origin main`, but this terminal still lacks GitHub credentials.
+
+Validation:
+
+```bash
+git fetch origin main
+```
+
+Result: blocked locally by GitHub auth: `fatal: could not read Username for 'https://github.com': No such device or address`.
+
+Risks/blockers:
+
+- Noona cannot push/fetch from this terminal until GitHub auth is configured here.
+- Vercel can still be connected through Raz's GitHub/Vercel UI.
+
+Next action:
+
+- Create/connect Vercel project from `warung-kerja/mission-control-online`.

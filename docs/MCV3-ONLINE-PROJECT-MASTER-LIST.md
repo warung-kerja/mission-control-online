@@ -1131,3 +1131,25 @@ Push from an authenticated GitHub terminal/GitHub Desktop, or configure credenti
 ```bash
 git push -u origin main
 ```
+
+
+---
+
+## 25. Progress Update — 2026-05-12 11:31 AEST
+
+### Status
+
+GitHub repo has been published by Raz, but this terminal still cannot authenticate to GitHub for fetch/push verification.
+
+### Completed
+
+- Raz reported publishing the repository.
+- Remote remains configured as `https://github.com/warung-kerja/mission-control-online.git`.
+
+### Local verification blocker
+
+`git fetch origin main` still fails in this terminal due missing GitHub credentials.
+
+### Next recommended step
+
+Connect the GitHub repo to Vercel and add the Vercel environment variables documented in `docs/VERCEL_DEPLOY.md`.
