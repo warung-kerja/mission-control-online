@@ -48,11 +48,17 @@ Start here:
 
 ## Current status
 
-Scaffold validated; Supabase setup pending.
+**V1 complete** — last updated 2026-05-12 22:20 AEST.
 
-The app scaffold, Supabase migration draft, and local sync bridge dry-run are in place. Latest validation passed: `npm run type-check`, `npm run build`, and `npm run sync:dry`.
+Mission Control Online is live at:
 
-See `docs/PROJECT_TRACKER.md` before continuing implementation.
+```text
+https://mission-control-online.vercel.app/
+```
+
+Current panels: Projects, Team, Source Health, Sync Runs, Manual Refresh.
+
+Next: Cron Health panel (in progress), then Token Usage, Calendar, Memory Vault, Office.
 
 ## Operating rules
 

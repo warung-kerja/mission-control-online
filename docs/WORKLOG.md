@@ -819,3 +819,39 @@ Risks/blockers:
 Next action:
 
 - V1.1: Windows Task Scheduler durability wrapper.
+
+
+---
+
+## 2026-05-12 22:20 AEST — Full documentation refresh
+
+Agent: Noona + Jen review
+
+Task IDs: MCO-029, MCO-030
+
+Files changed:
+
+- `README.md`
+- `docs/PRD.md`
+- `docs/EPICS.md`
+- `docs/AGENT_HANDOFF.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Jen completed cron bridge portability audit.
+- Brought all project docs to current V1-complete reality.
+- README now shows live Vercel URL and current panel status.
+- Epics now reflect completed V1 checkmarks for Supabase, GitHub, Vercel, and scheduled sync.
+- Tracker and worklog updated.
+
+Validation:
+
+- Docs inspection completed.
+- Git clean, ready for commit.
+
+Next action:
+
+- Add cron snapshot data source to sync bridge, then port cron pulse UI panel.

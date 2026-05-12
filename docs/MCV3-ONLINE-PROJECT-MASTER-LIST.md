@@ -1387,3 +1387,33 @@ Mission Control Online is a private, read-only, Vercel + Supabase mirror of the 
 - Controlled allowlisted remote actions
 - Mobile dashboard polish
 - Multi-agent or client-safe view if needed
+
+
+---
+
+## 33. Documentation Refresh — 2026-05-12 22:20 AEST
+
+### Status
+
+All project documentation has been refreshed to reflect V1-complete reality after Raz's request.
+
+### Files updated
+
+- `README.md` — now shows live Vercel URL and current panel status
+- `docs/PRD.md` — feature requirement status updated
+- `docs/EPICS.md` — completed V1 tasks checked off
+- `docs/AGENT_HANDOFF.md` — timestamp refreshed
+- `docs/PROJECT_TRACKER.md` — work records added
+- `docs/WORKLOG.md` — this entry
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md` — this entry
+
+### Jen review accepted
+
+- Cron bridge portability confirmed: `openclawClient.ts` ports cleanly into `scripts/sync-bridge.ts`.
+- Bridge should upsert `cron_job_snapshots` during `runSync()`.
+- Cron CLI should be read-only list only; no write/action commands.
+- Schema is sufficient; optional `tags`, `agent_id`, `source`, `raw` fields can be added for parity with local V3.
+
+### Next milestone
+
+Port cron health panel from local V3 to online version.

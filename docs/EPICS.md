@@ -1,6 +1,6 @@
 # Epics — Mission Control Online
 
-_Last updated: 2026-05-12_
+_Last updated: 2026-05-12 22:20 AEST_
 
 ## Epic 0 — Project foundation and documentation
 
@@ -34,9 +34,9 @@ Tasks:
 - [x] Include RLS policies
 - [x] Include owner helper function
 - [x] Include manual refresh request table
-- [ ] Raz runs SQL in Supabase
-- [ ] Verify Raz-only auth/profile flow
-- [ ] Verify unauthenticated users cannot read data
+- [x] Raz runs SQL in Supabase
+- [x] Verify Raz-only auth/profile flow
+- [x] Verify unauthenticated users cannot read data
 
 Acceptance criteria:
 
@@ -102,9 +102,9 @@ Tasks:
 
 - [x] Frontend inserts pending `sync_requests`
 - [x] Bridge can poll pending requests
-- [ ] Verify RLS insert policy works
-- [ ] Verify bridge marks request running/completed/failed
-- [ ] Add clearer UI for queued/offline state
+- [x] Verify RLS insert policy works
+- [x] Verify bridge marks request running/completed/failed
+- [x] Add clearer UI for queued/offline state
 
 Acceptance criteria:
 
@@ -118,13 +118,13 @@ Goal: make app accessible online.
 
 Tasks:
 
-- [ ] Create GitHub repo
-- [ ] Push project
-- [ ] Create Vercel project
-- [ ] Add Vercel env vars
-- [ ] Deploy preview
-- [ ] Test from another computer
-- [ ] Promote to production
+- [x] Create GitHub repo
+- [x] Push project
+- [x] Create Vercel project
+- [x] Add Vercel env vars
+- [x] Deploy preview
+- [x] Test from another computer
+- [x] Promote to production
 
 Acceptance criteria:
 
@@ -138,10 +138,10 @@ Goal: keep online snapshot fresh automatically.
 
 Tasks:
 
-- [ ] Decide runner: OpenClaw cron recommended
-- [ ] Add 10-minute sync job
-- [ ] Add failure logging
-- [ ] Add stale-data UI threshold
+- [x] Decide runner: background process for V1; Windows Task Scheduler for V1.1
+- [x] Add 10-minute sync job
+- [x] Add failure logging
+- [x] Add stale-data UI threshold
 
 Acceptance criteria:
 

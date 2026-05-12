@@ -1,6 +1,6 @@
 # Project Tracker — Mission Control Online
 
-_Last updated: 2026-05-12 21:45 AEST_  
+_Last updated: 2026-05-12 22:20 AEST_  
 _Current phase: Documentation-first foundation + early scaffold_  
 _Current status: V1 complete_
 
@@ -83,6 +83,8 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-026 | 2026-05-12 | Noona | Added Source Health panel to online dashboard | Done | `npm run type-check`, `npm run build`, `npm run supabase:verify` passed |
 | MCO-027 | 2026-05-12 | Jen | Bridge durability review | Done | Recommended runbook + single-instance guard for V1; Windows Task Scheduler for V1.1 |
 | MCO-028 | 2026-05-12 | Noona | Applied V1 hardening from Jen review | Done | Added bridge runbook, PID lock, stale doc cleanup, V1 marked complete |
+| MCO-029 | 2026-05-12 | Jen | Cron bridge portability audit | Done | Recommended porting openclawClient.ts into sync bridge with snapshot adaptation |
+| MCO-030 | 2026-05-12 | Noona | Full docs refresh per Raz request | Done | README, PRD, Epics, Handoff, Tracker, Worklog, Master List updated |
 
 ## Next recommended tasks
 
