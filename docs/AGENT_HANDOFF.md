@@ -1,6 +1,6 @@
 # Agent Handoff - Mission Control Online
 
-_Last updated: 2026-05-13 11:50 AEST_
+_Last updated: 2026-05-14 00:24 AEST_
 
 ## Read this first
 
@@ -40,9 +40,9 @@ Raz wants this repo to stay easy for Codex Desktop and other agents to continue.
 
 Current priority is overnight continuation:
 
-1. Commit and push the current MCO-036 Workspace/Git Signals changes if still uncommitted.
-2. Let Vercel deploy, then verify the live dashboard shows Cron Health and Workspace/Git panels.
-3. Start the V3 visual shell port so the online app begins matching the local-only V3 control-room feel.
+1. Continue V3 visual shell port: Jen is currently doing the read-only MCO-038 audit; Noona implements after review.
+2. Finish authenticated browser verification that production shows Cron Health and Workspace/Git panels. Static Vercel deployment is verified.
+3. Keep bridge durability/reboot-proofing queued after the visual shell slice.
 4. Reboot-proof bridge durability with Windows Task Scheduler or equivalent.
 5. No V2 remote actions until Raz explicitly approves.
 
@@ -80,12 +80,12 @@ No TypeScript/build blocker is currently open.
 Latest validation passed from WSL:
 
 ```bash
-npm run sync:dry
 npm run type-check
 npm run build
-npm run sync:once
 npm run supabase:verify
 ```
+
+2026-05-14 static production check: Vercel returned HTTP 200 and served `assets/index-CT2apXsp.js`, matching the current local production build asset hash.
 
 Current caveats:
 
@@ -140,14 +140,14 @@ Next action:
 
 ## Recommended next task
 
-Commit/push MCO-036, then begin V3 Visual Shell Port.
+Continue V3 Visual Shell Port safely.
 
 Steps:
 
-1. Check `git status`. At handoff time, MCO-036 changes were uncommitted in `.env.sync.example`, docs, `scripts/`, and `src/`.
-2. Commit and push those changes so Vercel can deploy Workspace/Git Signals.
-3. Verify production visually after Vercel finishes.
-4. For the visual port, read local V3 UI code from `mission-control-v2` for reference only. Do not modify local V3.
-5. Port the shell first: navigation, dashboard grid, status header, panel rhythm, color/type tokens, loading/empty states.
-6. Then upgrade panels one by one: Projects, Automation Pulse, Token Usage, Workspace/Git Signals, Source Health, Team, Sync History.
-7. After the visual shell is stable, return to Windows Task Scheduler or equivalent startup wrapper for `wsl npm run sync:poll`.
+1. Wait for or review Jen `MCO-038` read-only audit packet.
+2. Implement the first shell slice only: navigation/header, dashboard grid, panel rhythm, color/type tokens, loading/empty states.
+3. Keep data contracts unchanged and keep the app read-only.
+4. Run `npm run type-check` and `npm run build` before any commit.
+5. After shell is stable, upgrade panels one by one: Projects, Automation Pulse, Token Usage, Workspace/Git Signals, Source Health, Team, Sync History.
+6. Return to Windows Task Scheduler or equivalent startup wrapper for `wsl npm run sync:poll`.
+7. Authenticated browser verification of production panels remains pending; static Vercel deployment is verified.

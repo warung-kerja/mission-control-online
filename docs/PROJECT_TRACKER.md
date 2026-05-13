@@ -1,8 +1,8 @@
 # Project Tracker - Mission Control Online
 
-_Last updated: 2026-05-13 11:50 AEST_
+_Last updated: 2026-05-14 00:24 AEST_
 _Current phase: V1.1 operational visibility_
-_Current status: V1 complete; Workspace/Git Signals ready to commit/push; V3 visual port is next overnight track_
+_Current status: V1 complete; Workspace/Git Signals shipped; V3 visual shell audit is active with Jen_
 
 ## Current Priority
 
@@ -21,9 +21,9 @@ Ship the current operational panel work, then start the V3 Visual Shell Port whi
 | Sync bridge | V1.1 expanded | Bridge syncs Projects, Team, Source Health, Cron snapshots, Token Usage, and Workspace/Git signals |
 | Cron Health | Done | Bridge syncs 61 real cron jobs from local OpenClaw cron state files |
 | Token Usage | Done | Bridge syncs daily OpenClaw aggregate token rows; online panel reads `agent_token_usage_daily` |
-| Workspace/Git Signals | Done | Bridge inserts latest local V3 repo metadata into `workspace_signal_snapshots`; online panel reads latest row |
-| V3 Visual Match | Next | Clean path is shell first, then panel-by-panel polish using local V3 as read-only reference |
-| Validation | Passing | WSL `npm run type-check`, `npm run build`, `npm run sync:once`, and `npm run supabase:verify` passed |
+| Workspace/Git Signals | Shipped | Commit `d114515` pushed; Vercel serves the matching built assets; online panel reads latest `workspace_signal_snapshots` row |
+| V3 Visual Match | Active | Jen is running MCO-038 as a no-edit shell audit; Noona will implement after review packet is ready |
+| Validation | Passing | 2026-05-14 WSL `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
 | Vercel deploy | Online access verified | Raz confirmed page works from a different computer; magic-link login works |
 
@@ -99,20 +99,25 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-034 | 2026-05-13 | Codex | Checked Gateway Access URL/token for Cron Health | Partial | Token and URL present; one dry-run saw 61 jobs; later sync attempts hit gateway closed diagnostic |
 | MCO-035 | 2026-05-13 | Codex | Added local cron state fallback and synced real cron jobs | Done | `sync:once` wrote 61 cron jobs; Supabase verify sees 62 rows including old adapter row |
 | MCO-036 | 2026-05-13 | Codex | Added Workspace/Git signal snapshots and online panel | Done | `sync:once` wrote 1 workspace signal row; Supabase verify sees 1 `workspace_signal_snapshots` row |
+| MCO-037 | 2026-05-13 | Noona | Validated, committed, and pushed Workspace/Git Signals | Done | Commit `d114515` pushed to `origin/main`; post-push sync completed |
+| MCO-038 | 2026-05-14 | Jen | V3 visual shell port audit | In Progress | Read-only audit active; no review packet yet |
+| MCO-039 | 2026-05-14 | Noona | Production/static deployment and Supabase verification gate | Done | Vercel returns HTTP 200 and serves asset hash matching local build; `type-check`, `build`, `supabase:verify` passed |
 
 ## Next Recommended Tasks
 
 ### V1.1 Task A - Commit, Push, And Verify Production
 
-Owner: Overnight agent
+Owner: Noona
+
+Status: Mostly done - commit/push complete and Vercel static asset verified; authenticated visual panel verification still needs browser login
 
 Steps:
 
-1. Review current diff.
-2. Commit MCO-036 Workspace/Git Signals changes.
-3. Push `main` to GitHub.
-4. Wait for Vercel deployment.
-5. Verify Automation Pulse and Workspace/Git Signals on production.
+1. Review current diff. ✅
+2. Commit MCO-036 Workspace/Git Signals changes. ✅ `d114515`
+3. Push `main` to GitHub. ✅
+4. Wait for Vercel deployment. ✅ static asset hash matches local build
+5. Verify Automation Pulse and Workspace/Git Signals on production. Partial - Supabase rows verified; authenticated visual check still pending
 
 Acceptance criteria:
 
@@ -122,7 +127,9 @@ Acceptance criteria:
 
 ### V1.1 Task B - V3 Visual Shell Port
 
-Owner: Overnight agent
+Owner: Jen audit, then Noona implementation
+
+Status: Active as MCO-038 read-only audit
 
 Steps:
 

@@ -1,6 +1,6 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-13 11:50 AEST_
+_Last updated: 2026-05-14 00:24 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
 _Status: V1 complete / V1.1 operational panels in progress_
@@ -33,6 +33,8 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Workspace/Git Signals panel online.
 - [x] Bridge writes `workspace_signal_snapshots` rows.
 - [x] Overnight handoff updated for Workspace/Git commit/push and V3 visual shell port.
+- [x] Workspace/Git Signals changes committed and pushed as `d114515`.
+- [x] Vercel production serves the matching latest built asset hash (`index-CT2apXsp.js`).
 - [x] Manual Refresh button works through `sync_requests`.
 - [x] Local sync bridge runs scheduled 10-minute syncs.
 - [x] Bridge runbook added.
@@ -45,8 +47,10 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Configure local cron state sync so real cron jobs appear instead of relying on the unstable gateway CLI path.
 - [x] Add Workspace/Git signal snapshots.
 - [ ] Add Windows Task Scheduler wrapper or equivalent reboot-proof bridge durability.
-- [ ] Commit/push current Workspace/Git Signals changes and verify Vercel production.
-- [ ] Start V3 Visual Shell Port using local V3 as read-only reference.
+- [x] Commit/push current Workspace/Git Signals changes and verify Vercel static deployment.
+- [ ] Authenticated visual verification of Cron Health + Workspace/Git panels after login.
+- [ ] Start V3 Visual Shell Port implementation using local V3 as read-only reference.
+- [x] Assign/read-only V3 visual shell audit to Jen (`MCO-038`).
 - [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
 - [ ] Do not start V2 remote actions until Raz explicitly approves.
 
