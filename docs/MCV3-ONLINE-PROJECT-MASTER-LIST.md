@@ -1,6 +1,6 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-13 09:07 AEST_
+_Last updated: 2026-05-13 11:50 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
 _Status: V1 complete / V1.1 operational panels in progress_
@@ -30,6 +30,9 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Bridge syncs 61 real cron jobs from local OpenClaw cron state files.
 - [x] Token Usage panel online.
 - [x] Bridge writes `agent_token_usage_daily` aggregate rows.
+- [x] Workspace/Git Signals panel online.
+- [x] Bridge writes `workspace_signal_snapshots` rows.
+- [x] Overnight handoff updated for Workspace/Git commit/push and V3 visual shell port.
 - [x] Manual Refresh button works through `sync_requests`.
 - [x] Local sync bridge runs scheduled 10-minute syncs.
 - [x] Bridge runbook added.
@@ -40,8 +43,10 @@ Use this section as the fast truth source for what is done and what is next. Det
 ### 🔜 Next / not done yet
 
 - [x] Configure local cron state sync so real cron jobs appear instead of relying on the unstable gateway CLI path.
-- [ ] Add Workspace/Git signal snapshots.
+- [x] Add Workspace/Git signal snapshots.
 - [ ] Add Windows Task Scheduler wrapper or equivalent reboot-proof bridge durability.
+- [ ] Commit/push current Workspace/Git Signals changes and verify Vercel production.
+- [ ] Start V3 Visual Shell Port using local V3 as read-only reference.
 - [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
 - [ ] Do not start V2 remote actions until Raz explicitly approves.
 
@@ -759,14 +764,14 @@ Tasks:
 - [x] Build Source Health UI panel.
 - [x] Build Cron Health UI panel.
 - [x] Build Token Usage UI panel.
-- [ ] Build Workspace/Git Signals UI panel.
+- [x] Build Workspace/Git Signals UI panel.
 
 Acceptance criteria:
 
-- [ ] Real cron health visible online.
+- [x] Real cron health visible online.
 - [x] Token usage visible online.
 - [x] Source health visible online.
-- [ ] Workspace/git signal health visible online.
+- [x] Workspace/git signal health visible online.
 - [x] Completed panels clearly show sync freshness.
 
 ## Phase 9 — Hardening
@@ -800,10 +805,10 @@ Acceptance criteria:
 - [ ] Windows Task Scheduler wrapper for reboot-proof bridge durability.
 - [x] Cron snapshot sync plumbing.
 - [x] Cron Health panel shell.
-- [ ] Live cron job credential fix.
+- [x] Live cron job snapshot fallback.
 - [x] Token usage snapshot sync.
 - [x] Token Usage panel.
-- [ ] Workspace/git signal snapshots.
+- [x] Workspace/git signal snapshots.
 - [ ] Optional: Supabase Realtime trigger instead of polling.
 - [ ] Optional: More detailed sync progress.
 
@@ -894,9 +899,9 @@ Recommended build order:
 
 1. [x] Port Cron Health panel from local V3.
 2. [x] Add bridge-side `cron_job_snapshots` sync.
-3. [ ] Add/check OpenClaw gateway credentials for real cron rows.
+3. [x] Add local cron state fallback for real cron rows.
 4. [x] Add Token Usage panel.
-5. [ ] Add Workspace/Git Signals panel.
+5. [x] Add Workspace/Git Signals panel.
 6. [ ] Make the bridge reboot-proof.
 7. [ ] Only then discuss V2 controlled actions.
 
@@ -1574,7 +1579,7 @@ Token Usage syncs aggregate counts only: input/output/cache/total token numbers 
 
 ### Next recommended step
 
-Add Workspace/Git signal snapshots or implement Windows Task Scheduler bridge durability.
+Implement Windows Task Scheduler bridge durability.
 
 
 ---
@@ -1678,4 +1683,92 @@ Supabase verification:
 
 ### Next recommended step
 
-Verify the live Automation Pulse panel, then continue with Workspace/Git Signals or bridge durability.
+Continue with bridge durability.
+
+
+---
+
+## 39. Workspace/Git Signals Synced - 2026-05-13 11:35 AEST
+
+### Status
+
+Workspace/Git Signals are now backed by Supabase snapshots and visible in the online dashboard.
+
+### Completed
+
+- Added safe local V3 git metadata snapshotting to `scripts/sync-bridge.ts`.
+- Added `workspace_signal_snapshots` read support to the dashboard.
+- Added Workspace/Git panel with branch, head, working tree, commit cadence, recent commit summaries, and file churn.
+- Added `workspace_signal_snapshots` to Supabase verification counts.
+- Added `WORKSPACE_SIGNAL_REPO` to `.env.sync.example`.
+
+### Validation evidence
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run build
+wsl npm run sync:once
+wsl npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 64
+- Agent token usage daily rows: 21
+- Workspace signal snapshots: 1
+- Sync runs: 86
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+### Privacy note
+
+The Workspace/Git panel syncs metadata only. It does not upload raw local file contents, memories, transcripts, secrets, or gateway tokens.
+
+### Next recommended step
+
+Deploy/push these changes, visually verify production, then add the reboot-proof bridge runner.
+
+
+---
+
+## 40. Overnight Agent Handoff - 2026-05-13 11:50 AEST
+
+### Status
+
+The project is ready for another agent to continue overnight.
+
+### Handoff priorities
+
+1. Commit and push current Workspace/Git Signals changes.
+2. Verify Vercel production after deployment.
+3. Start V3 Visual Shell Port so the online app begins matching the local-only V3 control room.
+4. Return to bridge durability after the visual shell lands.
+
+### Clean V3 visual port plan
+
+- Read local V3 UI code/screens as reference only.
+- Do not modify `/mnt/d/Warung Kerja 1.0/03_Active_Projects/Mission Control/mission-control-v2`.
+- Port shell first: navigation, status header, dashboard grid, section rhythm, type/color tokens.
+- Keep data contracts unchanged.
+- Upgrade panels one at a time after the shell: Projects, Automation Pulse, Token Usage, Workspace/Git Signals, Source Health, Team, Sync History.
+- Validate with WSL `npm run type-check` and `npm run build` before pushing.
+
+### Current uncommitted files
+
+- `.env.sync.example`
+- `docs/AGENT_HANDOFF.md`
+- `docs/EPICS.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `scripts/sync-bridge.ts`
+- `scripts/verify-supabase.ts`
+- `src/App.tsx`
+- `src/styles.css`
+- `src/types/supabase.ts`

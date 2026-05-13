@@ -1,12 +1,12 @@
 # Project Tracker - Mission Control Online
 
-_Last updated: 2026-05-13 09:07 AEST_  
-_Current phase: V1.1 operational visibility_  
-_Current status: V1 complete; Cron Health and Token Usage shipped_
+_Last updated: 2026-05-13 11:50 AEST_
+_Current phase: V1.1 operational visibility_
+_Current status: V1 complete; Workspace/Git Signals ready to commit/push; V3 visual port is next overnight track_
 
 ## Current Priority
 
-Add operational panels while keeping the repo easy for Codex Desktop and future agents to continue.
+Ship the current operational panel work, then start the V3 Visual Shell Port while keeping the repo easy for Codex Desktop and future agents to continue.
 
 ## Current State Summary
 
@@ -18,9 +18,11 @@ Add operational panels while keeping the repo easy for Codex Desktop and future 
 | Supabase migration | Run successfully | Raz ran `supabase/migrations/001_initial_private_mirror.sql` in Supabase |
 | Frontend scaffold | Done | React/Vite dashboard exists and builds |
 | Supabase env | Local only | `.env.local` and `.env.sync` are gitignored |
-| Sync bridge | V1.1 expanded | Bridge syncs Projects, Team, Source Health, and Cron diagnostic/job snapshots |
+| Sync bridge | V1.1 expanded | Bridge syncs Projects, Team, Source Health, Cron snapshots, Token Usage, and Workspace/Git signals |
 | Cron Health | Done | Bridge syncs 61 real cron jobs from local OpenClaw cron state files |
 | Token Usage | Done | Bridge syncs daily OpenClaw aggregate token rows; online panel reads `agent_token_usage_daily` |
+| Workspace/Git Signals | Done | Bridge inserts latest local V3 repo metadata into `workspace_signal_snapshots`; online panel reads latest row |
+| V3 Visual Match | Next | Clean path is shell first, then panel-by-panel polish using local V3 as read-only reference |
 | Validation | Passing | WSL `npm run type-check`, `npm run build`, `npm run sync:once`, and `npm run supabase:verify` passed |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
 | Vercel deploy | Online access verified | Raz confirmed page works from a different computer; magic-link login works |
@@ -96,28 +98,47 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-033 | 2026-05-13 | Codex | Cleaned Cron Health missing-token diagnostic | Done | `sync:once` refreshed live row; Supabase verify passed with 83 sync runs |
 | MCO-034 | 2026-05-13 | Codex | Checked Gateway Access URL/token for Cron Health | Partial | Token and URL present; one dry-run saw 61 jobs; later sync attempts hit gateway closed diagnostic |
 | MCO-035 | 2026-05-13 | Codex | Added local cron state fallback and synced real cron jobs | Done | `sync:once` wrote 61 cron jobs; Supabase verify sees 62 rows including old adapter row |
+| MCO-036 | 2026-05-13 | Codex | Added Workspace/Git signal snapshots and online panel | Done | `sync:once` wrote 1 workspace signal row; Supabase verify sees 1 `workspace_signal_snapshots` row |
 
 ## Next Recommended Tasks
 
-### V1.1 Task A - Finish Live Cron Health
+### V1.1 Task A - Commit, Push, And Verify Production
 
-Owner: Codex/Noona + Raz
+Owner: Overnight agent
 
 Steps:
 
-1. Add local-only OpenClaw gateway credentials to `.env.sync`.
-2. Run WSL `npm run sync:dry`.
-3. Confirm real cron job rows appear instead of only the adapter diagnostic row.
-4. Run WSL `npm run sync:once`.
-5. Verify Cron Health on the Vercel dashboard.
+1. Review current diff.
+2. Commit MCO-036 Workspace/Git Signals changes.
+3. Push `main` to GitHub.
+4. Wait for Vercel deployment.
+5. Verify Automation Pulse and Workspace/Git Signals on production.
 
 Acceptance criteria:
 
-- Real cron jobs are synced into `cron_job_snapshots`.
-- Cron Health panel shows job status, schedule, last/next run, duration, and errors.
-- No gateway token is exposed to browser/Vercel.
+- Vercel production includes the Workspace/Git panel.
+- Supabase rows still read correctly from the live dashboard.
+- No secrets or local raw file contents are visible.
 
-### V1.1 Task B - Windows Task Scheduler Durability Wrapper
+### V1.1 Task B - V3 Visual Shell Port
+
+Owner: Overnight agent
+
+Steps:
+
+1. Read local V3 UI code/screens for reference only.
+2. Identify shell patterns: nav, dashboard grid, panel hierarchy, status header, colors, typography, spacing.
+3. Apply the shell to the online app without changing data contracts.
+4. Keep the app read-only.
+5. Validate desktop/mobile layouts with WSL build checks.
+
+Acceptance criteria:
+
+- Online first screen feels closer to local V3 control room.
+- Existing panels keep working.
+- No local V3 files are modified.
+
+### V1.1 Task C - Windows Task Scheduler Durability Wrapper
 
 Owner: Noona + Raz
 
@@ -133,21 +154,21 @@ Acceptance criteria:
 - Bridge survives normal host/session restart.
 - Manual refresh requests are still processed.
 
-### V1.1 Task C - Workspace/Git Signals Panel
+### V1.1 Task B - Live Dashboard Verification
 
-Owner: Codex/Noona
+Owner: Raz + Codex/Noona
 
 Steps:
 
-1. Inspect local V3 workspace signal adapter.
-2. Add bridge-side safe repo/source summary sync.
-3. Add online dashboard panel.
-4. Validate and document.
+1. Open the Vercel dashboard after deployment.
+2. Confirm Automation Pulse shows real cron jobs.
+3. Confirm Git signal shows branch/head/working-tree/recent commits.
+4. Confirm no sensitive local values are visible.
 
 Acceptance criteria:
 
-- Workspace/git signals sync without raw private file content.
-- Panel shows branch, head, working tree, recent commit cadence, and source freshness.
+- Cron and Workspace/Git panels are visible on production.
+- Panels clearly indicate snapshot freshness.
 
 ## Definition Of Done For Any Agent Task
 

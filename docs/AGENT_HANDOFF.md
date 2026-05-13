@@ -1,6 +1,6 @@
 # Agent Handoff - Mission Control Online
 
-_Last updated: 2026-05-13 09:07 AEST_
+_Last updated: 2026-05-13 11:50 AEST_
 
 ## Read this first
 
@@ -38,12 +38,13 @@ Before working:
 
 Raz wants this repo to stay easy for Codex Desktop and other agents to continue. Every meaningful work session must update the master list, tracker, worklog, and this handoff when context changes.
 
-Current priority is V1.1 operational visibility:
+Current priority is overnight continuation:
 
-1. Finish real Cron Health by adding local gateway credentials
-2. Workspace/Git signal snapshots
-3. Reboot-proof bridge durability
-5. No V2 remote actions until Raz explicitly approves
+1. Commit and push the current MCO-036 Workspace/Git Signals changes if still uncommitted.
+2. Let Vercel deploy, then verify the live dashboard shows Cron Health and Workspace/Git panels.
+3. Start the V3 visual shell port so the online app begins matching the local-only V3 control-room feel.
+4. Reboot-proof bridge durability with Windows Task Scheduler or equivalent.
+5. No V2 remote actions until Raz explicitly approves.
 
 ## Current technical state
 
@@ -57,6 +58,7 @@ Current online panels:
 - Sync history / Manual Refresh
 - Cron Health shell from `cron_job_snapshots`
 - Token Usage from `agent_token_usage_daily`
+- Workspace/Git Signals from `workspace_signal_snapshots`
 
 Important files:
 
@@ -89,6 +91,7 @@ Current caveats:
 
 - `cron_job_snapshots` plumbing and UI exist. The bridge now prefers local OpenClaw cron state files and successfully synced 61 real cron jobs. The gateway CLI path is still flaky because the gateway has event-loop delays, but Cron Health no longer depends on it for the normal sync path.
 - `agent_token_usage_daily` plumbing and UI exist. Current Supabase count is 21 aggregate rows.
+- `workspace_signal_snapshots` plumbing and UI exist. Current Supabase count is 1 snapshot row.
 - The bridge is process-based and not reboot-proof. Windows Task Scheduler or equivalent is still V1.1 work.
 - Run validation from WSL. The current `node_modules` native packages are Linux-flavored; Windows Node can type-check, but Vite/Rollup/esbuild native binaries fail from PowerShell.
 
@@ -137,10 +140,14 @@ Next action:
 
 ## Recommended next task
 
-Finish Cron Health V1.1.
+Commit/push MCO-036, then begin V3 Visual Shell Port.
 
 Steps:
 
-1. Verify the online Cron Health panel shows real jobs after reload.
-2. Add Workspace/Git Signals or Windows Task Scheduler durability next.
-3. Optionally investigate OpenClaw gateway event-loop starvation / Telegram fetch timeouts separately.
+1. Check `git status`. At handoff time, MCO-036 changes were uncommitted in `.env.sync.example`, docs, `scripts/`, and `src/`.
+2. Commit and push those changes so Vercel can deploy Workspace/Git Signals.
+3. Verify production visually after Vercel finishes.
+4. For the visual port, read local V3 UI code from `mission-control-v2` for reference only. Do not modify local V3.
+5. Port the shell first: navigation, dashboard grid, status header, panel rhythm, color/type tokens, loading/empty states.
+6. Then upgrade panels one by one: Projects, Automation Pulse, Token Usage, Workspace/Git Signals, Source Health, Team, Sync History.
+7. After the visual shell is stable, return to Windows Task Scheduler or equivalent startup wrapper for `wsl npm run sync:poll`.

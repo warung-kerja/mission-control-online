@@ -56,6 +56,26 @@ interface TokenUsageDailySnapshot {
   synced_at: string
 }
 
+interface WorkspaceSignalSnapshot {
+  branch: string | null
+  head: string | null
+  working_tree: string
+  commits_24h: number
+  commits_7d: number
+  latest_commit_at: string | null
+  recent_commits: Array<{
+    hash: string
+    committed_at: string
+    author: string
+    subject: string
+  }>
+  file_churn: Array<{
+    path: string
+    touches: number
+  }>
+  synced_at: string
+}
+
 interface RawCronState {
   lastRunStatus?: string
   lastStatus?: string
@@ -164,6 +184,9 @@ const openClawGatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN?.trim()
 
 const projectRegistryPath = path.join(workspaceRoot, '03_Active_Projects/_registry/projects.json')
 const teamRosterPath = path.join(workspaceRoot, '06_Agents/_Shared_Memory/AGENTS_ROSTER.md')
+const workspaceSignalRepo = process.env.WORKSPACE_SIGNAL_REPO
+  ?? process.env.MISSION_CONTROL_LOCAL_REPO
+  ?? path.join(workspaceRoot, '03_Active_Projects/Mission Control/mission-control-v2')
 const OPENCLAW_BINARY_CANDIDATES = [
   '/home/baro/.npm-global/bin/openclaw',
   '/usr/local/bin/openclaw',
@@ -544,6 +567,84 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
     .filter((entry) => entry.turns > 0 || entry.total_tokens > 0)
 }
 
+function runWorkspaceGit(args: string[]) {
+  return execFileSync('git', ['-C', workspaceSignalRepo, ...args], {
+    encoding: 'utf8',
+    timeout: 15_000,
+    maxBuffer: 2 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim()
+}
+
+function safeWorkspaceGit(args: string[]) {
+  try {
+    return runWorkspaceGit(args)
+  } catch {
+    return null
+  }
+}
+
+function parseGitCount(value: string | null) {
+  const count = Number(value ?? 0)
+  return Number.isFinite(count) ? count : 0
+}
+
+function parseRecentCommits(raw: string | null): WorkspaceSignalSnapshot['recent_commits'] {
+  if (!raw) return []
+  return raw
+    .split('\n')
+    .map((line) => {
+      const [hash, epoch, author, subject] = line.split('\x1f')
+      const timestamp = Number(epoch) * 1000
+      if (!hash || !Number.isFinite(timestamp)) return null
+      return {
+        hash,
+        committed_at: new Date(timestamp).toISOString(),
+        author: author || 'unknown',
+        subject: subject || '(no subject)',
+      }
+    })
+    .filter((commit): commit is WorkspaceSignalSnapshot['recent_commits'][number] => Boolean(commit))
+}
+
+function parseFileChurn(raw: string | null): WorkspaceSignalSnapshot['file_churn'] {
+  if (!raw) return []
+  const counts = new Map<string, number>()
+  for (const line of raw.split('\n')) {
+    const filePath = line.trim()
+    if (!filePath) continue
+    counts.set(filePath, (counts.get(filePath) ?? 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 12)
+    .map(([filePath, touches]) => ({ path: filePath, touches }))
+}
+
+function readWorkspaceSignals(syncedAt: string): WorkspaceSignalSnapshot {
+  const branch = safeWorkspaceGit(['branch', '--show-current'])
+  const head = safeWorkspaceGit(['rev-parse', '--short', 'HEAD'])
+  const status = safeWorkspaceGit(['status', '--porcelain'])
+  const commits24h = parseGitCount(safeWorkspaceGit(['rev-list', '--count', '--since=24.hours', 'HEAD']))
+  const commits7d = parseGitCount(safeWorkspaceGit(['rev-list', '--count', '--since=7.days', 'HEAD']))
+  const latestCommitEpoch = safeWorkspaceGit(['log', '-1', '--pretty=format:%ct'])
+  const latestCommitAt = latestCommitEpoch ? new Date(Number(latestCommitEpoch) * 1000).toISOString() : null
+  const recentCommits = parseRecentCommits(safeWorkspaceGit(['log', '-8', '--pretty=format:%h%x1f%ct%x1f%an%x1f%s']))
+  const fileChurn = parseFileChurn(safeWorkspaceGit(['log', '--since=7.days', '--name-only', '--pretty=format:']))
+
+  return {
+    branch,
+    head,
+    working_tree: status == null ? 'unknown' : status.length === 0 ? 'clean' : 'dirty',
+    commits_24h: commits24h,
+    commits_7d: commits7d,
+    latest_commit_at: latestCommitAt,
+    recent_commits: recentCommits,
+    file_churn: fileChurn,
+    synced_at: syncedAt,
+  }
+}
+
 async function createSyncRun(client: SupabaseBridgeClient, trigger: 'scheduled' | 'manual' | 'dry_run') {
   const { data, error } = await client
     .from('sync_runs')
@@ -570,10 +671,19 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
   const sourceHealth = readSourceHealth(syncedAt)
   const cronJobs = readCronJobs(syncedAt)
   const tokenUsage = readTokenUsage(syncedAt)
-  const summary = { projects: projects.length, teamMembers: team.length, sourceHealth: sourceHealth.length, cronJobs: cronJobs.length, tokenUsageRows: tokenUsage.length, syncedAt }
+  const workspaceSignals = readWorkspaceSignals(syncedAt)
+  const summary = {
+    projects: projects.length,
+    teamMembers: team.length,
+    sourceHealth: sourceHealth.length,
+    cronJobs: cronJobs.length,
+    tokenUsageRows: tokenUsage.length,
+    workspaceSignals: workspaceSignals.head ? 1 : 0,
+    syncedAt,
+  }
 
   if (dryRun || trigger === 'dry_run') {
-    console.log(JSON.stringify({ dryRun: true, summary, samples: { projects: projects.slice(0, 2), team: team.slice(0, 2), sourceHealth, cronJobs: cronJobs.slice(0, 3), tokenUsage: tokenUsage.slice(0, 5) } }, null, 2))
+    console.log(JSON.stringify({ dryRun: true, summary, samples: { projects: projects.slice(0, 2), team: team.slice(0, 2), sourceHealth, cronJobs: cronJobs.slice(0, 3), tokenUsage: tokenUsage.slice(0, 5), workspaceSignals } }, null, 2))
     return
   }
 
@@ -593,6 +703,7 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
       client.from('source_health_snapshots').upsert(sourceHealth),
       client.from('cron_job_snapshots').upsert(cronJobs),
       client.from('agent_token_usage_daily').upsert(tokenUsage),
+      client.from('workspace_signal_snapshots').insert(workspaceSignals),
     ])
 
     const failed = writes.find((result) => result.error)

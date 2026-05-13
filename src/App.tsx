@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { allowedEmail, supabase } from './lib/supabase'
-import type { AgentTokenUsageDaily, CanonicalProject, CanonicalTeamMember, CronJobSnapshot, SourceHealthSnapshot, SyncRequest, SyncRun } from './types/supabase'
+import type { AgentTokenUsageDaily, CanonicalProject, CanonicalTeamMember, CronJobSnapshot, SourceHealthSnapshot, SyncRequest, SyncRun, WorkspaceSignalSnapshot } from './types/supabase'
 import './styles.css'
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error'
@@ -14,6 +14,7 @@ interface DashboardData {
   sourceHealth: SourceHealthSnapshot[]
   cronJobs: CronJobSnapshot[]
   tokenUsage: AgentTokenUsageDaily[]
+  workspaceSignal: WorkspaceSignalSnapshot | null
 }
 
 const emptyDashboard: DashboardData = {
@@ -24,6 +25,7 @@ const emptyDashboard: DashboardData = {
   sourceHealth: [],
   cronJobs: [],
   tokenUsage: [],
+  workspaceSignal: null,
 }
 
 function parseDate(value: string | null | undefined) {
@@ -390,6 +392,75 @@ function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsage
   )
 }
 
+function WorkspaceSignalsPanel({ signal, syncRuns }: { signal: WorkspaceSignalSnapshot | null; syncRuns: SyncRun[] }) {
+  const latestSuccess = getLatestSuccessfulSync(syncRuns)
+  const recentCommits = signal?.recent_commits ?? []
+  const fileChurn = signal?.file_churn ?? []
+  const hasSignal = Boolean(signal)
+  const isDirty = signal?.working_tree === 'dirty'
+
+  return (
+    <section className="panel">
+      <div className="panelHeader">
+        <div>
+          <p className="eyebrow">workspace</p>
+          <h2>Git signal</h2>
+          <p className="muted smallCopy">Local V3 repository metadata from the bridge. It syncs commit and churn summaries only, not raw project files.</p>
+        </div>
+        <span className={isDirty ? 'countBadge warningBadge' : 'countBadge okBadge'}>
+          {hasSignal ? signal?.working_tree ?? 'unknown' : 'No snapshot'}
+        </span>
+      </div>
+
+      {signal ? (
+        <>
+          <div className="cronSummaryGrid">
+            <div><strong>{signal.branch ?? '-'}</strong><span>branch</span></div>
+            <div><strong>{signal.head ?? '-'}</strong><span>head</span></div>
+            <div><strong>{signal.commits_24h ?? 0}</strong><span>commits 24h</span></div>
+            <div><strong>{signal.commits_7d ?? 0}</strong><span>commits 7d</span></div>
+          </div>
+
+          <div className="workspaceColumns">
+            <div className="workspaceList">
+              <h3>Recent commits</h3>
+              {recentCommits.slice(0, 5).map((commit) => (
+                <div className="workspaceRow" key={`${commit.hash}-${commit.committed_at}`}>
+                  <div>
+                    <strong>{commit.subject}</strong>
+                    <span>{commit.hash} by {commit.author}</span>
+                  </div>
+                  <small>{formatRelative(commit.committed_at)}</small>
+                </div>
+              ))}
+              {recentCommits.length === 0 && <p className="emptyState">No recent commits captured yet.</p>}
+            </div>
+
+            <div className="workspaceList">
+              <h3>File churn</h3>
+              {fileChurn.slice(0, 6).map((file) => (
+                <div className="workspaceRow" key={file.path}>
+                  <div>
+                    <strong>{file.path}</strong>
+                    <span>{file.touches} touches</span>
+                  </div>
+                </div>
+              ))}
+              {fileChurn.length === 0 && <p className="emptyState">No churn captured for the last seven days.</p>}
+            </div>
+          </div>
+
+          <p className="muted smallCopy">
+            Latest commit: {formatDate(signal.latest_commit_at)}. Latest successful bridge sync: {formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}.
+          </p>
+        </>
+      ) : (
+        <p className="emptyState">No workspace signal snapshot synced yet.</p>
+      )}
+    </section>
+  )
+}
+
 function Dashboard({ user }: { user: User }) {
   const [loadState, setLoadState] = useState<LoadState>('idle')
   const [data, setData] = useState<DashboardData>(emptyDashboard)
@@ -400,7 +471,7 @@ function Dashboard({ user }: { user: User }) {
     if (!options.silent) setLoadState('loading')
     setError('')
 
-    const [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage] = await Promise.all([
+    const [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage, workspaceSignals] = await Promise.all([
       supabase.from('canonical_projects').select('*').order('priority', { ascending: true }),
       supabase.from('canonical_team_members').select('*').order('name', { ascending: true }),
       supabase.from('sync_runs').select('*').order('started_at', { ascending: false }).limit(8),
@@ -408,9 +479,10 @@ function Dashboard({ user }: { user: User }) {
       supabase.from('source_health_snapshots').select('*').order('label', { ascending: true }),
       supabase.from('cron_job_snapshots').select('*').order('name', { ascending: true }),
       supabase.from('agent_token_usage_daily').select('*').order('date', { ascending: false }).limit(120),
+      supabase.from('workspace_signal_snapshots').select('*').order('synced_at', { ascending: false }).limit(1),
     ])
 
-    const failed = [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage].find((result) => result.error)
+    const failed = [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage, workspaceSignals].find((result) => result.error)
     if (failed?.error) {
       setLoadState('error')
       setError(failed.error.message)
@@ -425,6 +497,7 @@ function Dashboard({ user }: { user: User }) {
       sourceHealth: (sourceHealth.data ?? []) as SourceHealthSnapshot[],
       cronJobs: (cronJobs.data ?? []) as CronJobSnapshot[],
       tokenUsage: (tokenUsage.data ?? []) as AgentTokenUsageDaily[],
+      workspaceSignal: ((workspaceSignals.data ?? [])[0] ?? null) as WorkspaceSignalSnapshot | null,
     }
 
     setData(nextData)
@@ -474,6 +547,7 @@ function Dashboard({ user }: { user: User }) {
       <SourceHealthPanel sources={data.sourceHealth} syncRuns={data.syncRuns} />
       <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} />
       <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />
+      <WorkspaceSignalsPanel signal={data.workspaceSignal} syncRuns={data.syncRuns} />
       <TeamPanel teamMembers={data.teamMembers} />
       <section className="panel compactPanel">
         <div>

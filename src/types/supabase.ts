@@ -85,3 +85,24 @@ export interface AgentTokenUsageDaily {
   turns: number
   synced_at: string
 }
+
+export interface WorkspaceSignalSnapshot {
+  id: string
+  branch: string | null
+  head: string | null
+  working_tree: string | null
+  commits_24h: number | null
+  commits_7d: number | null
+  latest_commit_at: string | null
+  recent_commits: Array<{
+    hash: string
+    committed_at: string
+    author: string
+    subject: string
+  }> | null
+  file_churn: Array<{
+    path: string
+    touches: number
+  }> | null
+  synced_at: string
+}

@@ -367,6 +367,53 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
   background: linear-gradient(90deg, #f4a261, #58a6ff);
 }
 
+.workspaceColumns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.workspaceList {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 18px;
+  background: rgba(2, 6, 12, 0.44);
+  padding: 1rem;
+}
+
+.workspaceList h3 {
+  margin: 0 0 0.75rem;
+  color: #f4a261;
+  font-size: 0.95rem;
+}
+
+.workspaceRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  padding: 0.7rem 0;
+}
+
+.workspaceRow div {
+  min-width: 0;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.workspaceRow strong {
+  overflow-wrap: anywhere;
+}
+
+.workspaceRow span,
+.workspaceRow small {
+  color: #95a3b8;
+  font-size: 0.78rem;
+}
+
+.workspaceRow small {
+  white-space: nowrap;
+}
+
 .miniStatus {
   width: 0.55rem;
   height: 0.55rem;
@@ -418,5 +465,6 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 @media (max-width: 900px) {
   .heroPanel, .compactPanel { grid-template-columns: 1fr; }
   .projectGrid, .sourceGrid, .teamColumns, .cronGrid, .cronSummaryGrid { grid-template-columns: 1fr; }
+  .workspaceColumns { grid-template-columns: 1fr; }
   .usageRow { grid-template-columns: 1fr; }
 }

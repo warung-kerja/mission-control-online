@@ -980,7 +980,7 @@ Risks/blockers:
 
 Next action:
 
-- Add Workspace/Git signal snapshots or implement Windows Task Scheduler bridge durability.
+- Workspace/Git signal snapshots were completed later; remaining durable work is the Windows Task Scheduler bridge wrapper.
 
 
 ---
@@ -1150,3 +1150,117 @@ Risks/blockers:
 Next action:
 
 - Verify the live Automation Pulse panel shows the real job cards, then continue to Workspace/Git Signals or bridge durability.
+
+
+---
+
+## 2026-05-13 11:35 AEST - Workspace/Git Signals synced
+
+Agent: Codex
+
+Task ID: MCO-036
+
+Files changed:
+
+- `.env.sync.example`
+- `scripts/sync-bridge.ts`
+- `scripts/verify-supabase.ts`
+- `src/App.tsx`
+- `src/styles.css`
+- `src/types/supabase.ts`
+- `docs/AGENT_HANDOFF.md`
+- `docs/EPICS.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Added safe local V3 git metadata snapshotting to the sync bridge.
+- Added latest workspace signal loading and a Workspace/Git panel to the online dashboard.
+- Synced branch, short head, clean/dirty state, commit cadence, recent commit summaries, and relative file churn only.
+- Added verification count for `workspace_signal_snapshots`.
+
+Validation:
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run build
+wsl npm run sync:once
+wsl npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification after sync:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 64
+- Agent token usage daily rows: 21
+- Workspace signal snapshots: 1
+- Sync runs: 86
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+Browser verification:
+
+- Local Vite server was started on `127.0.0.1:5173`.
+- In-app browser attach was blocked by the Windows sandbox setup error, so validation relied on WSL type-check/build plus Supabase verification.
+
+Next action:
+
+- Deploy/push the Workspace/Git panel changes, verify production visually, then add the reboot-proof bridge runner.
+
+
+---
+
+## 2026-05-13 11:50 AEST - Overnight agent handoff prepared
+
+Agent: Codex
+
+Task ID: MCO-037
+
+Files changed:
+
+- `docs/AGENT_HANDOFF.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Added explicit overnight continuation instructions for the next agent.
+- Marked current MCO-036 Workspace/Git Signals work as ready to commit/push.
+- Added the clean V3 Visual Shell Port plan: shell first, then panel-by-panel polish.
+- Reconfirmed the safety rule: local Mission Control V3 may be read as reference only, not modified from this repo.
+
+Current uncommitted work at handoff:
+
+- `.env.sync.example`
+- `docs/AGENT_HANDOFF.md`
+- `docs/EPICS.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `scripts/sync-bridge.ts`
+- `scripts/verify-supabase.ts`
+- `src/App.tsx`
+- `src/styles.css`
+- `src/types/supabase.ts`
+
+Validation already completed for MCO-036:
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run build
+wsl npm run sync:once
+wsl npm run supabase:verify
+```
+
+Next action:
+
+- Commit and push MCO-036/MCO-037, verify production after Vercel deploys, then start V3 Visual Shell Port.

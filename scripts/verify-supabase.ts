@@ -48,6 +48,7 @@ async function main() {
     source_health_snapshots: await countRows('source_health_snapshots'),
     cron_job_snapshots: await countRows('cron_job_snapshots'),
     agent_token_usage_daily: await countRows('agent_token_usage_daily'),
+    workspace_signal_snapshots: await countRows('workspace_signal_snapshots'),
     sync_runs: await countRows('sync_runs'),
   }
 

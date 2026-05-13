@@ -1,6 +1,6 @@
 # Epics — Mission Control Online
 
-_Last updated: 2026-05-13 07:43 AEST_
+_Last updated: 2026-05-13 11:35 AEST_
 
 ## Epic 0 — Project foundation and documentation
 
@@ -157,10 +157,11 @@ Tasks:
 
 - [x] Cron snapshot plumbing / adapter diagnostic row
 - [x] Cron Health panel shell
-- [ ] Real cron job rows after local gateway credentials are configured
+- [x] Real cron job rows after local cron state fallback is configured
 - [x] Token usage daily snapshots
 - [x] Token Usage panel
-- [ ] Workspace/git signal snapshots
+- [x] Workspace/git signal snapshots
+- [x] Workspace/Git Signals panel
 - [x] Source health details
 
 Acceptance criteria:
