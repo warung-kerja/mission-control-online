@@ -1,6 +1,6 @@
 # Agent Handoff - Mission Control Online
 
-_Last updated: 2026-05-13 07:43 AEST_
+_Last updated: 2026-05-13 09:07 AEST_
 
 ## Read this first
 
@@ -87,7 +87,7 @@ npm run supabase:verify
 
 Current caveats:
 
-- `cron_job_snapshots` plumbing and UI exist, but the current synced row is a diagnostic failure row because the OpenClaw cron CLI call needs explicit gateway credentials in `.env.sync`.
+- `cron_job_snapshots` plumbing and UI exist. The bridge now prefers local OpenClaw cron state files and successfully synced 61 real cron jobs. The gateway CLI path is still flaky because the gateway has event-loop delays, but Cron Health no longer depends on it for the normal sync path.
 - `agent_token_usage_daily` plumbing and UI exist. Current Supabase count is 21 aggregate rows.
 - The bridge is process-based and not reboot-proof. Windows Task Scheduler or equivalent is still V1.1 work.
 - Run validation from WSL. The current `node_modules` native packages are Linux-flavored; Windows Node can type-check, but Vite/Rollup/esbuild native binaries fail from PowerShell.
@@ -141,8 +141,6 @@ Finish Cron Health V1.1.
 
 Steps:
 
-1. Add valid `OPENCLAW_GATEWAY_TOKEN` or required gateway credentials to local `.env.sync`.
-2. Run `npm run sync:dry` from WSL and confirm real cron jobs appear instead of the `openclaw-cron-adapter` diagnostic row.
-3. Run `npm run sync:once` from WSL.
-4. Verify the online Cron Health panel shows real jobs.
-5. Then decide whether to implement Workspace/Git Signals or Windows Task Scheduler durability next.
+1. Verify the online Cron Health panel shows real jobs after reload.
+2. Add Workspace/Git Signals or Windows Task Scheduler durability next.
+3. Optionally investigate OpenClaw gateway event-loop starvation / Telegram fetch timeouts separately.

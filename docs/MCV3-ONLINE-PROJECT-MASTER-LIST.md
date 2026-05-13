@@ -1,6 +1,6 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-13 07:43 AEST_
+_Last updated: 2026-05-13 09:07 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
 _Status: V1 complete / V1.1 operational panels in progress_
@@ -27,6 +27,7 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Source Health panel online.
 - [x] Cron Health panel shell online.
 - [x] Bridge writes `cron_job_snapshots` diagnostic/job rows.
+- [x] Bridge syncs 61 real cron jobs from local OpenClaw cron state files.
 - [x] Token Usage panel online.
 - [x] Bridge writes `agent_token_usage_daily` aggregate rows.
 - [x] Manual Refresh button works through `sync_requests`.
@@ -38,7 +39,7 @@ Use this section as the fast truth source for what is done and what is next. Det
 
 ### 🔜 Next / not done yet
 
-- [ ] Configure local OpenClaw gateway credentials so real cron jobs sync instead of the adapter diagnostic row.
+- [x] Configure local cron state sync so real cron jobs appear instead of relying on the unstable gateway CLI path.
 - [ ] Add Workspace/Git signal snapshots.
 - [ ] Add Windows Task Scheduler wrapper or equivalent reboot-proof bridge durability.
 - [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
@@ -47,7 +48,7 @@ Use this section as the fast truth source for what is done and what is next. Det
 ### ⚠️ Current caveat
 
 - [ ] The bridge is functional, but not yet reboot-proof. If the host/session restarts, restart it using the bridge runbook.
-- [ ] Cron Health plumbing is present, but live cron job fetch currently needs gateway credentials in local `.env.sync`.
+- [ ] Gateway cron CLI access remains unstable, but Cron Health now uses local cron state files for normal sync.
 
 ---
 
@@ -1574,3 +1575,107 @@ Token Usage syncs aggregate counts only: input/output/cache/total token numbers 
 ### Next recommended step
 
 Add Workspace/Git signal snapshots or implement Windows Task Scheduler bridge durability.
+
+
+---
+
+## 36. Cron Health Diagnostic Cleanup - 2026-05-13 07:52 AEST
+
+### Status
+
+The live dashboard Cron Health error has been cleaned.
+
+### Completed
+
+- Bridge now short-circuits when `OPENCLAW_GATEWAY_TOKEN` is missing.
+- Live Supabase cron diagnostic row has been refreshed with a concise message.
+
+### Validation evidence
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run sync:once
+wsl npm run supabase:verify
+```
+
+Result: passed.
+
+### Remaining blocker
+
+Real cron jobs still require stable OpenClaw gateway cron CLI access.
+
+
+---
+
+## 37. Gateway Access Check - 2026-05-13 08:06 AEST
+
+### Status
+
+Cron Health now has the correct local Gateway Access URL and token. Gateway CLI sync is not stable, so the bridge now uses local OpenClaw cron state files for the normal sync path.
+
+### Completed
+
+- Set local `.env.sync` gateway URL to `ws://127.0.0.1:18789`.
+- Confirmed token is present without printing it.
+- Confirmed the gateway port is reachable.
+- One `sync:dry` returned 61 real cron jobs.
+- Subsequent sync attempts returned a clean gateway-closed diagnostic.
+
+### Validation evidence
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run sync:once
+wsl npm run supabase:verify
+wsl npm run build
+```
+
+Result: validation passed, but real cron fetch remains intermittent/unstable.
+
+### Next recommended step
+
+Use local cron state fallback for Mission Control Online and investigate gateway event-loop starvation separately if needed.
+
+
+---
+
+## 38. Cron Health Real Jobs Synced - 2026-05-13 09:07 AEST
+
+### Status
+
+Cron Health is now backed by real local OpenClaw cron job snapshots.
+
+### Completed
+
+- Added local file fallback from `/home/baro/.openclaw/cron/jobs.json` and `jobs-state.json`.
+- Sanitized long cron error details before sync.
+- Synced 61 real cron jobs into Supabase.
+
+### Validation evidence
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run sync:once
+wsl npm run supabase:verify
+wsl npm run build
+```
+
+Result: passed.
+
+Supabase verification:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 62, including one old adapter diagnostic row
+- Agent token usage daily rows: 21
+- Sync runs: 85
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+### Next recommended step
+
+Verify the live Automation Pulse panel, then continue with Workspace/Git Signals or bridge durability.

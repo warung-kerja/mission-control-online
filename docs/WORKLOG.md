@@ -981,3 +981,172 @@ Risks/blockers:
 Next action:
 
 - Add Workspace/Git signal snapshots or implement Windows Task Scheduler bridge durability.
+
+
+---
+
+## 2026-05-13 07:52 AEST - Cron Health diagnostic cleaned
+
+Agent: Codex
+
+Task ID: MCO-033
+
+Files changed:
+
+- `scripts/sync-bridge.ts`
+- `docs/AGENT_HANDOFF.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Stopped the Cron Health bridge from invoking the OpenClaw CLI when `OPENCLAW_GATEWAY_TOKEN` is missing.
+- Replaced noisy plugin/config warning output with a short actionable diagnostic.
+- Ran a one-shot sync so the live dashboard row now says the local gateway token is missing instead of showing plugin warnings.
+
+Validation:
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run sync:once
+wsl npm run supabase:verify
+```
+
+Result: passed.
+
+Supabase verification after sync:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 1
+- Agent token usage daily rows: 21
+- Sync runs: 83
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+Risks/blockers:
+
+- Real Cron Health still needs `OPENCLAW_GATEWAY_TOKEN` in local `.env.sync`.
+
+Next action:
+
+- Add/check local OpenClaw gateway token, then rerun dry-run and sync real cron jobs.
+
+
+---
+
+## 2026-05-13 08:06 AEST - Gateway Access URL checked
+
+Agent: Codex
+
+Task ID: MCO-034
+
+Files changed:
+
+- `.env.sync` local-only, gitignored
+- `scripts/sync-bridge.ts`
+- `docs/AGENT_HANDOFF.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Raz confirmed the Gateway Access WebSocket URL shown in the browser: `ws://127.0.0.1:18789`.
+- Updated local `.env.sync` to use that WebSocket URL.
+- Confirmed `OPENCLAW_GATEWAY_TOKEN` is present locally without printing it.
+- Confirmed Windows and WSL can reach the gateway port.
+- One WSL `sync:dry` returned 61 real cron jobs.
+- Subsequent `sync:once` / `sync:dry` attempts returned the adapter diagnostic because the gateway closed the cron CLI connection before returning jobs.
+- Shortened the gateway-closed diagnostic so the dashboard stays readable.
+
+Validation:
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run sync:once
+wsl npm run supabase:verify
+wsl npm run build
+```
+
+Result: build/type-check/Supabase verification passed. Real cron fetch is not yet stable.
+
+Current Supabase verification:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 1
+- Agent token usage daily rows: 21
+- Sync runs: 84
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+Risks/blockers:
+
+- Real Cron Health needs stable OpenClaw gateway cron CLI access. The URL/token are present, but the gateway closes the CLI connection on most attempts.
+
+Next action:
+
+- Check OpenClaw gateway session/auth mode and rerun `wsl npm run sync:dry` until real cron jobs appear consistently, then publish with `wsl npm run sync:once`.
+
+
+---
+
+## 2026-05-13 09:07 AEST - Cron Health real jobs synced
+
+Agent: Codex
+
+Task ID: MCO-035
+
+Files changed:
+
+- `.env.sync.example`
+- `scripts/sync-bridge.ts`
+- `docs/AGENT_HANDOFF.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Found local OpenClaw cron state files at `/home/baro/.openclaw/cron/jobs.json` and `jobs-state.json`.
+- Added a local file fallback that reads safe cron snapshot fields before trying the slow gateway CLI.
+- Sanitized long cron error details so raw task text is not synced.
+- Ran one-shot sync successfully with 61 real cron jobs.
+
+Validation:
+
+```bash
+wsl npm run sync:dry
+wsl npm run type-check
+wsl npm run sync:once
+wsl npm run supabase:verify
+wsl npm run build
+```
+
+Result: passed.
+
+Supabase verification after sync:
+
+- Projects: 8
+- Team members: 9
+- Source health records: 2
+- Cron job snapshots: 62, including one old adapter diagnostic row
+- Agent token usage daily rows: 21
+- Sync runs: 85
+- Anonymous project rows visible: 0
+- Anonymous sync request insert blocked: true
+
+Risks/blockers:
+
+- Gateway CLI cron fetch remains flaky because gateway logs show event-loop starvation and slow Telegram fetch timeouts.
+- Cron Health no longer depends on that path for normal sync.
+
+Next action:
+
+- Verify the live Automation Pulse panel shows the real job cards, then continue to Workspace/Git Signals or bridge durability.

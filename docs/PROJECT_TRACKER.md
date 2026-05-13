@@ -1,8 +1,8 @@
 # Project Tracker - Mission Control Online
 
-_Last updated: 2026-05-13 07:43 AEST_  
+_Last updated: 2026-05-13 09:07 AEST_  
 _Current phase: V1.1 operational visibility_  
-_Current status: V1 complete; Cron Health partial; Token Usage shipped_
+_Current status: V1 complete; Cron Health and Token Usage shipped_
 
 ## Current Priority
 
@@ -19,7 +19,7 @@ Add operational panels while keeping the repo easy for Codex Desktop and future 
 | Frontend scaffold | Done | React/Vite dashboard exists and builds |
 | Supabase env | Local only | `.env.local` and `.env.sync` are gitignored |
 | Sync bridge | V1.1 expanded | Bridge syncs Projects, Team, Source Health, and Cron diagnostic/job snapshots |
-| Cron Health | Partial | Online panel and `cron_job_snapshots` sync exist; live OpenClaw cron fetch needs gateway credentials |
+| Cron Health | Done | Bridge syncs 61 real cron jobs from local OpenClaw cron state files |
 | Token Usage | Done | Bridge syncs daily OpenClaw aggregate token rows; online panel reads `agent_token_usage_daily` |
 | Validation | Passing | WSL `npm run type-check`, `npm run build`, `npm run sync:once`, and `npm run supabase:verify` passed |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
@@ -27,21 +27,21 @@ Add operational panels while keeping the repo easy for Codex Desktop and future 
 
 ## Known Blockers / Caveats
 
-### CRON-001 - Live Cron Fetch Needs Gateway Credentials
+### CRON-001 - Live Cron Fetch Needs Stable Gateway CLI Access
 
-Status: Open - discovered 2026-05-13 07:30 AEST
+Status: Mitigated - local cron file fallback shipped 2026-05-13 09:07 AEST
 
 Current behavior:
 
 - `scripts/sync-bridge.ts` calls the OpenClaw CLI read-only command `cron list --all --json`.
-- The current environment writes a diagnostic `openclaw-cron-adapter` row into `cron_job_snapshots`.
-- The CLI reports that the gateway URL override requires explicit credentials.
+- `OPENCLAW_GATEWAY_URL=ws://127.0.0.1:18789` and `OPENCLAW_GATEWAY_TOKEN` are present locally.
+- Gateway CLI cron fetch remains flaky because the gateway has event-loop delays and sometimes closes before returning jobs.
+- Bridge now reads local OpenClaw cron state files first, which reliably returns 61 real cron jobs.
 
 Next fix:
 
-- Add valid local-only OpenClaw gateway credentials to `.env.sync`.
-- Run WSL `npm run sync:dry` and confirm real cron jobs appear.
-- Run WSL `npm run sync:once` and verify the online panel.
+- Verify the online panel shows real jobs.
+- Optionally investigate the gateway event-loop starvation separately.
 
 ### BRIDGE-001 - Bridge Not Reboot-Proof
 
@@ -93,6 +93,9 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-030 | 2026-05-12 | Noona | Full docs refresh per Raz request | Done | README, PRD, Epics, Handoff, Tracker, Worklog, Master List updated |
 | MCO-031 | 2026-05-13 | Codex | Added Cron Health snapshot plumbing and online panel | Partial | WSL validation passed; Supabase has 1 cron diagnostic row; live cron jobs need gateway credentials |
 | MCO-032 | 2026-05-13 | Codex | Added Token Usage snapshot sync and online panel | Done | WSL validation passed; Supabase has 21 `agent_token_usage_daily` rows |
+| MCO-033 | 2026-05-13 | Codex | Cleaned Cron Health missing-token diagnostic | Done | `sync:once` refreshed live row; Supabase verify passed with 83 sync runs |
+| MCO-034 | 2026-05-13 | Codex | Checked Gateway Access URL/token for Cron Health | Partial | Token and URL present; one dry-run saw 61 jobs; later sync attempts hit gateway closed diagnostic |
+| MCO-035 | 2026-05-13 | Codex | Added local cron state fallback and synced real cron jobs | Done | `sync:once` wrote 61 cron jobs; Supabase verify sees 62 rows including old adapter row |
 
 ## Next Recommended Tasks
 

@@ -82,6 +82,12 @@ interface RawCronJob {
   agentId?: unknown
 }
 
+interface RawCronStateFile {
+  jobs?: Record<string, {
+    state?: RawCronState
+  }>
+}
+
 interface ExecFailure {
   message?: string
   stdout?: string | Buffer
@@ -151,6 +157,8 @@ const syncIntervalMinutes = Number(process.env.SYNC_INTERVAL_MINUTES ?? 10)
 const tokenUsageDays = Math.min(Math.max(Number(process.env.TOKEN_USAGE_DAYS ?? 7), 1), 60)
 const tokenUsageTimeZone = process.env.TOKEN_USAGE_TIMEZONE ?? 'Australia/Sydney'
 const openClawAgentsDir = process.env.OPENCLAW_AGENTS_DIR ?? path.join(os.homedir(), '.openclaw', 'agents')
+const openClawCronDir = process.env.OPENCLAW_CRON_DIR ?? path.join(os.homedir(), '.openclaw', 'cron')
+const openClawCronTimeoutMs = Math.max(Number(process.env.OPENCLAW_CRON_TIMEOUT_MS ?? 90000), 30000)
 const openClawGatewayUrl = process.env.OPENCLAW_GATEWAY_URL?.trim()
 const openClawGatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN?.trim()
 
@@ -296,6 +304,14 @@ function normalizeCronStatus(rawStatus: string | undefined, enabled: boolean) {
   return rawStatus || 'pending'
 }
 
+function sanitizeCronError(value: string | undefined | null) {
+  if (!value) return null
+  return value
+    .replace(/`[^`]{80,}`/g, '[detail redacted]')
+    .replace(/\s+/g, ' ')
+    .slice(0, 280)
+}
+
 function normalizeCronJob(raw: RawCronJob, syncedAt: string): CronJobSnapshot {
   const state = raw.state || {}
   const enabled = raw.enabled !== false
@@ -309,7 +325,7 @@ function normalizeCronJob(raw: RawCronJob, syncedAt: string): CronJobSnapshot {
     last_run_at: state.lastRunAtMs ? new Date(state.lastRunAtMs).toISOString() : null,
     next_run_at: state.nextRunAtMs ? new Date(state.nextRunAtMs).toISOString() : null,
     duration_ms: state.lastDurationMs != null ? Number(state.lastDurationMs) : null,
-    error: state.lastError || state.error || null,
+    error: sanitizeCronError(state.lastError || state.error),
     synced_at: syncedAt,
   }
 }
@@ -329,19 +345,52 @@ function cronAdapterStatus(status: 'success' | 'failure', syncedAt: string, erro
   }
 }
 
+function readCronJobsFromFiles(syncedAt: string): CronJobSnapshot[] {
+  const jobsPath = path.join(openClawCronDir, 'jobs.json')
+  const statePath = path.join(openClawCronDir, 'jobs-state.json')
+  const jobsPayload = JSON.parse(fs.readFileSync(jobsPath, 'utf8')) as { jobs?: RawCronJob[] }
+  const statePayload = JSON.parse(fs.readFileSync(statePath, 'utf8')) as RawCronStateFile
+  const rawJobs = Array.isArray(jobsPayload.jobs) ? jobsPayload.jobs : []
+
+  return rawJobs.map((job) => {
+    const id = String(job.id || job.name || 'unknown-cron-job')
+    const state = statePayload.jobs?.[id]?.state ?? job.state ?? {}
+    return normalizeCronJob({ ...job, state }, syncedAt)
+  })
+}
+
 function errorMessage(error: unknown) {
   const failure = error as ExecFailure
   const stderr = typeof failure.stderr === 'string' ? failure.stderr.trim() : ''
   const raw = stderr || failure.message || 'unknown error'
-  return raw
+  if (/gateway closed/i.test(raw)) {
+    return 'OpenClaw gateway is reachable, but it closed the cron CLI connection before returning jobs. Check the Gateway Access token/auth settings and that cron access is enabled.'
+  }
+  const actionable = raw
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => /^(Error|Fix):/i.test(line) || /gateway.*credential|token.*missing|unauthori[sz]ed/i.test(line))
+
+  return (actionable || raw)
     .replace(/--token\s+\S+/gi, '--token [redacted]')
     .replace(/--password\s+\S+/gi, '--password [redacted]')
-    .slice(0, 700)
+    .slice(0, 280)
 }
 
 function readCronJobs(syncedAt: string): CronJobSnapshot[] {
+  try {
+    const fileJobs = readCronJobsFromFiles(syncedAt)
+    if (fileJobs.length > 0) return fileJobs
+  } catch {
+    // Fall back to the CLI when local cron files are unavailable.
+  }
+
   if (!openClawGatewayUrl) {
     return [cronAdapterStatus('failure', syncedAt, 'OPENCLAW_GATEWAY_URL is not set in .env.sync.')]
+  }
+
+  if (!openClawGatewayToken) {
+    return [cronAdapterStatus('failure', syncedAt, 'OPENCLAW_GATEWAY_TOKEN is not set in local .env.sync, so live cron jobs cannot be fetched yet.')]
   }
 
   const binary = findOpenClawBinary()
@@ -356,7 +405,7 @@ function readCronJobs(syncedAt: string): CronJobSnapshot[] {
     '--all',
     '--json',
     '--timeout',
-    '30000',
+    String(openClawCronTimeoutMs),
     '--url',
     wsUrl,
     ...(openClawGatewayToken ? ['--token', openClawGatewayToken] : []),
@@ -365,7 +414,7 @@ function readCronJobs(syncedAt: string): CronJobSnapshot[] {
   try {
     const stdout = execFileSync(binary, args, {
       encoding: 'utf8',
-      timeout: 40_000,
+      timeout: openClawCronTimeoutMs + 15_000,
       maxBuffer: 5 * 1024 * 1024,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
