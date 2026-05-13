@@ -1,8 +1,8 @@
 # Project Tracker - Mission Control Online
 
-_Last updated: 2026-05-14 00:24 AEST_
+_Last updated: 2026-05-14 06:27 AEST_
 _Current phase: V1.1 operational visibility_
-_Current status: V1 complete; Workspace/Git Signals shipped; V3 visual shell audit is active with Jen_
+_Current status: V1 complete; first V3 visual shell slice implemented by Noona; Jen follow-up audit remains queued_
 
 ## Current Priority
 
@@ -22,8 +22,8 @@ Ship the current operational panel work, then start the V3 Visual Shell Port whi
 | Cron Health | Done | Bridge syncs 61 real cron jobs from local OpenClaw cron state files |
 | Token Usage | Done | Bridge syncs daily OpenClaw aggregate token rows; online panel reads `agent_token_usage_daily` |
 | Workspace/Git Signals | Shipped | Commit `d114515` pushed; Vercel serves the matching built assets; online panel reads latest `workspace_signal_snapshots` row |
-| V3 Visual Match | Active | Jen is running MCO-038 as a no-edit shell audit; Noona will implement after review packet is ready |
-| Validation | Passing | 2026-05-14 WSL `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed |
+| V3 Visual Match | First slice implemented | Noona added the online V3-style shell/chrome after Jen runtime was unavailable; `MCO-039` remains queued for follow-up audit/panel-polish recommendation |
+| Validation | Passing | 2026-05-14 06:27 AEST `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
 | Vercel deploy | Online access verified | Raz confirmed page works from a different computer; magic-link login works |
 
@@ -102,6 +102,7 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-037 | 2026-05-13 | Noona | Validated, committed, and pushed Workspace/Git Signals | Done | Commit `d114515` pushed to `origin/main`; post-push sync completed |
 | MCO-038 | 2026-05-14 | Jen | V3 visual shell port audit | In Progress | Read-only audit active; no review packet yet |
 | MCO-039 | 2026-05-14 | Noona | Production/static deployment and Supabase verification gate | Done | Vercel returns HTTP 200 and serves asset hash matching local build; `type-check`, `build`, `supabase:verify` passed |
+| MCO-040 | 2026-05-14 | Noona | V3 visual shell first slice | Done | Added V3-style sidebar/header/truth legend/responsive panel grid; `type-check`, `build`, `supabase:verify` passed |
 
 ## Next Recommended Tasks
 
@@ -129,15 +130,16 @@ Acceptance criteria:
 
 Owner: Jen audit, then Noona implementation
 
-Status: Active as MCO-038 read-only audit
+Status: First slice implemented as MCO-040; MCO-039 remains queued for follow-up audit
 
 Steps:
 
-1. Read local V3 UI code/screens for reference only.
-2. Identify shell patterns: nav, dashboard grid, panel hierarchy, status header, colors, typography, spacing.
-3. Apply the shell to the online app without changing data contracts.
-4. Keep the app read-only.
-5. Validate desktop/mobile layouts with WSL build checks.
+1. Read local V3 UI code/screens for reference only. ✅
+2. Identify shell patterns: nav, dashboard grid, panel hierarchy, status header, colors, typography, spacing. ✅
+3. Apply the first shell slice to the online app without changing data contracts. ✅
+4. Keep the app read-only. ✅
+5. Validate desktop/mobile layouts with WSL build checks. ✅
+6. Continue panel-by-panel polish after Jen follow-up audit.
 
 Acceptance criteria:
 

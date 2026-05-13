@@ -28,6 +28,16 @@ const emptyDashboard: DashboardData = {
   workspaceSignal: null,
 }
 
+const navItems = [
+  { href: '#projects', label: 'Projects', tone: 'canonical' },
+  { href: '#source-health', label: 'Source Health', tone: 'canonical' },
+  { href: '#automation', label: 'Automation Pulse', tone: 'runtime' },
+  { href: '#tokens', label: 'Token Usage', tone: 'runtime' },
+  { href: '#workspace', label: 'Workspace/Git', tone: 'runtime' },
+  { href: '#team', label: 'Team', tone: 'canonical' },
+  { href: '#history', label: 'Bridge History', tone: 'fallback' },
+] as const
+
 function parseDate(value: string | null | undefined) {
   if (!value) return null
   const date = new Date(value)
@@ -57,6 +67,76 @@ function formatRelative(value: string | null | undefined) {
 
 function getLatestSuccessfulSync(syncRuns: SyncRun[]) {
   return syncRuns.find((run) => run.status === 'success') ?? null
+}
+
+function ShellSidebar({ data }: { data: DashboardData }) {
+  const latestSuccess = getLatestSuccessfulSync(data.syncRuns)
+  const latestSync = latestSuccess?.finished_at ?? latestSuccess?.started_at
+
+  return (
+    <aside className="shellSidebar" aria-label="Mission Control Online navigation">
+      <div className="brandBlock">
+        <span className="brandPill">V1.1 mirror</span>
+        <h1>Mission Control</h1>
+        <p>Private snapshot surface for projects, agents, automation truth, and workspace movement.</p>
+      </div>
+
+      <nav className="shellNav">
+        <p className="navLabel">Primary surfaces</p>
+        {navItems.map((item) => (
+          <a href={item.href} key={item.href}>
+            <span className={`navDot ${item.tone}`} />
+            {item.label}
+          </a>
+        ))}
+      </nav>
+
+      <div className="truthLegend">
+        <p className="navLabel">Truth legend</p>
+        <div className="truthPills">
+          <span className="truthPill canonical">canonical</span>
+          <span className="truthPill runtime">runtime</span>
+          <span className="truthPill fallback">fallback</span>
+        </div>
+        <p>Every online panel is snapshot-based. No browser-triggered local actions are enabled.</p>
+      </div>
+
+      <div className="operatorCard">
+        <div className="operatorAvatar">N</div>
+        <div>
+          <strong>Noona</strong>
+          <span>Tech lead session</span>
+        </div>
+        <span className="statusDot ok" />
+      </div>
+
+      <p className="sidebarSync">Latest successful sync: {formatRelative(latestSync)}</p>
+    </aside>
+  )
+}
+
+function ShellHeader({ data, user }: { data: DashboardData; user: User }) {
+  const latestSuccess = getLatestSuccessfulSync(data.syncRuns)
+  const latestRun = data.syncRuns[0]
+  const latestSync = latestSuccess?.finished_at ?? latestSuccess?.started_at
+  const latestSyncDate = parseDate(latestSync)
+  const isStale = latestSyncDate ? Date.now() - latestSyncDate.getTime() > 15 * 60_000 : true
+
+  return (
+    <header className="shellHeader">
+      <div>
+        <p className="eyebrow">online control room</p>
+        <h2>Read-only operating picture</h2>
+        <p className="muted">Vercel + Supabase mirror for Raz. Local Mission Control V3 remains the source system.</p>
+      </div>
+      <div className="headerStatusRail" aria-label="Snapshot status">
+        <span className={isStale ? 'truthPill fallback' : 'truthPill canonical'}>{isStale ? 'stale snapshot' : 'fresh snapshot'}</span>
+        <span>{latestRun ? `latest run: ${latestRun.status}` : 'latest run: none'}</span>
+        <span>{latestSync ? `synced ${formatRelative(latestSync)}` : 'never synced'}</span>
+        <span>{user.email}</span>
+      </div>
+    </header>
+  )
 }
 
 function hasActiveSyncRequest(syncRequests: SyncRequest[]) {
@@ -166,7 +246,7 @@ function SyncPanel({ data, user, onRefreshRequested, requestState }: {
 
 function ProjectsPanel({ projects }: { projects: CanonicalProject[] }) {
   return (
-    <section className="panel">
+    <section className="panel" id="projects">
       <div className="panelHeader">
         <div>
           <p className="eyebrow">projects</p>
@@ -201,7 +281,7 @@ function SourceHealthPanel({ sources, syncRuns }: { sources: SourceHealthSnapsho
   const hasProblems = sources.some((source) => source.status !== 'healthy' || !source.exists || !source.readable)
 
   return (
-    <section className="panel">
+    <section className="panel" id="source-health">
       <div className="panelHeader">
         <div>
           <p className="eyebrow">source health</p>
@@ -245,7 +325,7 @@ function TeamPanel({ teamMembers }: { teamMembers: CanonicalTeamMember[] }) {
   }, [teamMembers])
 
   return (
-    <section className="panel">
+    <section className="panel" id="team">
       <div className="panelHeader">
         <div>
           <p className="eyebrow">team</p>
@@ -282,7 +362,7 @@ function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; 
   const hasProblems = Boolean(adapterStatus?.status === 'failure' || failedJobs.length > 0)
 
   return (
-    <section className="panel">
+    <section className="panel" id="automation">
       <div className="panelHeader">
         <div>
           <p className="eyebrow">cron health</p>
@@ -354,7 +434,7 @@ function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsage
   const latestDate = tokenUsage.map((row) => row.date).sort().at(-1)
 
   return (
-    <section className="panel">
+    <section className="panel" id="tokens">
       <div className="panelHeader">
         <div>
           <p className="eyebrow">token usage</p>
@@ -400,7 +480,7 @@ function WorkspaceSignalsPanel({ signal, syncRuns }: { signal: WorkspaceSignalSn
   const isDirty = signal?.working_tree === 'dirty'
 
   return (
-    <section className="panel">
+    <section className="panel" id="workspace">
       <div className="panelHeader">
         <div>
           <p className="eyebrow">workspace</p>
@@ -539,34 +619,40 @@ function Dashboard({ user }: { user: User }) {
   }, [data.syncRequests, requestState])
 
   return (
-    <main className="dashboardShell">
-      <SyncPanel data={data} user={user} onRefreshRequested={requestRefresh} requestState={requestState} />
-      {loadState === 'loading' && <p className="muted">Loading private dashboard snapshot…</p>}
-      {loadState === 'error' && <p className="errorText">{error}</p>}
-      <ProjectsPanel projects={data.projects} />
-      <SourceHealthPanel sources={data.sourceHealth} syncRuns={data.syncRuns} />
-      <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} />
-      <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />
-      <WorkspaceSignalsPanel signal={data.workspaceSignal} syncRuns={data.syncRuns} />
-      <TeamPanel teamMembers={data.teamMembers} />
-      <section className="panel compactPanel">
-        <div>
-          <p className="eyebrow">latest sync runs</p>
-          <h2>Bridge history</h2>
-        </div>
-        <div className="runList">
-          {data.syncRuns.map((run) => (
-            <div className="runRow" key={run.id}>
-              <span>{run.status}</span>
-              <strong>{run.trigger}</strong>
-              <small>{formatDate(run.finished_at ?? run.started_at)}</small>
+    <div className="controlRoomShell">
+      <ShellSidebar data={data} />
+      <main className="dashboardShell">
+        <ShellHeader data={data} user={user} />
+        <SyncPanel data={data} user={user} onRefreshRequested={requestRefresh} requestState={requestState} />
+        {loadState === 'loading' && <p className="muted loadNotice">Loading private dashboard snapshot…</p>}
+        {loadState === 'error' && <p className="errorText loadNotice">{error}</p>}
+        <div className="dashboardGrid">
+          <ProjectsPanel projects={data.projects} />
+          <SourceHealthPanel sources={data.sourceHealth} syncRuns={data.syncRuns} />
+          <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} />
+          <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />
+          <WorkspaceSignalsPanel signal={data.workspaceSignal} syncRuns={data.syncRuns} />
+          <TeamPanel teamMembers={data.teamMembers} />
+          <section className="panel compactPanel" id="history">
+            <div>
+              <p className="eyebrow">latest sync runs</p>
+              <h2>Bridge history</h2>
             </div>
-          ))}
-          {data.syncRuns.length === 0 && <p className="emptyState">No sync runs recorded yet.</p>}
+            <div className="runList">
+              {data.syncRuns.map((run) => (
+                <div className="runRow" key={run.id}>
+                  <span>{run.status}</span>
+                  <strong>{run.trigger}</strong>
+                  <small>{formatDate(run.finished_at ?? run.started_at)}</small>
+                </div>
+              ))}
+              {data.syncRuns.length === 0 && <p className="emptyState">No sync runs recorded yet.</p>}
+            </div>
+          </section>
         </div>
-      </section>
-      <button className="logoutButton" type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
-    </main>
+        <button className="logoutButton" type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
+      </main>
+    </div>
   )
 }
 

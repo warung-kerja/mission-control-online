@@ -1,6 +1,6 @@
 # Agent Handoff - Mission Control Online
 
-_Last updated: 2026-05-14 00:24 AEST_
+_Last updated: 2026-05-14 06:27 AEST_
 
 ## Read this first
 
@@ -40,9 +40,9 @@ Raz wants this repo to stay easy for Codex Desktop and other agents to continue.
 
 Current priority is overnight continuation:
 
-1. Continue V3 visual shell port: Jen is currently doing the read-only MCO-038 audit; Noona implements after review.
-2. Finish authenticated browser verification that production shows Cron Health and Workspace/Git panels. Static Vercel deployment is verified.
-3. Keep bridge durability/reboot-proofing queued after the visual shell slice.
+1. Continue V3 visual shell port: first shell/chrome slice is implemented; Jen follow-up audit remains queued as `MCO-039` when runtime is available.
+2. Finish authenticated browser verification that production shows Cron Health, Workspace/Git, and the new shell after deployment. Static Vercel deployment was previously verified.
+3. Keep bridge durability/reboot-proofing queued after the visual shell/panel-polish slice.
 4. Reboot-proof bridge durability with Windows Task Scheduler or equivalent.
 5. No V2 remote actions until Raz explicitly approves.
 
@@ -75,7 +75,7 @@ Important files:
 
 ## Current caveats
 
-No TypeScript/build blocker is currently open.
+No TypeScript/build blocker is currently open. First V3-style online shell slice is implemented in `src/App.tsx` and `src/styles.css`.
 
 Latest validation passed from WSL:
 
@@ -94,6 +94,7 @@ Current caveats:
 - `workspace_signal_snapshots` plumbing and UI exist. Current Supabase count is 1 snapshot row.
 - The bridge is process-based and not reboot-proof. Windows Task Scheduler or equivalent is still V1.1 work.
 - Run validation from WSL. The current `node_modules` native packages are Linux-flavored; Windows Node can type-check, but Vite/Rollup/esbuild native binaries fail from PowerShell.
+- Authenticated visual verification of the new V3 shell on Vercel remains pending until after push/deploy.
 
 ## Supabase details
 
@@ -144,10 +145,10 @@ Continue V3 Visual Shell Port safely.
 
 Steps:
 
-1. Wait for or review Jen `MCO-038` read-only audit packet.
-2. Implement the first shell slice only: navigation/header, dashboard grid, panel rhythm, color/type tokens, loading/empty states.
+1. Review Jen `MCO-039` read-only audit packet when runtime is available.
+2. First shell slice is already implemented: navigation/sidebar, control-room header, truth legend, dashboard grid, panel rhythm, color/type tokens.
 3. Keep data contracts unchanged and keep the app read-only.
-4. Run `npm run type-check` and `npm run build` before any commit.
-5. After shell is stable, upgrade panels one by one: Projects, Automation Pulse, Token Usage, Workspace/Git Signals, Source Health, Team, Sync History.
+4. Run `npm run type-check`, `npm run build`, and `npm run supabase:verify` before any commit.
+5. Next visual work: polish panels one by one, starting with Projects and Automation Pulse, then Token Usage, Workspace/Git Signals, Source Health, Team, Sync History.
 6. Return to Windows Task Scheduler or equivalent startup wrapper for `wsl npm run sync:poll`.
-7. Authenticated browser verification of production panels remains pending; static Vercel deployment is verified.
+7. Authenticated browser verification of production panels/new shell remains pending; static Vercel deployment must be rechecked after push.

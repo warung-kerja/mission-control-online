@@ -1309,3 +1309,47 @@ Risks/blockers:
 Next action:
 
 - Review Jen's MCO-038 packet when ready, then implement the first V3 visual shell slice in the online repo only.
+
+---
+
+## 2026-05-14 06:27 AEST — V3 visual shell first slice
+
+Agent: Noona
+
+Task ID: MCO-040
+
+Files changed:
+
+- `src/App.tsx`
+- `src/styles.css`
+- `docs/PROJECT_TRACKER.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+- `docs/AGENT_HANDOFF.md`
+
+Summary:
+
+- Added the first safe Mission Control V3 visual shell slice to the online app without changing Supabase data contracts or bridge logic.
+- Added a V3-style fixed/stacked navigation shell, truth-source legend, operator card, control-room top header, panel anchors, and a responsive 12-column dashboard rhythm.
+- Kept all panels read-only and snapshot-based. No local V3 files were modified.
+- Attempted to delegate the read-only Jen audit first, but this runtime could not spawn `jen` and no existing Jen session was visible; `MCO-039` remains the next bounded Jen review/audit task.
+
+Validation:
+
+```bash
+npm run type-check
+npm run build
+npm run supabase:verify
+```
+
+Result: passed. Supabase verify returned 8 projects, 9 team members, 2 source health records, 64 cron snapshots, 21 token rows, 2 workspace signal snapshots, and RLS checks passed.
+
+Risks/blockers:
+
+- Browser-authenticated visual verification on Vercel is still pending.
+- The shell is a first visual pass; panel-by-panel polish remains.
+- Bridge is still process-based and not reboot-proof.
+
+Next action:
+
+- Push this shell slice, then let Jen audit the result / recommend the next panel-polish slice when a Jen runtime is available.

@@ -1,9 +1,9 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-14 00:24 AEST_
+_Last updated: 2026-05-14 06:27 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
-_Status: V1 complete / V1.1 operational panels in progress_
+_Status: V1 complete / V1.1 visual shell + operational panels in progress_
 _Mode: Private, read-only V1 online mirror_
 
 ---
@@ -35,6 +35,7 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Overnight handoff updated for Workspace/Git commit/push and V3 visual shell port.
 - [x] Workspace/Git Signals changes committed and pushed as `d114515`.
 - [x] Vercel production serves the matching latest built asset hash (`index-CT2apXsp.js`).
+- [x] First V3 visual shell slice added to the online app: sidebar, top header, truth legend, responsive dashboard grid.
 - [x] Manual Refresh button works through `sync_requests`.
 - [x] Local sync bridge runs scheduled 10-minute syncs.
 - [x] Bridge runbook added.
@@ -49,7 +50,7 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [ ] Add Windows Task Scheduler wrapper or equivalent reboot-proof bridge durability.
 - [x] Commit/push current Workspace/Git Signals changes and verify Vercel static deployment.
 - [ ] Authenticated visual verification of Cron Health + Workspace/Git panels after login.
-- [ ] Start V3 Visual Shell Port implementation using local V3 as read-only reference.
+- [x] Start V3 Visual Shell Port implementation using local V3 as read-only reference.
 - [x] Assign/read-only V3 visual shell audit to Jen (`MCO-038`).
 - [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
 - [ ] Do not start V2 remote actions until Raz explicitly approves.
@@ -1776,3 +1777,41 @@ The project is ready for another agent to continue overnight.
 - `src/App.tsx`
 - `src/styles.css`
 - `src/types/supabase.ts`
+
+
+---
+
+## 41. V3 Visual Shell First Slice - 2026-05-14 06:27 AEST
+
+### Status
+
+The first safe V3 visual shell port slice is implemented in Mission Control Online.
+
+### Completed
+
+- Added V3-style sidebar/chrome with section navigation.
+- Added online control-room header with snapshot/run status pills.
+- Added truth-source legend for canonical/runtime/fallback surfaces.
+- Added responsive 12-column dashboard rhythm and panel anchors.
+- Kept all Supabase data contracts, sync bridge behavior, auth, and read-only posture unchanged.
+- Did not modify the local Mission Control V3 repo.
+
+### Validation evidence
+
+```bash
+npm run type-check
+npm run build
+npm run supabase:verify
+```
+
+Result: passed.
+
+### Current caveats
+
+- Authenticated browser visual verification on Vercel remains pending.
+- Panel-by-panel polish should continue after a follow-up audit.
+- Bridge reboot-proofing remains open.
+
+### Next recommended step
+
+Have Jen audit the new shell when available, then polish the Projects and Automation Pulse panels next.
