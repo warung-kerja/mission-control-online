@@ -1344,6 +1344,11 @@ npm run supabase:verify
 
 Result: passed. Supabase verify returned 8 projects, 9 team members, 2 source health records, 64 cron snapshots, 21 token rows, 2 workspace signal snapshots, and RLS checks passed.
 
+Commit/push:
+
+- `0694ee4` (`feat: port first v3 visual shell slice`) pushed to `origin/main`.
+- Static Vercel check passed: production serves `index-D7VUWHhX.js` and `index-DtiB_eW1.css`, matching the local build.
+
 Risks/blockers:
 
 - Browser-authenticated visual verification on Vercel is still pending.

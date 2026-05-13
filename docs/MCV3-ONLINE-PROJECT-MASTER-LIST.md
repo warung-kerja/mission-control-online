@@ -36,6 +36,7 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Workspace/Git Signals changes committed and pushed as `d114515`.
 - [x] Vercel production serves the matching latest built asset hash (`index-CT2apXsp.js`).
 - [x] First V3 visual shell slice added to the online app: sidebar, top header, truth legend, responsive dashboard grid.
+- [x] V3 shell slice pushed as `0694ee4`; Vercel production serves matching static assets (`index-D7VUWHhX.js`, `index-DtiB_eW1.css`).
 - [x] Manual Refresh button works through `sync_requests`.
 - [x] Local sync bridge runs scheduled 10-minute syncs.
 - [x] Bridge runbook added.
@@ -1808,7 +1809,7 @@ Result: passed.
 
 ### Current caveats
 
-- Authenticated browser visual verification on Vercel remains pending.
+- Static Vercel asset verification passed after push; authenticated browser visual verification on Vercel remains pending.
 - Panel-by-panel polish should continue after a follow-up audit.
 - Bridge reboot-proofing remains open.
 

@@ -94,7 +94,7 @@ Current caveats:
 - `workspace_signal_snapshots` plumbing and UI exist. Current Supabase count is 1 snapshot row.
 - The bridge is process-based and not reboot-proof. Windows Task Scheduler or equivalent is still V1.1 work.
 - Run validation from WSL. The current `node_modules` native packages are Linux-flavored; Windows Node can type-check, but Vite/Rollup/esbuild native binaries fail from PowerShell.
-- Authenticated visual verification of the new V3 shell on Vercel remains pending until after push/deploy.
+- Static Vercel deployment check after `0694ee4` is complete: production serves `index-D7VUWHhX.js` and `index-DtiB_eW1.css`. Authenticated visual verification of the new V3 shell remains pending.
 
 ## Supabase details
 
@@ -151,4 +151,4 @@ Steps:
 4. Run `npm run type-check`, `npm run build`, and `npm run supabase:verify` before any commit.
 5. Next visual work: polish panels one by one, starting with Projects and Automation Pulse, then Token Usage, Workspace/Git Signals, Source Health, Team, Sync History.
 6. Return to Windows Task Scheduler or equivalent startup wrapper for `wsl npm run sync:poll`.
-7. Authenticated browser verification of production panels/new shell remains pending; static Vercel deployment must be rechecked after push.
+7. Authenticated browser verification of production panels/new shell remains pending; static Vercel asset check passed after push.

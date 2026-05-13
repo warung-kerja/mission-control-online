@@ -102,7 +102,7 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-037 | 2026-05-13 | Noona | Validated, committed, and pushed Workspace/Git Signals | Done | Commit `d114515` pushed to `origin/main`; post-push sync completed |
 | MCO-038 | 2026-05-14 | Jen | V3 visual shell port audit | In Progress | Read-only audit active; no review packet yet |
 | MCO-039 | 2026-05-14 | Noona | Production/static deployment and Supabase verification gate | Done | Vercel returns HTTP 200 and serves asset hash matching local build; `type-check`, `build`, `supabase:verify` passed |
-| MCO-040 | 2026-05-14 | Noona | V3 visual shell first slice | Done | Added V3-style sidebar/header/truth legend/responsive panel grid; `type-check`, `build`, `supabase:verify` passed |
+| MCO-040 | 2026-05-14 | Noona | V3 visual shell first slice | Done | Commit `0694ee4` pushed; Vercel serves matching assets `index-D7VUWHhX.js` / `index-DtiB_eW1.css`; `type-check`, `build`, `supabase:verify` passed |
 
 ## Next Recommended Tasks
 
@@ -118,7 +118,7 @@ Steps:
 2. Commit MCO-036 Workspace/Git Signals changes. ✅ `d114515`
 3. Push `main` to GitHub. ✅
 4. Wait for Vercel deployment. ✅ static asset hash matches local build
-5. Verify Automation Pulse and Workspace/Git Signals on production. Partial - Supabase rows verified; authenticated visual check still pending
+5. Verify Automation Pulse and Workspace/Git Signals on production. Partial - Supabase rows and static Vercel assets verified; authenticated visual check still pending
 
 Acceptance criteria:
 
