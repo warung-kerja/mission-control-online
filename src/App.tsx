@@ -28,15 +28,37 @@ const emptyDashboard: DashboardData = {
   workspaceSignal: null,
 }
 
-const navItems = [
-  { href: '#projects', label: 'Projects', tone: 'canonical' },
-  { href: '#source-health', label: 'Source Health', tone: 'canonical' },
-  { href: '#automation', label: 'Automation Pulse', tone: 'runtime' },
-  { href: '#tokens', label: 'Token Usage', tone: 'runtime' },
-  { href: '#workspace', label: 'Workspace/Git', tone: 'runtime' },
-  { href: '#team', label: 'Team', tone: 'canonical' },
-  { href: '#history', label: 'Bridge History', tone: 'fallback' },
-] as const
+interface NavItem {
+  href: string
+  label: string
+  tone: 'canonical' | 'runtime' | 'fallback'
+  icon: string
+}
+
+interface NavSection {
+  title: string
+  items: NavItem[]
+}
+
+const navSections: NavSection[] = [
+  {
+    title: 'Primary Surfaces',
+    items: [
+      { href: '#projects', label: 'Projects', tone: 'canonical', icon: '📋' },
+      { href: '#source-health', label: 'Source Health', tone: 'canonical', icon: '🔍' },
+      { href: '#automation', label: 'Automation Pulse', tone: 'runtime', icon: '⚡' },
+      { href: '#tokens', label: 'Token Usage', tone: 'runtime', icon: '📊' },
+    ],
+  },
+  {
+    title: 'System View',
+    items: [
+      { href: '#workspace', label: 'Workspace/Git', tone: 'runtime', icon: '🌿' },
+      { href: '#team', label: 'Team', tone: 'canonical', icon: '👥' },
+      { href: '#history', label: 'Bridge History', tone: 'fallback', icon: '📜' },
+    ],
+  },
+]
 
 function parseDate(value: string | null | undefined) {
   if (!value) return null
@@ -69,7 +91,19 @@ function getLatestSuccessfulSync(syncRuns: SyncRun[]) {
   return syncRuns.find((run) => run.status === 'success') ?? null
 }
 
-function ShellSidebar({ data }: { data: DashboardData }) {
+const sectionMetaByAnchor: Record<string, { eyebrow: string; question: string }> = {
+  '#projects': { eyebrow: 'Movement Board', question: 'Which project should move next?' },
+  '#source-health': { eyebrow: 'Source Audit', question: 'Are all truth sources readable and healthy?' },
+  '#automation': { eyebrow: 'Automation Audit', question: 'What is scheduled and is it healthy?' },
+  '#tokens': { eyebrow: 'Cost Surface', question: 'Where are the tokens going?' },
+  '#workspace': { eyebrow: 'Repository Watch', question: 'What moved in the local repo recently?' },
+  '#team': { eyebrow: 'Crew Structure', question: 'Who exists in the system and how are they organised?' },
+  '#history': { eyebrow: 'Sync History', question: 'How fresh is the bridge and when did it last run?' },
+}
+
+const defaultHeaderMeta = { eyebrow: 'online control room', question: 'Read-only operating picture' }
+
+function ShellSidebar({ data, activeAnchor }: { data: DashboardData; activeAnchor: string }) {
   const latestSuccess = getLatestSuccessfulSync(data.syncRuns)
   const latestSync = latestSuccess?.finished_at ?? latestSuccess?.started_at
 
@@ -82,12 +116,24 @@ function ShellSidebar({ data }: { data: DashboardData }) {
       </div>
 
       <nav className="shellNav">
-        <p className="navLabel">Primary surfaces</p>
-        {navItems.map((item) => (
-          <a href={item.href} key={item.href}>
-            <span className={`navDot ${item.tone}`} />
-            {item.label}
-          </a>
+        {navSections.map((section) => (
+          <div className="navSection" key={section.title}>
+            <p className="navLabel">{section.title}</p>
+            {section.items.map((item) => {
+              const isActive = activeAnchor === item.href
+              return (
+                <a
+                  href={item.href}
+                  key={item.href}
+                  className={isActive ? 'navLink active' : 'navLink'}
+                >
+                  <span className={`navIcon ${item.tone}${isActive ? ' active' : ''}`}>{item.icon}</span>
+                  <span className="navLinkLabel">{item.label}</span>
+                  <span className={`navDot ${item.tone}${isActive ? ' active' : ''}`} />
+                </a>
+              )
+            })}
+          </div>
         ))}
       </nav>
 
@@ -115,18 +161,19 @@ function ShellSidebar({ data }: { data: DashboardData }) {
   )
 }
 
-function ShellHeader({ data, user }: { data: DashboardData; user: User }) {
+function ShellHeader({ data, user, activeAnchor }: { data: DashboardData; user: User; activeAnchor: string }) {
   const latestSuccess = getLatestSuccessfulSync(data.syncRuns)
   const latestRun = data.syncRuns[0]
   const latestSync = latestSuccess?.finished_at ?? latestSuccess?.started_at
   const latestSyncDate = parseDate(latestSync)
   const isStale = latestSyncDate ? Date.now() - latestSyncDate.getTime() > 15 * 60_000 : true
+  const headerMeta = sectionMetaByAnchor[activeAnchor] ?? defaultHeaderMeta
 
   return (
     <header className="shellHeader">
       <div>
-        <p className="eyebrow">online control room</p>
-        <h2>Read-only operating picture</h2>
+        <p className="eyebrow">{headerMeta.eyebrow}</p>
+        <h2>{headerMeta.question}</h2>
         <p className="muted">Vercel + Supabase mirror for Raz. Local Mission Control V3 remains the source system.</p>
       </div>
       <div className="headerStatusRail" aria-label="Snapshot status">
@@ -541,11 +588,14 @@ function WorkspaceSignalsPanel({ signal, syncRuns }: { signal: WorkspaceSignalSn
   )
 }
 
+const panelAnchors = ['#projects', '#source-health', '#automation', '#tokens', '#workspace', '#team', '#history'] as const
+
 function Dashboard({ user }: { user: User }) {
   const [loadState, setLoadState] = useState<LoadState>('idle')
   const [data, setData] = useState<DashboardData>(emptyDashboard)
   const [requestState, setRequestState] = useState<'idle' | 'requesting' | 'requested' | 'error'>('idle')
   const [error, setError] = useState('')
+  const [activeAnchor, setActiveAnchor] = useState<string>('#projects')
 
   async function loadDashboard(options: { silent?: boolean } = {}) {
     if (!options.silent) setLoadState('loading')
@@ -608,6 +658,36 @@ function Dashboard({ user }: { user: User }) {
     void loadDashboard()
   }, [])
 
+  // Intersection Observer: track which panel section is currently in view
+  useEffect(() => {
+    if (loadState !== 'ready') return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Find the entry with the highest intersection ratio that is above threshold
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+
+        if (visible.length > 0) {
+          const anchor = `#${visible[0].target.id}`
+          if (panelAnchors.includes(anchor as typeof panelAnchors[number])) {
+            setActiveAnchor(anchor)
+          }
+        }
+      },
+      { rootMargin: '-20% 0px -60% 0px', threshold: [0, 0.25, 0.5] },
+    )
+
+    // Observe all panel sections by their id
+    for (const anchor of panelAnchors) {
+      const el = document.getElementById(anchor.slice(1))
+      if (el) observer.observe(el)
+    }
+
+    return () => observer.disconnect()
+  }, [loadState])
+
   useEffect(() => {
     if (!hasActiveSyncRequest(data.syncRequests) && requestState !== 'requested') return
 
@@ -620,9 +700,9 @@ function Dashboard({ user }: { user: User }) {
 
   return (
     <div className="controlRoomShell">
-      <ShellSidebar data={data} />
+      <ShellSidebar data={data} activeAnchor={activeAnchor} />
       <main className="dashboardShell">
-        <ShellHeader data={data} user={user} />
+        <ShellHeader data={data} user={user} activeAnchor={activeAnchor} />
         <SyncPanel data={data} user={user} onRefreshRequested={requestRefresh} requestState={requestState} />
         {loadState === 'loading' && (
           <div className="loadingShell">
