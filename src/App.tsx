@@ -624,7 +624,13 @@ function Dashboard({ user }: { user: User }) {
       <main className="dashboardShell">
         <ShellHeader data={data} user={user} />
         <SyncPanel data={data} user={user} onRefreshRequested={requestRefresh} requestState={requestState} />
-        {loadState === 'loading' && <p className="muted loadNotice">Loading private dashboard snapshot…</p>}
+        {loadState === 'loading' && (
+          <div className="loadingShell">
+            <div className="loadingSkeleton" />
+            <div className="loadingSkeleton short" />
+            <p className="muted loadNotice">Loading private dashboard snapshot…</p>
+          </div>
+        )}
         {loadState === 'error' && <p className="errorText loadNotice">{error}</p>}
         <div className="dashboardGrid">
           <ProjectsPanel projects={data.projects} />

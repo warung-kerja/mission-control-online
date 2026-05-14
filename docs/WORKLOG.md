@@ -1358,3 +1358,45 @@ Risks/blockers:
 Next action:
 
 - Push this shell slice, then let Jen audit the result / recommend the next panel-polish slice when a Jen runtime is available.
+
+
+---
+
+## 2026-05-14 18:24 AEST — MCO-041 panel polish review gate
+
+Agent: Noona
+
+Task ID: MCO-041
+
+Files changed:
+
+- `src/App.tsx`
+- `src/styles.css`
+- `docs/PROJECT_TRACKER.md`
+- `docs/AGENT_HANDOFF.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Reviewed Jen's V3 panel-polish slice.
+- Accepted the loading skeleton, panel hover lift, static spotlight, reveal stagger, and reduced-motion direction.
+- Applied one small Noona correction so panel `::after` spotlight pseudo-elements exist in both normal and hover states, and reduced-motion also disables loading skeleton animation.
+- No data fetching, Supabase contracts, auth/security, bridge logic, dependencies, deployment config, cron logic, or local Mission Control V3 files changed.
+
+Validation:
+
+- Scoped forbidden-model search over `src/App.tsx` and `src/styles.css`: clean.
+- `npm run type-check`: passed.
+- `npm run build`: passed; generated `dist/assets/index-C7Bre12Q.css` and `dist/assets/index-DR3SolLA.js`.
+- `npm run supabase:verify`: passed; service-role counts included 8 projects, 9 team, 64 cron rows, 21 token rows, 2 workspace snapshots, 87 sync runs; anon RLS checks passed.
+
+Risks/blockers:
+
+- Cosmetic animations will run on dashboard mount; reduced-motion disables them.
+- Authenticated visual production verification remains pending after deployment.
+- Bridge is still not reboot-proof.
+
+Next action:
+
+- Commit and push the validated panel-polish slice, then verify production visually when authenticated access is available.

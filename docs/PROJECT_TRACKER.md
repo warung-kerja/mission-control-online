@@ -1,8 +1,8 @@
 # Project Tracker - Mission Control Online
 
-_Last updated: 2026-05-14 06:27 AEST_
+_Last updated: 2026-05-14 18:24 AEST_
 _Current phase: V1.1 operational visibility_
-_Current status: V1 complete; first V3 visual shell slice implemented by Noona; Jen follow-up audit remains queued_
+_Current status: V1 complete; V3 visual shell and panel-polish slice validated for commit_
 
 ## Current Priority
 
@@ -22,8 +22,8 @@ Ship the current operational panel work, then start the V3 Visual Shell Port whi
 | Cron Health | Done | Bridge syncs 61 real cron jobs from local OpenClaw cron state files |
 | Token Usage | Done | Bridge syncs daily OpenClaw aggregate token rows; online panel reads `agent_token_usage_daily` |
 | Workspace/Git Signals | Shipped | Commit `d114515` pushed; Vercel serves the matching built assets; online panel reads latest `workspace_signal_snapshots` row |
-| V3 Visual Match | First slice implemented | Noona added the online V3-style shell/chrome after Jen runtime was unavailable; `MCO-039` remains queued for follow-up audit/panel-polish recommendation |
-| Validation | Passing | 2026-05-14 06:27 AEST `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed |
+| V3 Visual Match | Shell + panel polish validated | First shell slice is shipped; Jen `MCO-041` panel polish reviewed by Noona with a small CSS correction and passed validation |
+| Validation | Passing | 2026-05-14 18:24 AEST `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
 | Vercel deploy | Online access verified | Raz confirmed page works from a different computer; magic-link login works |
 
@@ -100,9 +100,10 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-035 | 2026-05-13 | Codex | Added local cron state fallback and synced real cron jobs | Done | `sync:once` wrote 61 cron jobs; Supabase verify sees 62 rows including old adapter row |
 | MCO-036 | 2026-05-13 | Codex | Added Workspace/Git signal snapshots and online panel | Done | `sync:once` wrote 1 workspace signal row; Supabase verify sees 1 `workspace_signal_snapshots` row |
 | MCO-037 | 2026-05-13 | Noona | Validated, committed, and pushed Workspace/Git Signals | Done | Commit `d114515` pushed to `origin/main`; post-push sync completed |
-| MCO-038 | 2026-05-14 | Jen | V3 visual shell port audit | In Progress | Read-only audit active; no review packet yet |
-| MCO-039 | 2026-05-14 | Noona | Production/static deployment and Supabase verification gate | Done | Vercel returns HTTP 200 and serves asset hash matching local build; `type-check`, `build`, `supabase:verify` passed |
+| MCO-038 | 2026-05-14 | Jen | V3 visual shell port audit | Blocked | Stale/incomplete; superseded by clean retry `MCO-039` |
+| MCO-039 | 2026-05-14 | Jen | V3 visual shell port audit clean retry | Done - No Changes | Accepted as planning input for visual polish; no source changes |
 | MCO-040 | 2026-05-14 | Noona | V3 visual shell first slice | Done | Commit `0694ee4` pushed; Vercel serves matching assets `index-D7VUWHhX.js` / `index-DtiB_eW1.css`; `type-check`, `build`, `supabase:verify` passed |
+| MCO-041 | 2026-05-14 | Jen + Noona | V3 panel polish slice | Validated for commit | `src/App.tsx` loading skeleton and `src/styles.css` panel hover/spotlight/reveal polish; validation passed |
 
 ## Next Recommended Tasks
 
@@ -130,7 +131,7 @@ Acceptance criteria:
 
 Owner: Jen audit, then Noona implementation
 
-Status: First slice implemented as MCO-040; MCO-039 remains queued for follow-up audit
+Status: Shell slice implemented as MCO-040; panel-polish slice MCO-041 validated for commit
 
 Steps:
 
@@ -139,7 +140,7 @@ Steps:
 3. Apply the first shell slice to the online app without changing data contracts. ✅
 4. Keep the app read-only. ✅
 5. Validate desktop/mobile layouts with WSL build checks. ✅
-6. Continue panel-by-panel polish after Jen follow-up audit.
+6. Continue panel-by-panel polish after Jen follow-up audit. ✅ MCO-041 validated
 
 Acceptance criteria:
 

@@ -1,6 +1,6 @@
 # Agent Handoff - Mission Control Online
 
-_Last updated: 2026-05-14 06:27 AEST_
+_Last updated: 2026-05-14 18:24 AEST_
 
 ## Read this first
 
@@ -40,8 +40,8 @@ Raz wants this repo to stay easy for Codex Desktop and other agents to continue.
 
 Current priority is overnight continuation:
 
-1. Continue V3 visual shell port: first shell/chrome slice is implemented; Jen follow-up audit remains queued as `MCO-039` when runtime is available.
-2. Finish authenticated browser verification that production shows Cron Health, Workspace/Git, and the new shell after deployment. Static Vercel deployment was previously verified.
+1. Continue V3 visual polish: first shell/chrome slice is implemented and Jen `MCO-041` panel polish has passed Noona validation for commit/push.
+2. Finish authenticated browser verification that production shows Cron Health, Workspace/Git, the new shell, and the panel polish after deployment. Static Vercel deployment was previously verified.
 3. Keep bridge durability/reboot-proofing queued after the visual shell/panel-polish slice.
 4. Reboot-proof bridge durability with Windows Task Scheduler or equivalent.
 5. No V2 remote actions until Raz explicitly approves.
@@ -75,7 +75,7 @@ Important files:
 
 ## Current caveats
 
-No TypeScript/build blocker is currently open. First V3-style online shell slice is implemented in `src/App.tsx` and `src/styles.css`.
+No TypeScript/build blocker is currently open. First V3-style online shell slice is implemented, and the MCO-041 panel polish slice adds loading skeletons plus CSS hover/spotlight/reveal polish in `src/App.tsx` and `src/styles.css`.
 
 Latest validation passed from WSL:
 
@@ -85,16 +85,16 @@ npm run build
 npm run supabase:verify
 ```
 
-2026-05-14 static production check: Vercel returned HTTP 200 and served `assets/index-CT2apXsp.js`, matching the current local production build asset hash.
+2026-05-14 validation for MCO-041 passed: forbidden-model scoped search clean, `npm run type-check`, `npm run build`, and `npm run supabase:verify`.
 
 Current caveats:
 
+- Static Vercel deployment check after `0694ee4` is complete: production serves `index-D7VUWHhX.js` and `index-DtiB_eW1.css`. Authenticated visual verification of the new V3 shell/panel polish remains pending.
 - `cron_job_snapshots` plumbing and UI exist. The bridge now prefers local OpenClaw cron state files and successfully synced 61 real cron jobs. The gateway CLI path is still flaky because the gateway has event-loop delays, but Cron Health no longer depends on it for the normal sync path.
 - `agent_token_usage_daily` plumbing and UI exist. Current Supabase count is 21 aggregate rows.
 - `workspace_signal_snapshots` plumbing and UI exist. Current Supabase count is 1 snapshot row.
 - The bridge is process-based and not reboot-proof. Windows Task Scheduler or equivalent is still V1.1 work.
 - Run validation from WSL. The current `node_modules` native packages are Linux-flavored; Windows Node can type-check, but Vite/Rollup/esbuild native binaries fail from PowerShell.
-- Static Vercel deployment check after `0694ee4` is complete: production serves `index-D7VUWHhX.js` and `index-DtiB_eW1.css`. Authenticated visual verification of the new V3 shell remains pending.
 
 ## Supabase details
 
@@ -149,6 +149,6 @@ Steps:
 2. First shell slice is already implemented: navigation/sidebar, control-room header, truth legend, dashboard grid, panel rhythm, color/type tokens.
 3. Keep data contracts unchanged and keep the app read-only.
 4. Run `npm run type-check`, `npm run build`, and `npm run supabase:verify` before any commit.
-5. Next visual work: polish panels one by one, starting with Projects and Automation Pulse, then Token Usage, Workspace/Git Signals, Source Health, Team, Sync History.
+5. Next visual work: after MCO-041 is pushed, consider the blocked follow-up `MCO-042` nav polish/scroll-active metadata slice.
 6. Return to Windows Task Scheduler or equivalent startup wrapper for `wsl npm run sync:poll`.
 7. Authenticated browser verification of production panels/new shell remains pending; static Vercel asset check passed after push.

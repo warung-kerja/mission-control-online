@@ -1,9 +1,9 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-14 06:27 AEST_
+_Last updated: 2026-05-14 18:24 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
-_Status: V1 complete / V1.1 visual shell + operational panels in progress_
+_Status: V1 complete / V1.1 visual shell shipped; panel polish validated_
 _Mode: Private, read-only V1 online mirror_
 
 ---
@@ -11,6 +11,16 @@ _Mode: Private, read-only V1 online mirror_
 ## 0. Master Checklist
 
 Use this section as the fast truth source for what is done and what is next. Detailed evidence remains in the progress updates below.
+
+### Current snapshot — 2026-05-14 18:24 AEST
+
+- **Current phase:** V1.1 operational visibility + V3 visual polish.
+- **Done:** V1 private read-only online mirror is complete; operational panels are online; first V3 shell slice is deployed and statically verified.
+- **In progress / queued:** `MCO-042` nav polish is prepared but blocked until the MCO-041 commit/push baseline is clean.
+- **Ready for Noona review:** None after this gate; `MCO-041` passed review/validation and is ready to be committed/pushed.
+- **Next milestone:** Push the validated `MCO-041` panel-polish slice, then run authenticated visual production verification when available.
+- **Blocked / caveats:** Bridge is still not reboot-proof; authenticated production visual verification is still pending.
+- **Release/readiness:** V1 is released/usable. V1.1 is partially released; not fully durability-ready until the bridge survives restart/sign-in.
 
 ### ✅ Completed / shipped
 
@@ -37,6 +47,8 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Vercel production serves the matching latest built asset hash (`index-CT2apXsp.js`).
 - [x] First V3 visual shell slice added to the online app: sidebar, top header, truth legend, responsive dashboard grid.
 - [x] V3 shell slice pushed as `0694ee4`; Vercel production serves matching static assets (`index-D7VUWHhX.js`, `index-DtiB_eW1.css`).
+- [x] V3 shell deployment check documented and pushed as `421611f`.
+- [x] Jen `MCO-039` no-edit visual shell audit accepted as planning input for next polish slice.
 - [x] Manual Refresh button works through `sync_requests`.
 - [x] Local sync bridge runs scheduled 10-minute syncs.
 - [x] Bridge runbook added.
@@ -52,7 +64,8 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Commit/push current Workspace/Git Signals changes and verify Vercel static deployment.
 - [ ] Authenticated visual verification of Cron Health + Workspace/Git panels after login.
 - [x] Start V3 Visual Shell Port implementation using local V3 as read-only reference.
-- [x] Assign/read-only V3 visual shell audit to Jen (`MCO-038`).
+- [x] Assign/read-only V3 visual shell audit to Jen (`MCO-038` / clean retry `MCO-039`).
+- [x] Complete/review Jen `MCO-041` V3 panel polish slice.
 - [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
 - [ ] Do not start V2 remote actions until Raz explicitly approves.
 
@@ -880,7 +893,9 @@ Not planned for now.
 - [x] Port cron health panel from local V3 to online.
 - [x] Add `cron_job_snapshots` upsert during `runSync()`.
 - [x] Validate cron snapshot sync with `npm run type-check`, `npm run build`, and `npm run supabase:verify`.
-- [ ] Add/check local OpenClaw gateway credentials so real cron jobs sync.
+- [x] Add local cron state fallback so real cron jobs sync reliably despite unstable gateway CLI access.
+- [x] Review and validate Jen `MCO-041` panel-polish DoD.
+- [ ] Authenticated visual verification of production Cron Health + Workspace/Git + V3 shell panels.
 - [ ] Decide and implement reboot-proof bridge durability path.
 
 ---
@@ -908,8 +923,9 @@ Recommended build order:
 3. [x] Add local cron state fallback for real cron rows.
 4. [x] Add Token Usage panel.
 5. [x] Add Workspace/Git Signals panel.
-6. [ ] Make the bridge reboot-proof.
-7. [ ] Only then discuss V2 controlled actions.
+6. [ ] Complete/review the V3 panel-polish slice (`MCO-041`) without changing data contracts.
+7. [ ] Make the bridge reboot-proof.
+8. [ ] Only then discuss V2 controlled actions.
 
 Do not add remote command execution or browser-triggered local actions until Raz explicitly approves V2 scope.
 
@@ -1816,3 +1832,66 @@ Result: passed.
 ### Next recommended step
 
 Have Jen audit the new shell when available, then polish the Projects and Automation Pulse panels next.
+
+
+---
+
+## 42. Status Refresh — 2026-05-14 12:50 AEST
+
+### Status
+
+V1 is released and usable. V1.1 is in visual polish/durability mode.
+
+### Completed / accepted since the previous master-list update
+
+- Repository is clean and aligned on `main` at `421611f` (`docs: record v3 shell deployment check`).
+- `MCO-039` no-edit V3 visual shell audit was accepted as planning input.
+- First shell slice remains shipped: `0694ee4` plus deployment check `421611f`.
+- Static Vercel asset verification has passed for the first V3 shell slice.
+
+### Current / queued
+
+- `MCO-041` passed Noona review/validation; commit/push is the immediate next step.
+- `MCO-042` nav polish is prepared but remains blocked until the clean post-commit baseline is confirmed.
+
+### Blockers / caveats
+
+- Bridge durability is still open: no Windows Task Scheduler/equivalent reboot-proof runner yet.
+- Authenticated visual production verification is still pending after login.
+
+### Validation / release readiness
+
+- Latest evidence in repo/docs: `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed for the shipped shell slice.
+- Current refresh did not run a new build; repo status/log evidence confirms no new source diff to validate.
+- V1 is release-ready/usable. V1.1 is not fully durability-ready until bridge restart behavior is solved.
+
+
+---
+
+## 43. Review Gate — 2026-05-14 18:24 AEST
+
+### Result
+
+`MCO-041` V3 panel polish passed Noona review and validation.
+
+### Accepted scope
+
+- Loading skeleton wrapper in `src/App.tsx`.
+- Panel hover lift, static spotlight gradients, reveal stagger, shimmer loading skeleton, and reduced-motion guard in `src/styles.css`.
+- No data, auth, Supabase, bridge, dependency, deployment, cron, or local V3 changes.
+
+### Noona correction
+
+- Adjusted the spotlight pseudo-element selector so `::after` exists in both normal and hover states.
+- Added `.loadingSkeleton` to reduced-motion animation disabling.
+
+### Validation
+
+- Scoped forbidden-model search over changed source files: clean.
+- `npm run type-check`: passed.
+- `npm run build`: passed.
+- `npm run supabase:verify`: passed with RLS checks intact.
+
+### Next
+
+Commit/push the coherent `MCO-041` slice, then verify the authenticated production UI after deployment.
