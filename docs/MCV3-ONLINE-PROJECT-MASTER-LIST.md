@@ -1,9 +1,9 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-14 18:24 AEST_
+_Last updated: 2026-05-15 12:04 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
-_Status: V1 complete / V1.1 visual shell shipped; panel polish validated_
+_Status: V1 complete / V1.1 visual shell + panel/nav polish shipped; bridge durability planning queued_
 _Mode: Private, read-only V1 online mirror_
 
 ---
@@ -12,15 +12,15 @@ _Mode: Private, read-only V1 online mirror_
 
 Use this section as the fast truth source for what is done and what is next. Detailed evidence remains in the progress updates below.
 
-### Current snapshot — 2026-05-14 18:24 AEST
+### Current snapshot — 2026-05-15 06:50 AEST
 
-- **Current phase:** V1.1 operational visibility + V3 visual polish.
-- **Done:** V1 private read-only online mirror is complete; operational panels are online; first V3 shell slice is deployed and statically verified.
-- **In progress / queued:** `MCO-042` nav polish is prepared but blocked until the MCO-041 commit/push baseline is clean.
-- **Ready for Noona review:** None after this gate; `MCO-041` passed review/validation and is ready to be committed/pushed.
-- **Next milestone:** Push the validated `MCO-041` panel-polish slice, then run authenticated visual production verification when available.
-- **Blocked / caveats:** Bridge is still not reboot-proof; authenticated production visual verification is still pending.
-- **Release/readiness:** V1 is released/usable. V1.1 is partially released; not fully durability-ready until the bridge survives restart/sign-in.
+- **Current phase:** V1.1 operational visibility + V3 visual polish/durability.
+- **Done:** V1 private read-only online mirror is complete; operational panels are online; V3 shell, panel polish, and nav polish slices are committed/pushed through `4f0a1d3`.
+- **In progress / queued:** `MCO-044` is Pending for Jen as the clean-retry no-edit bridge durability implementation packet for Raz's Windows + WSL setup.
+- **Ready for Noona review:** None. `MCO-043` was marked Blocked as stale/incomplete because no DoD packet was present.
+- **Next milestone:** Jen completes `MCO-044`; then Noona reviews bridge durability options with Raz before any scheduler/wrapper changes. Authenticated production visual verification of `4f0a1d3` remains needed.
+- **Blocked / caveats:** Bridge is still not reboot-proof; authenticated production visual verification for latest shell/panel/nav polish is still pending.
+- **Release/readiness:** V1 is released/usable. V1.1 visual polish is shipped to `main` and validation-passing; not fully durability-ready until the bridge survives restart/sign-in.
 
 ### ✅ Completed / shipped
 
@@ -49,6 +49,8 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] V3 shell slice pushed as `0694ee4`; Vercel production serves matching static assets (`index-D7VUWHhX.js`, `index-DtiB_eW1.css`).
 - [x] V3 shell deployment check documented and pushed as `421611f`.
 - [x] Jen `MCO-039` no-edit visual shell audit accepted as planning input for next polish slice.
+- [x] V3 panel polish slice reviewed, validated, committed, and pushed as `91a0906`.
+- [x] V3 nav polish + scroll-active metadata slice reviewed, validated, committed, and pushed as `4f0a1d3`.
 - [x] Manual Refresh button works through `sync_requests`.
 - [x] Local sync bridge runs scheduled 10-minute syncs.
 - [x] Bridge runbook added.
@@ -65,7 +67,10 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [ ] Authenticated visual verification of Cron Health + Workspace/Git panels after login.
 - [x] Start V3 Visual Shell Port implementation using local V3 as read-only reference.
 - [x] Assign/read-only V3 visual shell audit to Jen (`MCO-038` / clean retry `MCO-039`).
-- [x] Complete/review Jen `MCO-041` V3 panel polish slice.
+- [x] Complete/review/ship Jen `MCO-041` V3 panel polish slice.
+- [x] Complete/review/ship Jen `MCO-042` V3 nav polish + scroll-active metadata slice.
+- [ ] Complete/review Jen `MCO-044` bridge durability implementation packet. (`MCO-043` blocked as stale/incomplete.)
+- [ ] Authenticated production visual verification for the latest V3 shell/panel/nav polish.
 - [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
 - [ ] Do not start V2 remote actions until Raz explicitly approves.
 
@@ -923,9 +928,11 @@ Recommended build order:
 3. [x] Add local cron state fallback for real cron rows.
 4. [x] Add Token Usage panel.
 5. [x] Add Workspace/Git Signals panel.
-6. [ ] Complete/review the V3 panel-polish slice (`MCO-041`) without changing data contracts.
-7. [ ] Make the bridge reboot-proof.
-8. [ ] Only then discuss V2 controlled actions.
+6. [x] Complete/review/ship the V3 panel-polish slice (`MCO-041`) without changing data contracts.
+7. [x] Complete/review/ship the V3 nav polish + scroll-active metadata slice (`MCO-042`).
+8. [ ] Review Jen `MCO-043` bridge durability packet, then choose a reboot-proof runner path with Raz approval.
+9. [ ] Make the bridge reboot-proof.
+10. [ ] Only then discuss V2 controlled actions.
 
 Do not add remote command execution or browser-triggered local actions until Raz explicitly approves V2 scope.
 
@@ -1895,3 +1902,97 @@ V1 is released and usable. V1.1 is in visual polish/durability mode.
 ### Next
 
 Commit/push the coherent `MCO-041` slice, then verify the authenticated production UI after deployment.
+
+
+---
+
+## 44. Master List Refresh — 2026-05-14 18:50 AEST
+
+### Status
+
+V1 is released and usable. V1.1 shell + panel polish is now shipped on `main`.
+
+### Completed / accepted since the previous master-list update
+
+- `MCO-041` was accepted, committed, and pushed as `91a0906` (`feat: add v3 panel polish`).
+- Validation evidence from Noona review: scoped forbidden-model search clean; `npm run type-check`, `npm run build`, and `npm run supabase:verify` all passed.
+- Repo is clean and aligned on `main`/`origin/main` at `91a0906`.
+
+### Current / queued
+
+- `MCO-042` is pending for Jen: V3 nav polish + scroll-active metadata, scoped to `src/App.tsx` and `src/styles.css`.
+
+### Blockers / caveats
+
+- Authenticated production visual verification is still pending for the latest shell/panel polish after Vercel deployment.
+- Bridge durability remains open: no Windows Task Scheduler/equivalent reboot-proof runner yet.
+
+### Validation / release readiness
+
+- V1 is release-ready/usable.
+- V1.1 visual polish is shipped to GitHub and validation-passing, but not fully durability-ready until bridge restart behavior is solved.
+
+
+---
+
+## 45. Master List Refresh — 2026-05-15 00:50 AEST
+
+### Status
+
+V1 is released and usable. V1.1 shell, panel polish, and nav polish are now shipped on `main`.
+
+### Completed / accepted since the previous master-list update
+
+- `MCO-042` was accepted, committed, and pushed as `4f0a1d3` (`feat: add v3 nav polish`).
+- Shipped scope: grouped sidebar nav, emoji icon boxes, scroll-active sidebar state, and section-aware header eyebrow/question copy.
+- Validation evidence from Noona review: scoped forbidden-model search clean; `npm run type-check`, `npm run build`, and `npm run supabase:verify` all passed.
+
+### Current / queued
+
+- No active Jen implementation task is queued for Mission Control Online.
+- Next work should wait for authenticated production visual verification and any Noona/Raz decision on whether the dynamic header metadata and emoji icons should stay as-is.
+
+### Blockers / caveats
+
+- Authenticated production visual verification remains pending after Vercel deploys `4f0a1d3`.
+- Bridge durability remains open: no Windows Task Scheduler/equivalent reboot-proof runner yet.
+- The repo has this tracker doc modified for visibility; no source changes are currently pending per latest git log/status check.
+
+### Validation / release readiness
+
+- V1 is release-ready/usable.
+- V1.1 visual polish is shipped to GitHub and validation-passing through `4f0a1d3`.
+- Release is not fully durability-ready until bridge restart behavior is solved and authenticated production visual verification passes.
+
+
+---
+
+## 46. Master List Refresh — 2026-05-15 06:50 AEST
+
+### Status
+
+V1 remains released and usable. V1.1 visual polish is shipped; the active focus has moved to bridge durability planning.
+
+### Completed / accepted since the previous master-list update
+
+- No new source milestone was accepted after `4f0a1d3`.
+- Noona's 06:15 review gate found no Mission Control Online work ready for review.
+- Repo evidence: `main` is aligned with `origin/main` at `4f0a1d3`; only this master-list doc is dirty for visibility tracking.
+
+### Current / queued
+
+- `MCO-043` is Pending for Jen: a no-edit bridge durability implementation packet for Windows + WSL reboot-proofing.
+- Scope is planning only: startup trigger, WSL command form, logs, PID-lock behavior, stop/restart, health check, rollback/removal, and validation steps.
+- No scheduler/service creation should happen until Noona reviews the packet and Raz approves the chosen durability path.
+
+### Blockers / caveats
+
+- Bridge remains process-based and not reboot-proof.
+- Authenticated production visual verification of the shipped V3 shell/panel/nav polish remains pending.
+- Gateway cron CLI access remains flaky, but the local cron state fallback continues to mitigate normal Cron Health sync.
+
+### Validation / release readiness
+
+- Latest accepted validation remains the `MCO-042` Noona gate: scoped forbidden-model search clean; `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed.
+- This refresh did not run a new build because there are no source changes to validate.
+- V1 is release-ready/usable. V1.1 is visually shipped but not durability-ready until bridge restart/sign-in behavior is solved.
