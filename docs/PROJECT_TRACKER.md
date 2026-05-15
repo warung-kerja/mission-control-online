@@ -1,12 +1,12 @@
 # Project Tracker - Mission Control Online
 
-_Last updated: 2026-05-14 18:24 AEST_
+_Last updated: 2026-05-15 18:15 AEST_
 _Current phase: V1.1 operational visibility_
-_Current status: V1 complete; V3 visual shell and panel-polish slice validated for commit_
+_Current status: V1 complete; V3 shell/panel/nav polish shipped; bridge durability packet reviewed, awaiting Raz approval_
 
 ## Current Priority
 
-Ship the current operational panel work, then start the V3 Visual Shell Port while keeping the repo easy for Codex Desktop and future agents to continue.
+Keep Mission Control Online stable and read-only, finish bridge durability with Raz approval, and complete authenticated production visual verification.
 
 ## Current State Summary
 
@@ -22,8 +22,8 @@ Ship the current operational panel work, then start the V3 Visual Shell Port whi
 | Cron Health | Done | Bridge syncs 61 real cron jobs from local OpenClaw cron state files |
 | Token Usage | Done | Bridge syncs daily OpenClaw aggregate token rows; online panel reads `agent_token_usage_daily` |
 | Workspace/Git Signals | Shipped | Commit `d114515` pushed; Vercel serves the matching built assets; online panel reads latest `workspace_signal_snapshots` row |
-| V3 Visual Match | Shell + panel polish validated | First shell slice is shipped; Jen `MCO-041` panel polish reviewed by Noona with a small CSS correction and passed validation |
-| Validation | Passing | 2026-05-14 18:24 AEST `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed |
+| V3 Visual Match | Shell + panel + nav polish shipped | Shell, panel polish, and nav/scroll-active metadata slices are pushed through `4f0a1d3` |
+| Validation | Passing | 2026-05-15 18:15 AEST read-only bridge durability review passed; `npm run supabase:verify` passed |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
 | Vercel deploy | Online access verified | Raz confirmed page works from a different computer; magic-link login works |
 
@@ -47,9 +47,9 @@ Next fix:
 
 ### BRIDGE-001 - Bridge Not Reboot-Proof
 
-Status: Open - V1.1 durability task
+Status: Planning accepted - waiting on Raz approval before persistent scheduler/startup changes
 
-The bridge works as a single process, but it is not yet managed by Windows Task Scheduler or an equivalent startup wrapper.
+The bridge works as a single process, but it is not yet managed by Windows Task Scheduler or an equivalent startup wrapper. Jen `MCO-044` produced a reviewed no-edit implementation packet covering candidate Task Scheduler command, PID-lock behavior, health checks, rollback, and approval points.
 
 ## Closed Blockers
 
@@ -103,7 +103,10 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-038 | 2026-05-14 | Jen | V3 visual shell port audit | Blocked | Stale/incomplete; superseded by clean retry `MCO-039` |
 | MCO-039 | 2026-05-14 | Jen | V3 visual shell port audit clean retry | Done - No Changes | Accepted as planning input for visual polish; no source changes |
 | MCO-040 | 2026-05-14 | Noona | V3 visual shell first slice | Done | Commit `0694ee4` pushed; Vercel serves matching assets `index-D7VUWHhX.js` / `index-DtiB_eW1.css`; `type-check`, `build`, `supabase:verify` passed |
-| MCO-041 | 2026-05-14 | Jen + Noona | V3 panel polish slice | Validated for commit | `src/App.tsx` loading skeleton and `src/styles.css` panel hover/spotlight/reveal polish; validation passed |
+| MCO-041 | 2026-05-14 | Jen + Noona | V3 panel polish slice | Done | Commit `91a0906`; validation passed |
+| MCO-042 | 2026-05-15 | Jen + Noona | V3 nav polish + scroll-active metadata | Done | Commit `4f0a1d3`; validation passed |
+| MCO-043 | 2026-05-15 | Jen | Bridge durability packet first attempt | Blocked | Stale/incomplete; superseded by `MCO-044` |
+| MCO-044 | 2026-05-15 | Jen + Noona | Bridge durability implementation packet | Done - No Changes | Packet reviewed; no scheduler changes without Raz approval; `npm run supabase:verify` passed |
 
 ## Next Recommended Tasks
 
@@ -131,7 +134,7 @@ Acceptance criteria:
 
 Owner: Jen audit, then Noona implementation
 
-Status: Shell slice implemented as MCO-040; panel-polish slice MCO-041 validated for commit
+Status: Shell slice, panel polish, and nav polish shipped through MCO-042
 
 Steps:
 
@@ -140,7 +143,8 @@ Steps:
 3. Apply the first shell slice to the online app without changing data contracts. ✅
 4. Keep the app read-only. ✅
 5. Validate desktop/mobile layouts with WSL build checks. ✅
-6. Continue panel-by-panel polish after Jen follow-up audit. ✅ MCO-041 validated
+6. Continue panel-by-panel polish after Jen follow-up audit. ✅ MCO-041 shipped
+7. Add nav grouping, scroll-active state, and dynamic header metadata. ✅ MCO-042 shipped
 
 Acceptance criteria:
 
@@ -154,10 +158,11 @@ Owner: Noona + Raz
 
 Steps:
 
-1. Create a Windows Task Scheduler entry or equivalent startup wrapper.
-2. Ensure it runs the WSL `npm run sync:poll` command from this repo.
-3. Confirm only one bridge process runs.
-4. Confirm sync resumes after restart/sign-in.
+1. Review and approve the Task Scheduler plan. ✅ MCO-044 packet accepted by Noona
+2. Create a Windows Task Scheduler entry or equivalent startup wrapper after Raz approval.
+3. Ensure it runs the WSL `npm run sync:poll` command from this repo.
+4. Confirm only one bridge process runs.
+5. Confirm sync resumes after restart/sign-in.
 
 Acceptance criteria:
 

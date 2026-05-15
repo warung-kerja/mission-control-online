@@ -1400,3 +1400,45 @@ Risks/blockers:
 Next action:
 
 - Commit and push the validated panel-polish slice, then verify production visually when authenticated access is available.
+
+---
+
+## 2026-05-15 18:15 AEST — MCO-044 bridge durability packet review
+
+Agent: Noona
+
+Task ID: MCO-044
+
+Files changed:
+
+- `docs/PROJECT_TRACKER.md`
+- `docs/AGENT_HANDOFF.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+
+Summary:
+
+- Reviewed Jen's no-edit bridge durability implementation packet for Raz's Windows + WSL setup.
+- Accepted the Task Scheduler direction as a practical planning packet only: candidate WSL command, PID-lock interaction, health checks, rollback, and approval points are clear.
+- Did not create, modify, enable, disable, or test any persistent scheduler/startup automation.
+- Persistent bridge durability remains gated on Raz approval because it keeps WSL running and uses local `.env.sync` service-role configuration.
+
+Validation:
+
+- `git status --short --branch`: `main...origin/main` with docs-only master-list drift before this doc refresh.
+- `git log -3 --oneline`: `ad602b5`, `4f0a1d3`, `91a0906`.
+- Package scripts confirmed present: `sync:poll`, `sync:once`, `supabase:verify`, `sync:dry`, `type-check`, `build`.
+- Read-only process/lock check: no active bridge process and no `/tmp/mission-control-online-sync-bridge.pid` lock file.
+- Scoped forbidden-model search on changed project docs: clean.
+- `npm run supabase:verify`: passed; service-role counts included 8 projects, 9 team, 64 cron rows, 21 token rows, 2 workspace snapshots, 87 sync runs; anon RLS checks passed.
+
+Risks/blockers:
+
+- Bridge is still not reboot-proof until Raz approves and Noona applies/tests the Windows Task Scheduler wrapper.
+- WSL 24/7 uptime has memory cost, and bridge logs need later rotation/truncation if the scheduled bridge runs continuously.
+- Authenticated production visual verification of the latest shell/panel/nav polish remains pending.
+
+Next action:
+
+- Ask Raz to approve the Task Scheduler bridge wrapper before creating any persistent startup automation.
+

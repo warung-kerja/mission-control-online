@@ -1,6 +1,6 @@
 # Agent Handoff - Mission Control Online
 
-_Last updated: 2026-05-14 18:24 AEST_
+_Last updated: 2026-05-15 18:15 AEST_
 
 ## Read this first
 
@@ -38,12 +38,12 @@ Before working:
 
 Raz wants this repo to stay easy for Codex Desktop and other agents to continue. Every meaningful work session must update the master list, tracker, worklog, and this handoff when context changes.
 
-Current priority is overnight continuation:
+Current priority is durability + verification:
 
-1. Continue V3 visual polish: first shell/chrome slice is implemented and Jen `MCO-041` panel polish has passed Noona validation for commit/push.
-2. Finish authenticated browser verification that production shows Cron Health, Workspace/Git, the new shell, and the panel polish after deployment. Static Vercel deployment was previously verified.
-3. Keep bridge durability/reboot-proofing queued after the visual shell/panel-polish slice.
-4. Reboot-proof bridge durability with Windows Task Scheduler or equivalent.
+1. Keep the shipped V3 shell, panel polish, and nav polish stable.
+2. Finish authenticated browser verification that production shows Cron Health, Workspace/Git, the new shell, panel polish, and nav active-state after deployment.
+3. Bridge durability planning is accepted via `MCO-044`; do not create persistent scheduler/startup automation until Raz approves it.
+4. After approval, reboot-proof bridge durability with Windows Task Scheduler or equivalent and verify after sign-in/restart.
 5. No V2 remote actions until Raz explicitly approves.
 
 ## Current technical state
@@ -75,7 +75,7 @@ Important files:
 
 ## Current caveats
 
-No TypeScript/build blocker is currently open. First V3-style online shell slice is implemented, and the MCO-041 panel polish slice adds loading skeletons plus CSS hover/spotlight/reveal polish in `src/App.tsx` and `src/styles.css`.
+No TypeScript/build blocker is currently open. V3-style shell, panel polish, and nav polish are shipped through `4f0a1d3`. The MCO-044 bridge durability packet has been reviewed as a no-edit implementation plan; persistent Windows Task Scheduler/startup changes require Raz approval before execution.
 
 Latest validation passed from WSL:
 
@@ -85,7 +85,7 @@ npm run build
 npm run supabase:verify
 ```
 
-2026-05-14 validation for MCO-041 passed: forbidden-model scoped search clean, `npm run type-check`, `npm run build`, and `npm run supabase:verify`.
+2026-05-15 validation for MCO-044 review passed: package scripts present, no active bridge process/lock detected, scoped forbidden-model search clean on docs, and `npm run supabase:verify` passed.
 
 Current caveats:
 
@@ -93,7 +93,7 @@ Current caveats:
 - `cron_job_snapshots` plumbing and UI exist. The bridge now prefers local OpenClaw cron state files and successfully synced 61 real cron jobs. The gateway CLI path is still flaky because the gateway has event-loop delays, but Cron Health no longer depends on it for the normal sync path.
 - `agent_token_usage_daily` plumbing and UI exist. Current Supabase count is 21 aggregate rows.
 - `workspace_signal_snapshots` plumbing and UI exist. Current Supabase count is 1 snapshot row.
-- The bridge is process-based and not reboot-proof. Windows Task Scheduler or equivalent is still V1.1 work.
+- The bridge is process-based and not reboot-proof. Windows Task Scheduler or equivalent is still V1.1 work, gated on Raz approval.
 - Run validation from WSL. The current `node_modules` native packages are Linux-flavored; Windows Node can type-check, but Vite/Rollup/esbuild native binaries fail from PowerShell.
 
 ## Supabase details
