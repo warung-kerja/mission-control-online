@@ -406,7 +406,11 @@ function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; 
   const failedJobs = visibleJobs.filter((job) => job.status === 'failure')
   const runningJobs = visibleJobs.filter((job) => job.status === 'running')
   const disabledJobs = visibleJobs.filter((job) => job.status === 'disabled' || job.enabled === false)
-  const hasProblems = Boolean(adapterStatus?.status === 'failure' || failedJobs.length > 0)
+  // Only flag system-level problems: adapter failure, or a high ratio of failing vs total.
+  // Single-digit transient failures (rate-limit, timeout) are normal operational noise.
+  const adapterDown = adapterStatus?.status === 'failure'
+  const failureRatio = visibleJobs.length > 0 ? failedJobs.length / visibleJobs.length : 0
+  const hasProblems = adapterDown || failureRatio > 0.25
 
   return (
     <section className="panel" id="automation">
