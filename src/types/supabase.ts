@@ -76,6 +76,7 @@ export interface CronJobSnapshot {
 export interface AgentTokenUsageDaily {
   id: string
   agent: string
+  parent_agent?: string | null
   date: string
   input_tokens: number
   output_tokens: number

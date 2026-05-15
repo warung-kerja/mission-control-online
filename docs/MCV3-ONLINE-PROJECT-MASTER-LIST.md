@@ -1,9 +1,9 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-15 18:15 AEST_
+_Last updated: 2026-05-16 06:50 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
-_Status: V1 complete / V1.1 visual shell + panel/nav polish shipped; bridge durability packet reviewed, awaiting Raz approval_
+_Status: V1 complete / V1.1 visual shell + panel/nav polish shipped; bridge durability packet reviewed and recorded, awaiting Raz approval_
 _Mode: Private, read-only V1 online mirror_
 
 ---
@@ -12,14 +12,15 @@ _Mode: Private, read-only V1 online mirror_
 
 Use this section as the fast truth source for what is done and what is next. Detailed evidence remains in the progress updates below.
 
-### Current snapshot — 2026-05-15 18:15 AEST
+### Current snapshot — 2026-05-16 06:50 AEST
 
 - **Current phase:** V1.1 operational visibility + V3 visual polish/durability.
-- **Done:** V1 private read-only online mirror is complete; operational panels are online; V3 shell, panel polish, and nav polish slices are committed/pushed through `4f0a1d3`; tracker refresh was committed/pushed as `ad602b5`.
-- **In progress / queued:** `MCO-044` bridge durability implementation packet has been reviewed and accepted as a no-edit plan; persistent Windows Task Scheduler/startup changes are waiting on Raz approval.
+- **Done:** V1 private read-only online mirror is complete; operational panels are online; V3 shell, panel polish, and nav polish slices are committed/pushed through `4f0a1d3`; bridge durability review docs were recorded in `c6fa817`.
+- **In progress / queued:** Persistent Windows Task Scheduler/startup changes are waiting on Raz approval; no Jen task is currently pending.
 - **Ready for Noona review:** None. `MCO-043` remains Blocked as stale/incomplete; `MCO-044` is accepted as planning input with no repo source changes.
 - **Next milestone:** Get Raz approval for the Windows Task Scheduler bridge wrapper, then Noona can apply/test durability. Authenticated production visual verification of `4f0a1d3` remains needed.
-- **Blocked / caveats:** Bridge is still not reboot-proof; authenticated production visual verification for latest shell/panel/nav polish is still pending.
+- **Blocked / caveats:** Bridge is still not reboot-proof; no active bridge process was detected during the latest planning check; authenticated production visual verification for latest shell/panel/nav polish is still pending.
+- **Validation state:** Latest Noona review gate at 06:15 AEST found no Jen review work; scoped compliance search was clean and `npm run supabase:verify` passed with RLS checks intact.
 - **Release/readiness:** V1 is released/usable. V1.1 visual polish is shipped to `main` and validation-passing; project is **not fully durability-ready** until the bridge survives restart/sign-in.
 
 ### ✅ Completed / shipped
@@ -70,6 +71,7 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Complete/review/ship Jen `MCO-041` V3 panel polish slice.
 - [x] Complete/review/ship Jen `MCO-042` V3 nav polish + scroll-active metadata slice.
 - [x] Complete/review Jen `MCO-044` bridge durability implementation packet. (`MCO-043` blocked as stale/incomplete.)
+- [ ] Ask Raz to approve the Windows Task Scheduler bridge wrapper before any persistent startup automation is created.
 - [ ] Authenticated production visual verification for the latest V3 shell/panel/nav polish.
 - [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
 - [ ] Do not start V2 remote actions until Raz explicitly approves.
@@ -1996,3 +1998,38 @@ V1 remains released and usable. V1.1 visual polish is shipped; the active focus 
 - Latest accepted validation remains the `MCO-042` Noona gate: scoped forbidden-model search clean; `npm run type-check`, `npm run build`, and `npm run supabase:verify` passed.
 - This refresh did not run a new build because there are no source changes to validate.
 - V1 is release-ready/usable. V1.1 is visually shipped but not durability-ready until bridge restart/sign-in behavior is solved.
+
+---
+
+## 47. Master List Refresh — 2026-05-16 06:50 AEST
+
+### Status
+
+V1 remains released and usable. V1.1 visual polish is shipped; bridge durability is still the active release-readiness gap.
+
+### Completed / accepted since the previous master-list update
+
+- Bridge durability review remains accepted and recorded in `c6fa817` (`docs: record bridge durability review`).
+- `MCO-044` remains accepted as a no-edit planning packet; no scheduler, service, cron, deployment, or source change has been applied.
+- Noona's 06:15 review gate found no Mission Control Online work ready for review.
+- Repo evidence: `main` is aligned with `origin/main` at `c6fa817`; only this master-list doc is dirty for visibility tracking.
+
+### Current / queued
+
+- No Jen task is currently pending for Mission Control Online.
+- Next Noona action is still to ask Raz for approval before creating the Windows Task Scheduler bridge wrapper.
+- Authenticated production visual verification is still needed for the shipped shell/panel/nav polish.
+
+### Blockers / caveats
+
+- Bridge remains process-based and not reboot-proof until the Task Scheduler/startup wrapper is approved and tested.
+- No active bridge process was detected during the latest planning check.
+- Authenticated production visual verification of the shipped V3 shell/panel/nav polish remains pending.
+- Gateway cron CLI access remains flaky, but the local cron state fallback continues to mitigate normal Cron Health sync.
+
+### Validation / release readiness
+
+- Latest review evidence: scoped compliance search clean; `npm run supabase:verify` passed with RLS checks intact at the 06:15 AEST review gate.
+- This refresh did not run a new build because there are no source changes to validate.
+- V1 is release-ready/usable. V1.1 is visually shipped but not durability-ready until bridge restart/sign-in behavior is solved and authenticated production visual verification passes.
+

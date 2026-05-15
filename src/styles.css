@@ -327,6 +327,198 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
   padding-top: 0.5rem;
 }
 
+.tokenPanelHeader {
+  align-items: flex-start;
+}
+
+.tokenHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tokenToggleButton {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(232, 237, 244, 0.08);
+  color: #e8edf4;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.78rem;
+  transform: translateZ(0);
+}
+
+.tokenChartShell {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  gap: 0.9rem;
+  min-height: 320px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 24px;
+  background:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    #0d0f13;
+  background-size: 100% 33.333%;
+  padding: 1rem 1rem 0.85rem;
+  overflow-x: auto;
+}
+
+.tokenYAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 1.65rem;
+  color: #6f7d91;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.tokenPlot {
+  min-width: min(820px, 100%);
+  display: flex;
+  align-items: stretch;
+}
+
+.tokenBars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(32px, 40px);
+  gap: 4px;
+  width: 100%;
+  align-items: end;
+}
+
+.tokenDay {
+  display: grid;
+  grid-template-rows: minmax(220px, 1fr) 1.4rem;
+  align-items: end;
+  gap: 0.35rem;
+}
+
+.tokenStack {
+  width: 100%;
+  min-height: 2px;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  border-radius: 10px 10px 4px 4px;
+  overflow: visible;
+  transform: translateZ(0);
+}
+
+.tokenSegment {
+  position: relative;
+  width: 100%;
+  min-height: 2px;
+  padding: 0;
+  border-radius: 3px;
+  border: 0;
+  box-shadow: inset 0 0 0 1px rgba(13, 15, 19, 0.72);
+  transition: transform 200ms ease, filter 200ms ease, opacity 200ms ease;
+  transform: translateZ(0);
+}
+
+.tokenSegment:hover:not(:disabled),
+.tokenSegment.selected {
+  filter: saturate(1.08) brightness(1.08);
+  transform: scaleX(1.08) translateZ(0);
+}
+
+.tokenSegment:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.tokenTooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  z-index: 2;
+  width: max-content;
+  max-width: 12rem;
+  transform: translate(-50%, 4px);
+  opacity: 0;
+  pointer-events: none;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  background: rgba(5, 11, 20, 0.96);
+  color: #e8edf4;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.tokenSegment:hover .tokenTooltip,
+.tokenSegment:focus-visible .tokenTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.tokenXAxisLabel {
+  min-height: 1.4rem;
+  color: #6f7d91;
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tokenLegend {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin: 0.85rem 0 1rem;
+}
+
+.tokenLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 999px;
+  background: rgba(2, 6, 12, 0.34);
+  color: #cbd5e1;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.76rem;
+}
+
+.tokenLegendItem i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16);
+}
+
+.tokenLegendItem strong {
+  color: #95a3b8;
+  font-weight: 700;
+}
+
+.tokenDrilldown {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 18px;
+  background: rgba(2, 6, 12, 0.42);
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.tokenDrilldownRows {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.tokenDrilldownRow {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.8fr) minmax(8rem, 2fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+}
+
 .usageList {
   display: grid;
   gap: 0.85rem;
@@ -466,7 +658,10 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
   .heroPanel, .compactPanel { grid-template-columns: 1fr; }
   .projectGrid, .sourceGrid, .teamColumns, .cronGrid, .cronSummaryGrid { grid-template-columns: 1fr; }
   .workspaceColumns { grid-template-columns: 1fr; }
-  .usageRow { grid-template-columns: 1fr; }
+  .usageRow, .tokenDrilldownRow { grid-template-columns: 1fr; }
+  .tokenPanelHeader, .tokenHeaderActions { display: block; }
+  .tokenHeaderActions .countBadge { display: inline-block; margin-top: 0.65rem; }
+  .tokenChartShell { grid-template-columns: 3.4rem minmax(0, 1fr); }
 }
 
 /* V3 visual shell port — first safe slice */
@@ -927,7 +1122,10 @@ body::before {
   .dashboardGrid > .panel,
   .heroPanel,
   .panel,
-  .loadingSkeleton {
+  .loadingSkeleton,
+  .tokenSegment,
+  .tokenTooltip,
+  .tokenToggleButton {
     animation: none;
     transition: none;
   }

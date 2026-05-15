@@ -467,57 +467,172 @@ function formatTokens(value: number) {
   return value.toLocaleString()
 }
 
+const tokenPalette = ['#f4a261', '#58a6ff', '#86efac', '#fbbf24', '#fda4af', '#67e8f9', '#c4b5fd', '#fdba74', '#93c5fd', '#bef264']
+
+function getTokenColor(name: string) {
+  let hash = 0
+  for (const char of name) hash = ((hash << 5) - hash + char.charCodeAt(0)) | 0
+  return tokenPalette[Math.abs(hash) % tokenPalette.length]
+}
+
+function formatChartDate(value: string) {
+  const date = parseDate(value)
+  if (!date) return value.slice(5)
+  return new Intl.DateTimeFormat('en-AU', { day: '2-digit', month: 'short' }).format(date)
+}
+
 function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsageDaily[]; syncRuns: SyncRun[] }) {
   const latestSuccess = getLatestSuccessfulSync(syncRuns)
-  const totals = useMemo(() => {
-    const byAgent = tokenUsage.reduce<Record<string, { agent: string; total: number; turns: number }>>((acc, row) => {
-      const current = acc[row.agent] ?? { agent: row.agent, total: 0, turns: 0 }
-      current.total += row.total_tokens
-      current.turns += row.turns
-      acc[row.agent] = current
-      return acc
-    }, {})
-    return Object.values(byAgent).sort((a, b) => b.total - a.total)
-  }, [tokenUsage])
-  const totalTokens = totals.reduce((sum, row) => sum + row.total, 0)
-  const totalTurns = totals.reduce((sum, row) => sum + row.turns, 0)
-  const maxTotal = Math.max(...totals.map((row) => row.total), 1)
-  const latestDate = tokenUsage.map((row) => row.date).sort().at(-1)
+  const [groupedByParent, setGroupedByParent] = useState(true)
+  const [drilldown, setDrilldown] = useState<{ date: string; parent: string } | null>(null)
+
+  const chart = useMemo(() => {
+    const dates = [...new Set(tokenUsage.map((row) => row.date))].sort()
+    const keyTotals = new Map<string, { key: string; total: number; turns: number }>()
+    const days = dates.map((date) => {
+      const rows = tokenUsage.filter((row) => row.date === date)
+      const segmentTotals = new Map<string, { key: string; total: number; turns: number }>()
+
+      for (const row of rows) {
+        const key = groupedByParent ? row.parent_agent ?? 'Independent' : row.agent
+        const current = segmentTotals.get(key) ?? { key, total: 0, turns: 0 }
+        current.total += row.total_tokens
+        current.turns += row.turns
+        segmentTotals.set(key, current)
+
+        const running = keyTotals.get(key) ?? { key, total: 0, turns: 0 }
+        running.total += row.total_tokens
+        running.turns += row.turns
+        keyTotals.set(key, running)
+      }
+
+      const segments = [...segmentTotals.values()].sort((a, b) => b.total - a.total)
+      return {
+        date,
+        total: segments.reduce((sum, segment) => sum + segment.total, 0),
+        turns: segments.reduce((sum, segment) => sum + segment.turns, 0),
+        segments,
+      }
+    })
+
+    return {
+      days,
+      totals: [...keyTotals.values()].sort((a, b) => b.total - a.total),
+    }
+  }, [groupedByParent, tokenUsage])
+
+  const totalTokens = chart.totals.reduce((sum, row) => sum + row.total, 0)
+  const totalTurns = chart.totals.reduce((sum, row) => sum + row.turns, 0)
+  const maxDailyTotal = Math.max(...chart.days.map((day) => day.total), 1)
+  const latestDate = chart.days.at(-1)?.date
+  const yTicks = [maxDailyTotal, Math.round(maxDailyTotal * 0.66), Math.round(maxDailyTotal * 0.33), 0]
+  const selectedParent = drilldown?.parent ?? null
+  const selectedDate = drilldown?.date ?? null
+  const drilldownRows = useMemo(() => {
+    if (!selectedDate || !selectedParent || !groupedByParent) return []
+    return tokenUsage
+      .filter((row) => row.date === selectedDate && (row.parent_agent ?? 'Independent') === selectedParent)
+      .sort((a, b) => b.total_tokens - a.total_tokens)
+  }, [groupedByParent, selectedDate, selectedParent, tokenUsage])
 
   return (
     <section className="panel" id="tokens">
-      <div className="panelHeader">
+      <div className="panelHeader tokenPanelHeader">
         <div>
           <p className="eyebrow">token usage</p>
           <h2>Agent token burn</h2>
-          <p className="muted smallCopy">Daily aggregate tokens from local OpenClaw session logs. No raw transcripts or prompts are synced.</p>
+          <p className="muted smallCopy">Where are the tokens going? Daily aggregate tokens from local OpenClaw session logs. No raw transcripts or prompts are synced.</p>
         </div>
-        <span className="countBadge">{formatTokens(totalTokens)} tokens</span>
+        <div className="tokenHeaderActions">
+          <button
+            className="tokenToggleButton"
+            type="button"
+            onClick={() => {
+              setGroupedByParent((value) => !value)
+              setDrilldown(null)
+            }}
+          >
+            {groupedByParent ? 'Group by parent' : 'Flat list'}
+          </button>
+          <span className="countBadge">{formatTokens(totalTokens)} tokens</span>
+        </div>
       </div>
 
       <div className="cronSummaryGrid">
         <div><strong>{formatTokens(totalTokens)}</strong><span>tokens</span></div>
         <div><strong>{totalTurns}</strong><span>turns</span></div>
-        <div><strong>{totals[0]?.agent ?? '-'}</strong><span>top agent</span></div>
+        <div><strong>{chart.totals[0]?.key ?? '-'}</strong><span>top agent</span></div>
         <div><strong>{latestDate ?? '-'}</strong><span>latest day</span></div>
       </div>
 
-      <div className="usageList">
-        {totals.map((agent) => {
-          const width = maxTotal > 0 ? Math.max((agent.total / maxTotal) * 100, agent.total > 0 ? 3 : 0) : 0
-          return (
-            <div className="usageRow" key={agent.agent}>
-              <div>
-                <strong>{agent.agent}</strong>
-                <span>{agent.turns} turns</span>
-              </div>
-              <div className="usageBar"><span style={{ width: `${width}%` }} /></div>
-              <strong>{formatTokens(agent.total)}</strong>
+      {chart.days.length > 0 ? (
+        <>
+          <div className="tokenChartShell">
+            <div className="tokenYAxis" aria-hidden="true">
+              {yTicks.map((tick, index) => <span key={`${tick}-${index}`}>{formatTokens(tick)}</span>)}
             </div>
-          )
-        })}
-        {totals.length === 0 && <p className="emptyState">No token usage rows synced yet. New OpenClaw runs will appear after session logs include usage data.</p>}
-      </div>
+            <div className="tokenPlot" role="img" aria-label="Stacked daily token usage by agent">
+              <div className="tokenBars">
+                {chart.days.map((day, dayIndex) => (
+                  <div className="tokenDay" key={day.date}>
+                    <div className="tokenStack" style={{ height: `${Math.max((day.total / maxDailyTotal) * 100, day.total > 0 ? 2 : 0)}%` }}>
+                      {day.segments.map((segment) => {
+                        const height = day.total > 0 ? Math.max((segment.total / day.total) * 100, 2) : 0
+                        const isSelected = selectedDate === day.date && selectedParent === segment.key
+                        return (
+                          <button
+                            className={isSelected ? 'tokenSegment selected' : 'tokenSegment'}
+                            key={`${day.date}-${segment.key}`}
+                            type="button"
+                            style={{ backgroundColor: getTokenColor(segment.key), height: `${height}%` }}
+                            onClick={() => groupedByParent && setDrilldown({ date: day.date, parent: segment.key })}
+                            aria-disabled={!groupedByParent}
+                            aria-label={`${segment.key}, ${formatTokens(segment.total)} tokens on ${day.date}`}
+                          >
+                            <span className="tokenTooltip">{segment.key}: {formatTokens(segment.total)} tokens</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <span className="tokenXAxisLabel">{dayIndex % 3 === 0 || dayIndex === chart.days.length - 1 ? formatChartDate(day.date) : ''}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="tokenLegend" aria-label="Token chart legend">
+            {chart.totals.map((row) => (
+              <span className="tokenLegendItem" key={row.key}>
+                <i style={{ backgroundColor: getTokenColor(row.key) }} />
+                {row.key}
+                <strong>{formatTokens(row.total)}</strong>
+              </span>
+            ))}
+          </div>
+
+          {drilldownRows.length > 0 && (
+            <div className="tokenDrilldown">
+              <div className="sourceCardHeader">
+                <span className="miniStatus ok" />
+                <strong>{selectedParent} children on {selectedDate}</strong>
+              </div>
+              <div className="tokenDrilldownRows">
+                {drilldownRows.map((row) => (
+                  <div className="tokenDrilldownRow" key={`${row.id}-${row.parent_agent ?? 'root'}`}>
+                    <span>{row.agent}</span>
+                    <div className="usageBar"><span style={{ width: `${Math.max((row.total_tokens / Math.max(...drilldownRows.map((item) => item.total_tokens), 1)) * 100, 3)}%`, background: getTokenColor(row.agent) }} /></div>
+                    <strong>{formatTokens(row.total_tokens)}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="emptyState">No token usage rows synced yet. New OpenClaw runs will appear after session logs include usage data.</p>
+      )}
+
       <p className="muted smallCopy">Latest successful bridge sync: {formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}.</p>
     </section>
   )

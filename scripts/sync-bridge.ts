@@ -46,6 +46,7 @@ interface CronJobSnapshot {
 interface TokenUsageDailySnapshot {
   id: string
   agent: string
+  parent_agent?: string | null
   date: string
   input_tokens: number
   output_tokens: number
@@ -476,23 +477,84 @@ function buildDateWindow(days: number) {
   return dates
 }
 
-function addTokenUsageEntry(usage: Map<string, Map<string, TokenUsageDailySnapshot>>, agent: string, date: string, syncedAt: string) {
+function parseAgentFromSessionKey(sessionKey: string): string | null {
+  const parts = sessionKey.split(':')
+  if (parts[0] === 'agent' && parts.length >= 2) return parts[1]
+  return null
+}
+
+function normalizeParentAgent(agent: string, parentAgent: string) {
+  return agent === parentAgent ? null : parentAgent
+}
+
+function addTokenUsageEntry(
+  usage: Map<string, Map<string, TokenUsageDailySnapshot>>,
+  agent: string,
+  date: string,
+  syncedAt: string,
+  parentAgent: string | null,
+) {
   const agentUsage = usage.get(agent) ?? new Map<string, TokenUsageDailySnapshot>()
-  const entry = agentUsage.get(date) ?? {
-    id: `${agent}:${date}`,
-    agent,
-    date,
-    input_tokens: 0,
-    output_tokens: 0,
-    cache_read_tokens: 0,
-    cache_write_tokens: 0,
-    total_tokens: 0,
-    turns: 0,
-    synced_at: syncedAt,
+  let entry = agentUsage.get(date)
+
+  if (!entry) {
+    entry = {
+      id: `${agent}:${date}`,
+      agent,
+      parent_agent: parentAgent,
+      date,
+      input_tokens: 0,
+      output_tokens: 0,
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
+      total_tokens: 0,
+      turns: 0,
+      synced_at: syncedAt,
+    }
+  } else if (entry.parent_agent !== parentAgent) {
+    // The current table is unique by agent/date. If the same named agent appears
+    // under more than one parent in a day, keep the row valid and avoid implying
+    // a single parent that is no longer true.
+    entry.parent_agent = null
   }
+
   usage.set(agent, agentUsage)
   agentUsage.set(date, entry)
   return entry
+}
+
+function applyUsageToEntry(entry: TokenUsageDailySnapshot, usage: Record<string, unknown>) {
+  const input = Number(usage.input ?? usage.inputTokens ?? 0)
+  const output = Number(usage.output ?? usage.outputTokens ?? 0)
+  const cacheRead = Number(usage.cacheRead ?? usage.cache_read ?? 0)
+  const cacheWrite = Number(usage.cacheWrite ?? usage.cache_write ?? 0)
+  const totalTokens = Number(usage.totalTokens ?? usage.total ?? (input + output + cacheRead + cacheWrite))
+
+  entry.input_tokens += Number.isFinite(input) ? input : 0
+  entry.output_tokens += Number.isFinite(output) ? output : 0
+  entry.cache_read_tokens += Number.isFinite(cacheRead) ? cacheRead : 0
+  entry.cache_write_tokens += Number.isFinite(cacheWrite) ? cacheWrite : 0
+  entry.total_tokens += Number.isFinite(totalTokens) ? totalTokens : 0
+  entry.turns += 1
+}
+
+function readFirstLines(filePath: string, maxLines: number) {
+  const fd = fs.openSync(filePath, 'r')
+  const buffer = Buffer.alloc(64 * 1024)
+  let body = ''
+
+  try {
+    while (body.split('\n').length <= maxLines) {
+      const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, null)
+      if (bytesRead <= 0) break
+      body += buffer.toString('utf8', 0, bytesRead)
+      if (body.length > 2 * 1024 * 1024) break
+    }
+  } finally {
+    fs.closeSync(fd)
+  }
+
+  return body.split('\n').slice(0, maxLines)
 }
 
 function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
@@ -507,8 +569,8 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
     return []
   }
 
-  for (const agentId of agentDirs) {
-    const sessionsDir = path.join(openClawAgentsDir, agentId, 'sessions')
+  for (const parentAgent of agentDirs) {
+    const sessionsDir = path.join(openClawAgentsDir, parentAgent, 'sessions')
     let files: string[] = []
     try {
       files = fs.readdirSync(sessionsDir)
@@ -517,20 +579,53 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
     }
 
     for (const file of files) {
-      if (!file.endsWith('.jsonl') || file.endsWith('.trajectory.jsonl')) continue
+      if (!file.endsWith('.jsonl')) continue
+      const isTrajectory = file.endsWith('.trajectory.jsonl')
 
-      let body = ''
+      const filePath = path.join(sessionsDir, file)
+      let lines: string[] = []
       try {
-        body = fs.readFileSync(path.join(sessionsDir, file), 'utf8')
+        lines = isTrajectory ? readFirstLines(filePath, 200) : fs.readFileSync(filePath, 'utf8').split('\n')
       } catch {
         continue
       }
 
-      for (const line of body.split('\n')) {
+      for (const line of lines) {
         if (!line.includes('"usage"')) continue
 
         try {
           const record = JSON.parse(line)
+
+          if (isTrajectory) {
+            if (record?.event !== 'model.completed' && record?.type !== 'model.completed') continue
+
+            const sessionKey = typeof record?.sessionKey === 'string'
+              ? record.sessionKey
+              : typeof record?.data?.sessionKey === 'string'
+                ? record.data.sessionKey
+                : ''
+            const agent = parseAgentFromSessionKey(sessionKey)
+            const usage = record?.data?.usage
+            if (!agent || !usage) continue
+
+            const rawTimestamp = record?.ts ?? record?.timestamp ?? record?.data?.ts
+            const timestamp = typeof rawTimestamp === 'number' ? new Date(rawTimestamp) : new Date(String(rawTimestamp))
+            if (Number.isNaN(timestamp.getTime())) continue
+
+            const date = formatDateInZone(timestamp)
+            if (!allowedDates.has(date)) continue
+
+            const entry = addTokenUsageEntry(
+              usageByAgent,
+              agent,
+              date,
+              syncedAt,
+              normalizeParentAgent(agent, parentAgent),
+            )
+            applyUsageToEntry(entry, usage)
+            continue
+          }
+
           const message = record?.message
           const usage = message?.usage
           if (!usage) continue
@@ -542,19 +637,8 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
           const date = formatDateInZone(timestamp)
           if (!allowedDates.has(date)) continue
 
-          const entry = addTokenUsageEntry(usageByAgent, agentId, date, syncedAt)
-          const input = Number(usage.input ?? usage.inputTokens ?? 0)
-          const output = Number(usage.output ?? usage.outputTokens ?? 0)
-          const cacheRead = Number(usage.cacheRead ?? usage.cache_read ?? 0)
-          const cacheWrite = Number(usage.cacheWrite ?? usage.cache_write ?? 0)
-          const totalTokens = Number(usage.totalTokens ?? usage.total ?? (input + output + cacheRead + cacheWrite))
-
-          entry.input_tokens += Number.isFinite(input) ? input : 0
-          entry.output_tokens += Number.isFinite(output) ? output : 0
-          entry.cache_read_tokens += Number.isFinite(cacheRead) ? cacheRead : 0
-          entry.cache_write_tokens += Number.isFinite(cacheWrite) ? cacheWrite : 0
-          entry.total_tokens += Number.isFinite(totalTokens) ? totalTokens : 0
-          entry.turns += 1
+          const entry = addTokenUsageEntry(usageByAgent, parentAgent, date, syncedAt, null)
+          applyUsageToEntry(entry, usage)
         } catch {
           // Ignore malformed historical log lines.
         }
