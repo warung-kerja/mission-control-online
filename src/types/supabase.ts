@@ -88,6 +88,19 @@ export interface AgentTokenUsageDaily {
   synced_at: string
 }
 
+export interface ModelTokenUsageDaily {
+  id: string
+  model: string
+  date: string
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  cache_write_tokens: number
+  total_tokens: number
+  turns: number
+  synced_at: string
+}
+
 export interface WorkspaceSignalSnapshot {
   id: string
   branch: string | null

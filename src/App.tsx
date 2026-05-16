@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { allowedEmail, supabase } from './lib/supabase'
-import type { AgentTokenUsageDaily, CanonicalProject, CanonicalTeamMember, CronJobSnapshot, SourceHealthSnapshot, SyncRequest, SyncRun, WorkspaceSignalSnapshot } from './types/supabase'
+import type { AgentTokenUsageDaily, CanonicalProject, CanonicalTeamMember, CronJobSnapshot, ModelTokenUsageDaily, SourceHealthSnapshot, SyncRequest, SyncRun, WorkspaceSignalSnapshot } from './types/supabase'
 import './styles.css'
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error'
@@ -14,6 +14,7 @@ interface DashboardData {
   sourceHealth: SourceHealthSnapshot[]
   cronJobs: CronJobSnapshot[]
   tokenUsage: AgentTokenUsageDaily[]
+  modelUsage: ModelTokenUsageDaily[]
   workspaceSignal: WorkspaceSignalSnapshot | null
 }
 
@@ -25,6 +26,7 @@ const emptyDashboard: DashboardData = {
   sourceHealth: [],
   cronJobs: [],
   tokenUsage: [],
+  modelUsage: [],
   workspaceSignal: null,
 }
 
@@ -45,6 +47,7 @@ const navSections: NavSection[] = [
     title: 'Primary Surfaces',
     items: [
       { href: '#tokens', label: 'Token Usage', tone: 'runtime', icon: '📊' },
+      { href: '#models', label: 'Model Usage', tone: 'runtime', icon: '🧠' },
       { href: '#automation', label: 'Automation Pulse', tone: 'runtime', icon: '⚡' },
       { href: '#projects', label: 'Projects', tone: 'canonical', icon: '📋' },
       { href: '#team', label: 'Team', tone: 'canonical', icon: '👥' },
@@ -96,6 +99,7 @@ const sectionMetaByAnchor: Record<string, { eyebrow: string; question: string }>
   '#source-health': { eyebrow: 'Source Audit', question: 'Are all truth sources readable and healthy?' },
   '#automation': { eyebrow: 'Automation Audit', question: 'What is scheduled and is it healthy?' },
   '#tokens': { eyebrow: 'Cost Surface', question: 'Where are the tokens going?' },
+  '#models': { eyebrow: 'Model Spend', question: 'Which models are eating the most tokens?' },
   '#workspace': { eyebrow: 'Repository Watch', question: 'What moved in the local repo recently?' },
   '#team': { eyebrow: 'Crew Structure', question: 'Who exists in the system and how are they organised?' },
   '#history': { eyebrow: 'Sync History', question: 'How fresh is the bridge and when did it last run?' },
@@ -537,6 +541,120 @@ function formatChartDate(value: string) {
   return new Intl.DateTimeFormat('en-AU', { day: '2-digit', month: 'short' }).format(date)
 }
 
+function ModelUsagePanel({ modelUsage, syncRuns }: { modelUsage: ModelTokenUsageDaily[]; syncRuns: SyncRun[] }) {
+  const latestSuccess = getLatestSuccessfulSync(syncRuns)
+
+  const chart = useMemo(() => {
+    const dates = [...new Set(modelUsage.map((row) => row.date))].sort()
+    const keyTotals = new Map<string, { key: string; total: number; turns: number }>()
+    const days = dates.map((date) => {
+      const rows = modelUsage.filter((row) => row.date === date)
+      const segmentTotals = new Map<string, { key: string; total: number; turns: number }>()
+
+      for (const row of rows) {
+        const key = row.model
+        const current = segmentTotals.get(key) ?? { key, total: 0, turns: 0 }
+        current.total += row.total_tokens
+        current.turns += row.turns
+        segmentTotals.set(key, current)
+
+        const running = keyTotals.get(key) ?? { key, total: 0, turns: 0 }
+        running.total += row.total_tokens
+        running.turns += row.turns
+        keyTotals.set(key, running)
+      }
+
+      const segments = [...segmentTotals.values()].sort((a, b) => b.total - a.total)
+      return {
+        date,
+        total: segments.reduce((sum, segment) => sum + segment.total, 0),
+        turns: segments.reduce((sum, segment) => sum + segment.turns, 0),
+        segments,
+      }
+    })
+
+    return {
+      days,
+      totals: [...keyTotals.values()].sort((a, b) => b.total - a.total),
+    }
+  }, [modelUsage])
+
+  const totalTokens = chart.totals.reduce((sum, row) => sum + row.total, 0)
+  const totalTurns = chart.totals.reduce((sum, row) => sum + row.turns, 0)
+  const maxDailyTotal = Math.max(...chart.days.map((day) => day.total), 1)
+  const latestDate = chart.days.at(-1)?.date
+  const yTicks = [maxDailyTotal, Math.round(maxDailyTotal * 0.66), Math.round(maxDailyTotal * 0.33), 0]
+
+  return (
+    <section className="panel" id="models">
+      <div className="panelHeader tokenPanelHeader">
+        <div>
+          <p className="eyebrow">model usage</p>
+          <h2>Model token burn</h2>
+          <p className="muted smallCopy">Which models are consuming tokens? Daily aggregate from local OpenClaw session logs.</p>
+        </div>
+        <span className="countBadge">{formatTokens(totalTokens)} tokens</span>
+      </div>
+
+      <div className="cronSummaryGrid">
+        <div><strong>{formatTokens(totalTokens)}</strong><span>tokens</span></div>
+        <div><strong>{totalTurns}</strong><span>turns</span></div>
+        <div><strong>{chart.totals[0]?.key ?? '-'}</strong><span>top model</span></div>
+        <div><strong>{latestDate ?? '-'}</strong><span>latest day</span></div>
+      </div>
+
+      {chart.days.length > 0 ? (
+        <>
+          <div className="tokenChartShell">
+            <div className="tokenYAxis" aria-hidden="true">
+              {yTicks.map((tick, index) => <span key={`${tick}-${index}`}>{formatTokens(tick)}</span>)}
+            </div>
+            <div className="tokenPlot" role="img" aria-label="Stacked daily token usage by model">
+              <div className="tokenBars">
+                {chart.days.map((day, dayIndex) => (
+                  <div className="tokenDay" key={day.date}>
+                    <span className="tokenDailyTotal">{formatTokens(day.total)}</span>
+                    <div className="tokenStack" style={{ height: `${Math.max((day.total / maxDailyTotal) * 100, day.total > 0 ? 2 : 0)}%` }}>
+                      {day.segments.map((segment) => {
+                        const height = day.total > 0 ? Math.max((segment.total / day.total) * 100, 2) : 0
+                        return (
+                          <div
+                            className="tokenSegment"
+                            key={`${day.date}-${segment.key}`}
+                            style={{ backgroundColor: getTokenColor(segment.key), height: `${height}%` }}
+                            aria-label={`${segment.key}, ${formatTokens(segment.total)} tokens on ${day.date}`}
+                          >
+                            <span className="tokenTooltip">{segment.key}: {formatTokens(segment.total)} tokens</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <span className="tokenXAxisLabel">{dayIndex % 3 === 0 || dayIndex === chart.days.length - 1 ? formatChartDate(day.date) : ''}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="tokenLegend" aria-label="Model chart legend">
+            {chart.totals.map((row) => (
+              <span className="tokenLegendItem" key={row.key}>
+                <i style={{ backgroundColor: getTokenColor(row.key) }} />
+                {row.key}
+                <strong>{formatTokens(row.total)}</strong>
+              </span>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="emptyState">No model usage rows synced yet. New OpenClaw runs will appear after session logs include usage data.</p>
+      )}
+
+      <p className="muted smallCopy">Latest successful bridge sync: {formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}.</p>
+    </section>
+  )
+}
+
 function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsageDaily[]; syncRuns: SyncRun[] }) {
   const latestSuccess = getLatestSuccessfulSync(syncRuns)
   const [groupedByParent, setGroupedByParent] = useState(false)
@@ -777,7 +895,7 @@ function WorkspaceSignalsPanel({ signal, syncRuns }: { signal: WorkspaceSignalSn
   )
 }
 
-const panelAnchors = ['#tokens', '#automation', '#projects', '#team', '#workspace', '#source-health', '#history'] as const
+const panelAnchors = ['#tokens', '#models', '#automation', '#projects', '#team', '#workspace', '#source-health', '#history'] as const
 
 function Dashboard({ user }: { user: User }) {
   const [loadState, setLoadState] = useState<LoadState>('idle')
@@ -790,7 +908,7 @@ function Dashboard({ user }: { user: User }) {
     if (!options.silent) setLoadState('loading')
     setError('')
 
-    const [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage, workspaceSignals] = await Promise.all([
+    const [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage, modelUsage, workspaceSignals] = await Promise.all([
       supabase.from('canonical_projects').select('*').order('priority', { ascending: true }),
       supabase.from('canonical_team_members').select('*').order('name', { ascending: true }),
       supabase.from('sync_runs').select('*').order('started_at', { ascending: false }).limit(8),
@@ -798,10 +916,11 @@ function Dashboard({ user }: { user: User }) {
       supabase.from('source_health_snapshots').select('*').order('label', { ascending: true }),
       supabase.from('cron_job_snapshots').select('*').order('name', { ascending: true }),
       supabase.from('agent_token_usage_daily').select('*').order('date', { ascending: false }).limit(120),
+      supabase.from('model_token_usage_daily').select('*').order('date', { ascending: false }).limit(120),
       supabase.from('workspace_signal_snapshots').select('*').order('synced_at', { ascending: false }).limit(1),
     ])
 
-    const failed = [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage, workspaceSignals].find((result) => result.error)
+    const failed = [projects, teamMembers, syncRuns, syncRequests, sourceHealth, cronJobs, tokenUsage, modelUsage, workspaceSignals].find((result) => result.error)
     if (failed?.error) {
       setLoadState('error')
       setError(failed.error.message)
@@ -816,6 +935,7 @@ function Dashboard({ user }: { user: User }) {
       sourceHealth: (sourceHealth.data ?? []) as SourceHealthSnapshot[],
       cronJobs: (cronJobs.data ?? []) as CronJobSnapshot[],
       tokenUsage: (tokenUsage.data ?? []) as AgentTokenUsageDaily[],
+      modelUsage: (modelUsage.data ?? []) as ModelTokenUsageDaily[],
       workspaceSignal: ((workspaceSignals.data ?? [])[0] ?? null) as WorkspaceSignalSnapshot | null,
     }
 
@@ -894,6 +1014,7 @@ function Dashboard({ user }: { user: User }) {
         <ShellHeader data={data} user={user} activeAnchor={activeAnchor} />
         <SyncPanel data={data} user={user} onRefreshRequested={requestRefresh} requestState={requestState} />
         {loadState === 'ready' && <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />}
+        {loadState === 'ready' && <ModelUsagePanel modelUsage={data.modelUsage} syncRuns={data.syncRuns} />}
         {loadState === 'loading' && (
           <div className="loadingShell">
             <div className="loadingSkeleton" />

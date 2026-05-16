@@ -58,6 +58,19 @@ interface TokenUsageDailySnapshot {
   synced_at: string
 }
 
+interface ModelUsageDailySnapshot {
+  id: string
+  model: string
+  date: string
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  cache_write_tokens: number
+  total_tokens: number
+  turns: number
+  synced_at: string
+}
+
 interface WorkspaceSignalSnapshot {
   branch: string | null
   head: string | null
@@ -526,7 +539,7 @@ function addTokenUsageEntry(
   return entry
 }
 
-function applyUsageToEntry(entry: TokenUsageDailySnapshot, usage: Record<string, unknown>) {
+function applyUsageToEntry(entry: { input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number; total_tokens: number; turns: number }, usage: Record<string, unknown>) {
   const input = Number(usage.input ?? usage.inputTokens ?? 0)
   const output = Number(usage.output ?? usage.outputTokens ?? 0)
   const cacheRead = Number(usage.cacheRead ?? usage.cache_read ?? 0)
@@ -603,6 +616,15 @@ function normalizeAgentId(agent: string | null | undefined) {
   const key = String(agent ?? '').trim().toLowerCase()
   if (!key) return ''
   return AGENT_NAME_ALIASES[key] ?? key
+}
+
+function normalizeModelName(model: string) {
+  // Strip provider prefix for display, keep model name
+  // e.g. "openai-codex/gpt-5.5" -> "gpt-5.5"
+  //      "ollama/deepseek-v4-pro:cloud" -> "deepseek-v4-pro:cloud"
+  const trimmed = model.trim()
+  const slashIdx = trimmed.indexOf('/')
+  return slashIdx >= 0 ? trimmed.slice(slashIdx + 1) : trimmed
 }
 
 function inferCronAgent(job: CronJobDef) {
@@ -682,18 +704,48 @@ function parseSessionAgent(
   return { agent: parentAgent, parent: null }
 }
 
-function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
+function addModelUsageEntry(
+  usage: Map<string, Map<string, ModelUsageDailySnapshot>>,
+  model: string,
+  date: string,
+  syncedAt: string,
+) {
+  const modelUsage = usage.get(model) ?? new Map<string, ModelUsageDailySnapshot>()
+  let entry = modelUsage.get(date)
+
+  if (!entry) {
+    entry = {
+      id: `${model}:${date}`,
+      model,
+      date,
+      input_tokens: 0,
+      output_tokens: 0,
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
+      total_tokens: 0,
+      turns: 0,
+      synced_at: syncedAt,
+    }
+  }
+
+  usage.set(model, modelUsage)
+  modelUsage.set(date, entry)
+  return entry
+}
+
+function readTokenUsage(syncedAt: string): { agentUsage: TokenUsageDailySnapshot[]; modelUsage: ModelUsageDailySnapshot[] } {
   const dates = buildDateWindow(tokenUsageDays)
   const allowedDates = new Set(dates)
   const cronAgentMap = buildCronAgentMap()
   const subagentNameMap = buildSubagentNameMap()
   const usageByAgent = new Map<string, Map<string, TokenUsageDailySnapshot>>()
+  const usageByModel = new Map<string, Map<string, ModelUsageDailySnapshot>>()
 
   let agentDirs: string[] = []
   try {
     agentDirs = fs.readdirSync(openClawAgentsDir)
   } catch {
-    return []
+    return { agentUsage: [], modelUsage: [] }
   }
 
   for (const parentAgent of agentDirs) {
@@ -748,6 +800,11 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
           if (!allowedDates.has(date)) continue
 
           applyUsageToEntry(addTokenUsageEntry(usageByAgent, agent, date, syncedAt, parsedParent), usage)
+
+          const model = String(record?.message?.model ?? record?.model ?? '').trim()
+          if (model) {
+            applyUsageToEntry(addModelUsageEntry(usageByModel, normalizeModelName(model), date, syncedAt), usage)
+          }
         } catch {
           // skip malformed lines
         }
@@ -755,9 +812,14 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
     }
   }
 
-  return [...usageByAgent.values()]
-    .flatMap((agentUsage) => [...agentUsage.values()])
-    .filter((entry) => entry.turns > 0 || entry.total_tokens > 0)
+  return {
+    agentUsage: [...usageByAgent.values()]
+      .flatMap((agentUsage) => [...agentUsage.values()])
+      .filter((entry) => entry.turns > 0 || entry.total_tokens > 0),
+    modelUsage: [...usageByModel.values()]
+      .flatMap((modelUsage) => [...modelUsage.values()])
+      .filter((entry) => entry.turns > 0 || entry.total_tokens > 0),
+  }
 }
 
 function runWorkspaceGit(args: string[]) {
@@ -863,7 +925,7 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
   const team = readTeam(syncedAt)
   const sourceHealth = readSourceHealth(syncedAt)
   const cronJobs = readCronJobs(syncedAt)
-  const tokenUsage = readTokenUsage(syncedAt)
+  const { agentUsage: tokenUsage, modelUsage } = readTokenUsage(syncedAt)
   const workspaceSignals = readWorkspaceSignals(syncedAt)
   const summary = {
     projects: projects.length,
@@ -871,12 +933,13 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
     sourceHealth: sourceHealth.length,
     cronJobs: cronJobs.length,
     tokenUsageRows: tokenUsage.length,
+    modelUsageRows: modelUsage.length,
     workspaceSignals: workspaceSignals.head ? 1 : 0,
     syncedAt,
   }
 
   if (dryRun || trigger === 'dry_run') {
-    console.log(JSON.stringify({ dryRun: true, summary, samples: { projects: projects.slice(0, 2), team: team.slice(0, 2), sourceHealth, cronJobs: cronJobs.slice(0, 3), tokenUsage, workspaceSignals } }, null, 2))
+    console.log(JSON.stringify({ dryRun: true, summary, samples: { projects: projects.slice(0, 2), team: team.slice(0, 2), sourceHealth, cronJobs: cronJobs.slice(0, 3), tokenUsage, modelUsage: modelUsage.slice(0, 5), workspaceSignals } }, null, 2))
     return
   }
 
@@ -896,6 +959,12 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
       .not('id', 'is', null)
     if (deleteTokenUsage.error) throw deleteTokenUsage.error
 
+    const deleteModelUsage = await client
+      .from('model_token_usage_daily')
+      .delete()
+      .not('id', 'is', null)
+    if (deleteModelUsage.error) throw deleteModelUsage.error
+
     const writes = await Promise.all([
       client.from('canonical_projects').upsert(projects),
       client.from('canonical_team_members').upsert(team),
@@ -903,6 +972,9 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
       client.from('cron_job_snapshots').upsert(cronJobs),
       tokenUsage.length > 0
         ? client.from('agent_token_usage_daily').upsert(tokenUsage)
+        : Promise.resolve({ error: null }),
+      modelUsage.length > 0
+        ? client.from('model_token_usage_daily').upsert(modelUsage)
         : Promise.resolve({ error: null }),
       client.from('workspace_signal_snapshots').insert(workspaceSignals),
     ])
