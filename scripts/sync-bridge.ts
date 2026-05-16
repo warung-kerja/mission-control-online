@@ -175,7 +175,7 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const workspaceRoot = process.env.WARUNG_KERJA_ROOT ?? '/mnt/d/Warung Kerja 1.0'
 const pollSeconds = Number(process.env.SYNC_REQUEST_POLL_SECONDS ?? 30)
 const syncIntervalMinutes = Number(process.env.SYNC_INTERVAL_MINUTES ?? 10)
-const tokenUsageDays = Math.min(Math.max(Number(process.env.TOKEN_USAGE_DAYS ?? 7), 1), 60)
+const tokenUsageDays = Math.min(Math.max(Number(process.env.TOKEN_USAGE_DAYS ?? 30), 1), 60)
 const tokenUsageTimeZone = process.env.TOKEN_USAGE_TIMEZONE ?? 'Australia/Sydney'
 const openClawAgentsDir = process.env.OPENCLAW_AGENTS_DIR ?? path.join(os.homedir(), '.openclaw', 'agents')
 const openClawCronDir = process.env.OPENCLAW_CRON_DIR ?? path.join(os.homedir(), '.openclaw', 'cron')
@@ -577,6 +577,35 @@ interface CronJobDef {
   agentId?: unknown
   name?: unknown
   enabled?: boolean
+  payload?: { message?: unknown }
+}
+
+const AGENT_NAME_ALIASES: Record<string, string> = {
+  main: 'baro',
+  'soba-1': 'soba',
+}
+
+const KNOWN_AGENT_IDS = ['haji', 'soba', 'soba-1', 'lin', 'bob', 'jen', 'noona', 'obey', 'baro']
+
+function normalizeAgentId(agent: string | null | undefined) {
+  const key = String(agent ?? '').trim().toLowerCase()
+  if (!key) return ''
+  return AGENT_NAME_ALIASES[key] ?? key
+}
+
+function inferCronAgent(job: CronJobDef) {
+  const configuredAgent = normalizeAgentId(String(job.agentId ?? ''))
+  const name = String(job.name ?? '').toLowerCase()
+  const message = String(job.payload?.message ?? '').toLowerCase()
+  const searchable = `${name}\n${message}`
+
+  for (const agent of KNOWN_AGENT_IDS) {
+    const normalized = normalizeAgentId(agent)
+    const escaped = agent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    if (new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(searchable)) return normalized
+  }
+
+  return configuredAgent
 }
 
 function buildCronAgentMap(): Map<string, string> {
@@ -586,7 +615,7 @@ function buildCronAgentMap(): Map<string, string> {
     const data = JSON.parse(raw) as { jobs?: CronJobDef[] }
     for (const job of data.jobs ?? []) {
       const jid = String(job.id ?? '')
-      const agentId = String(job.agentId ?? '').toLowerCase()
+      const agentId = inferCronAgent(job)
       if (jid && agentId) map.set(jid, agentId)
     }
   } catch { /* best-effort */ }
@@ -599,7 +628,8 @@ function buildSubagentNameMap(): Map<string, string> {
     const raw = fs.readFileSync(path.join(openClawCronDir, 'subagent-names.json'), 'utf8')
     const data = JSON.parse(raw) as Record<string, string>
     for (const [uuid, name] of Object.entries(data)) {
-      if (uuid && name) map.set(uuid, name)
+      const normalized = normalizeAgentId(name)
+      if (uuid && normalized) map.set(uuid, normalized)
     }
   } catch { /* best-effort */ }
   return map
@@ -614,29 +644,30 @@ function parseSessionAgent(
   const parts = sessionKey.split(':')
   // Format: agent:<parentDir>:<kind>[:<subId>]
 
+  const parentAgent = normalizeAgentId(parentAgentDir)
   const kind = parts[2] ?? 'unknown'
   const subId = parts[3] ?? null
 
   if (kind === 'cron' && subId) {
-    const cronAgent = cronAgentMap.get(subId)
-    if (cronAgent && cronAgent !== parentAgentDir) {
-      return { agent: cronAgent, parent: parentAgentDir }
+    const cronAgent = normalizeAgentId(cronAgentMap.get(subId))
+    if (cronAgent && cronAgent !== parentAgent) {
+      return { agent: cronAgent, parent: parentAgent }
     }
-    return { agent: parentAgentDir, parent: null }
+    return { agent: parentAgent, parent: null }
   }
 
   if (kind === 'subagent' && subId) {
     // Look up the human-readable name from subagent-names.json. If the
     // historical sub-agent was never named, roll it into the parent agent
     // rather than exposing raw UUID fragments in the dashboard legend.
-    const resolved = subagentNameMap.get(subId)
+    const resolved = normalizeAgentId(subagentNameMap.get(subId))
     if (resolved) {
-      return { agent: resolved, parent: parentAgentDir }
+      return { agent: resolved, parent: resolved === parentAgent ? null : parentAgent }
     }
-    return { agent: parentAgentDir, parent: null }
+    return { agent: parentAgent, parent: null }
   }
 
-  return { agent: parentAgentDir, parent: null }
+  return { agent: parentAgent, parent: null }
 }
 
 function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
@@ -817,7 +848,7 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
 
   const syncRunId = await createSyncRun(client, trigger)
   try {
-    const tokenUsageDates = [...new Set(tokenUsage.map((entry) => entry.date))]
+    const tokenUsageDates = buildDateWindow(tokenUsageDays)
     if (tokenUsageDates.length > 0) {
       const deleteTokenUsage = await client
         .from('agent_token_usage_daily')
