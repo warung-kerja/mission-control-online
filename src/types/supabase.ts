@@ -67,6 +67,8 @@ export interface CronJobSnapshot {
   schedule: string | null
   status: string | null
   enabled: boolean | null
+  model: string | null
+  model_source: string | null
   last_run_at: string | null
   next_run_at: string | null
   duration_ms: number | null

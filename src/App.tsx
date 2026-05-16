@@ -90,6 +90,19 @@ function formatRelative(value: string | null | undefined) {
   return `${Math.round(hours / 24)}d ago`
 }
 
+function formatModelName(value: string | null | undefined) {
+  if (!value) return 'model unknown'
+  const slashIndex = value.indexOf('/')
+  return slashIndex >= 0 ? value.slice(slashIndex + 1) : value
+}
+
+function getModelSourceLabel(value: string | null | undefined) {
+  if (value === 'job') return 'job assigned'
+  if (value === 'agent') return 'agent inherited'
+  if (value === 'default') return 'default inherited'
+  return 'not captured'
+}
+
 function getLatestSuccessfulSync(syncRuns: SyncRun[]) {
   return syncRuns.find((run) => run.status === 'success') ?? null
 }
@@ -403,10 +416,18 @@ function TeamPanel({ teamMembers }: { teamMembers: CanonicalTeamMember[] }) {
   )
 }
 
-function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; syncRuns: SyncRun[] }) {
+function CronHealthPanel({ cronJobs, syncRuns, teamMembers }: { cronJobs: CronJobSnapshot[]; syncRuns: SyncRun[]; teamMembers: CanonicalTeamMember[] }) {
   const latestSuccess = getLatestSuccessfulSync(syncRuns)
   const visibleJobs = cronJobs.filter((job) => job.id !== 'openclaw-cron-adapter')
   const adapterStatus = cronJobs.find((job) => job.id === 'openclaw-cron-adapter')
+  const modelByAgent = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const member of teamMembers) {
+      if (member.name && member.model) map.set(member.name.trim().toLowerCase(), member.model)
+      if (member.id && member.model) map.set(member.id.trim().toLowerCase(), member.model)
+    }
+    return map
+  }, [teamMembers])
 
   // Filters
   const [agentFilter, setAgentFilter] = useState<string>('all')
@@ -482,26 +503,37 @@ function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; 
       </div>
 
       <div className="cronGrid">
-        {displayedJobs.map((job) => (
-          <article className="cronCard" key={job.id}>
-            <div className="sourceCardHeader">
-              <span className={job.status === 'failure' ? 'miniStatus warning' : 'miniStatus ok'} />
-              <strong>{job.name ?? 'Unnamed job'}</strong>
-            </div>
-            <div className="cardTopline">
-              <span>{job.status ?? 'unknown'}</span>
-              <span>{job.enabled === false ? 'disabled' : 'enabled'}</span>
-              {job.agent && <span className="cronAgentLabel">{job.agent}</span>}
-            </div>
-            <p>{job.schedule || 'No schedule captured.'}</p>
-            <dl>
-              <div><dt>Last</dt><dd>{formatRelative(job.last_run_at)}</dd></div>
-              <div><dt>Next</dt><dd>{formatRelative(job.next_run_at)}</dd></div>
-              <div><dt>Duration</dt><dd>{job.duration_ms == null ? '-' : `${job.duration_ms}ms`}</dd></div>
-            </dl>
-            {job.error && <p className="errorText">{job.error}</p>}
-          </article>
-        ))}
+        {displayedJobs.map((job) => {
+          const rosterModel = job.agent ? modelByAgent.get(job.agent.trim().toLowerCase()) : null
+          const displayModel = job.model ?? rosterModel
+          const displayModelSource = job.model_source ?? (rosterModel ? 'agent' : null)
+
+          return (
+            <article className="cronCard" key={job.id}>
+              <div className="sourceCardHeader">
+                <span className={job.status === 'failure' ? 'miniStatus warning' : 'miniStatus ok'} />
+                <strong>{job.name ?? 'Unnamed job'}</strong>
+              </div>
+              <div className="cardTopline">
+                <span>{job.status ?? 'unknown'}</span>
+                <span>{job.enabled === false ? 'disabled' : 'enabled'}</span>
+                {job.agent && <span className="cronAgentLabel">{job.agent}</span>}
+              </div>
+              <div className="cronModelLine" title={displayModel ?? undefined}>
+                <span className="cronModelLabel">model</span>
+                <strong>{formatModelName(displayModel)}</strong>
+                <span>{getModelSourceLabel(displayModelSource)}</span>
+              </div>
+              <p>{job.schedule || 'No schedule captured.'}</p>
+              <dl>
+                <div><dt>Last</dt><dd>{formatRelative(job.last_run_at)}</dd></div>
+                <div><dt>Next</dt><dd>{formatRelative(job.next_run_at)}</dd></div>
+                <div><dt>Duration</dt><dd>{job.duration_ms == null ? '-' : `${job.duration_ms}ms`}</dd></div>
+              </dl>
+              {job.error && <p className="errorText">{job.error}</p>}
+            </article>
+          )
+        })}
         {filteredJobs.length === 0 && !adapterStatus?.error && <p className="emptyState">No cron jobs match the current filters.</p>}
       </div>
 
@@ -1024,7 +1056,7 @@ function Dashboard({ user }: { user: User }) {
         )}
         {loadState === 'error' && <p className="errorText loadNotice">{error}</p>}
         <div className="dashboardGrid">
-          <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} />
+          <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} teamMembers={data.teamMembers} />
           <ProjectsPanel projects={data.projects} />
           <TeamPanel teamMembers={data.teamMembers} />
           <WorkspaceSignalsPanel signal={data.workspaceSignal} syncRuns={data.syncRuns} />

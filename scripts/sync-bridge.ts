@@ -37,6 +37,8 @@ interface CronJobSnapshot {
   schedule: string
   status: string
   enabled: boolean
+  model: string | null
+  model_source: string | null
   last_run_at: string | null
   next_run_at: string | null
   duration_ms: number | null
@@ -115,6 +117,7 @@ interface RawCronJob {
   state?: RawCronState
   tags?: unknown[]
   agentId?: unknown
+  payload?: { model?: unknown; kind?: unknown; message?: unknown }
 }
 
 interface RawCronStateFile {
@@ -350,17 +353,74 @@ function sanitizeCronError(value: string | undefined | null) {
     .slice(0, 280)
 }
 
-function normalizeCronJob(raw: RawCronJob, syncedAt: string): CronJobSnapshot {
+function readOpenClawConfig(): Record<string, unknown> | null {
+  const candidates = [
+    path.join(os.homedir(), '.openclaw', 'openclaw.json'),
+    '/home/baro/.openclaw/openclaw.json',
+  ]
+
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate)) return JSON.parse(fs.readFileSync(candidate, 'utf8')) as Record<string, unknown>
+    } catch { /* best-effort */ }
+  }
+
+  return null
+}
+
+function extractPrimaryModel(value: unknown): string | null {
+  if (!value) return null
+  if (typeof value === 'string') return value.trim() || null
+  if (typeof value === 'object' && value !== null) {
+    const primary = (value as { primary?: unknown }).primary
+    if (typeof primary === 'string') return primary.trim() || null
+  }
+  return null
+}
+
+function buildAgentModelMap(): { agentModels: Map<string, string>; defaultModel: string | null } {
+  const config = readOpenClawConfig()
+  const agentModels = new Map<string, string>()
+  if (!config) return { agentModels, defaultModel: null }
+
+  const agents = config.agents as { defaults?: { model?: unknown }; list?: Array<{ id?: unknown; model?: unknown }> } | undefined
+  const defaultModel = extractPrimaryModel(agents?.defaults?.model)
+
+  for (const agent of agents?.list ?? []) {
+    const id = normalizeAgentId(String(agent.id ?? ''))
+    const model = extractPrimaryModel(agent.model)
+    if (id && model) agentModels.set(id, model)
+  }
+
+  return { agentModels, defaultModel }
+}
+
+function resolveCronModel(raw: RawCronJob, normalizedAgent: string, agentModels: Map<string, string>, defaultModel: string | null): { model: string | null; source: string | null } {
+  const explicitModel = extractPrimaryModel(raw.payload?.model)
+  if (explicitModel) return { model: explicitModel, source: 'job' }
+
+  const agentModel = agentModels.get(normalizedAgent)
+  if (agentModel) return { model: agentModel, source: 'agent' }
+
+  if (defaultModel) return { model: defaultModel, source: 'default' }
+  return { model: null, source: null }
+}
+
+function normalizeCronJob(raw: RawCronJob, syncedAt: string, modelContext = buildAgentModelMap()): CronJobSnapshot {
   const state = raw.state || {}
   const enabled = raw.enabled !== false
+  const agent = normalizeAgentId(String(raw.agentId ?? ''))
+  const model = resolveCronModel(raw, agent, modelContext.agentModels, modelContext.defaultModel)
 
   return {
     id: String(raw.id || raw.name || 'unknown-cron-job'),
-    agent: normalizeAgentId(String(raw.agentId ?? '')),
+    agent,
     name: String(raw.name || 'Unnamed cron job'),
     schedule: formatCronSchedule(raw.schedule),
     status: normalizeCronStatus(state.lastRunStatus || state.lastStatus, enabled),
     enabled,
+    model: model.model,
+    model_source: model.source,
     last_run_at: state.lastRunAtMs ? new Date(state.lastRunAtMs).toISOString() : null,
     next_run_at: state.nextRunAtMs ? new Date(state.nextRunAtMs).toISOString() : null,
     duration_ms: state.lastDurationMs != null ? Number(state.lastDurationMs) : null,
@@ -377,6 +437,8 @@ function cronAdapterStatus(status: 'success' | 'failure', syncedAt: string, erro
     schedule: 'bridge check',
     status,
     enabled: status === 'success',
+    model: null,
+    model_source: null,
     last_run_at: syncedAt,
     next_run_at: null,
     duration_ms: null,
@@ -392,10 +454,12 @@ function readCronJobsFromFiles(syncedAt: string): CronJobSnapshot[] {
   const statePayload = JSON.parse(fs.readFileSync(statePath, 'utf8')) as RawCronStateFile
   const rawJobs = Array.isArray(jobsPayload.jobs) ? jobsPayload.jobs : []
 
+  const modelContext = buildAgentModelMap()
+
   return rawJobs.map((job) => {
     const id = String(job.id || job.name || 'unknown-cron-job')
     const state = statePayload.jobs?.[id]?.state ?? job.state ?? {}
-    return normalizeCronJob({ ...job, state }, syncedAt)
+    return normalizeCronJob({ ...job, state }, syncedAt, modelContext)
   })
 }
 
@@ -459,7 +523,8 @@ function readCronJobs(syncedAt: string): CronJobSnapshot[] {
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     const payload = JSON.parse(stdout) as { jobs?: RawCronJob[] }
-    const jobs = Array.isArray(payload.jobs) ? payload.jobs.map((job) => normalizeCronJob(job, syncedAt)) : []
+    const modelContext = buildAgentModelMap()
+    const jobs = Array.isArray(payload.jobs) ? payload.jobs.map((job) => normalizeCronJob(job, syncedAt, modelContext)) : []
     return jobs.length > 0 ? jobs : [cronAdapterStatus('success', syncedAt, null)]
   } catch (error) {
     return [cronAdapterStatus('failure', syncedAt, `Failed to fetch cron jobs via CLI: ${errorMessage(error)}`)]
