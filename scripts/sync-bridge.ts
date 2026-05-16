@@ -29,6 +29,9 @@ interface CanonicalProjectSnapshot {
   priority: string | null
   current_phase: string | null
   next_step: string | null
+  project_kind: string | null
+  parent_project_id: string | null
+  visibility: string | null
   source_root: string | null
   folder_path: string | null
   folder_status: string | null
@@ -43,6 +46,32 @@ interface ProjectFolderInventory {
   source_root: string
   folder_path: string
   folder_status: 'active-folder' | 'passive-folder' | 'decommissioned-folder'
+}
+
+const projectOverrides: Record<string, Partial<Pick<CanonicalProjectSnapshot, 'status' | 'priority' | 'current_phase' | 'next_step' | 'project_kind' | 'parent_project_id' | 'visibility' | 'folder_status'>>> = {
+  'workspace-explorer': {
+    project_kind: 'internal-module',
+    parent_project_id: 'mission-control-v3',
+    visibility: 'nested',
+    current_phase: 'Mission Control V3 internal workspace visibility surface.',
+    next_step: 'Keep as a nested Mission Control module unless Raz promotes it back into standalone project work.',
+  },
+  'memories-browser': {
+    project_kind: 'internal-module',
+    parent_project_id: 'mission-control-v3',
+    visibility: 'nested',
+    current_phase: 'Mission Control V3 internal Memory Vault surface.',
+    next_step: 'Keep as a nested Mission Control module unless Raz promotes it back into standalone project work.',
+  },
+  'figma-template-blueprint': {
+    status: 'cancelled',
+    priority: 'none',
+    project_kind: 'cancelled-project',
+    visibility: 'archived',
+    folder_status: 'decommissioned-folder',
+    current_phase: 'Cancelled legacy template exploration.',
+    next_step: 'Keep out of active project planning unless Raz explicitly revives it.',
+  },
 }
 
 interface CanonicalTeamMember {
@@ -300,19 +329,23 @@ function readProjects(syncedAt: string): CanonicalProjectSnapshot[] {
   const registeredProjects = registry.projects.map((project) => {
     const folder = resolveProjectFolder(project.name, folders)
     if (folder) usedFolderIds.add(folder.id)
+    const override = projectOverrides[project.id] ?? {}
 
     return {
       id: project.id,
       name: project.name,
       owner: project.owner ?? null,
       team: project.team ?? [],
-      status: project.status ?? null,
-      priority: project.priority ?? null,
-      current_phase: project.currentPhase ?? null,
-      next_step: project.nextStep ?? null,
+      status: override.status ?? project.status ?? null,
+      priority: override.priority ?? project.priority ?? null,
+      current_phase: override.current_phase ?? project.currentPhase ?? null,
+      next_step: override.next_step ?? project.nextStep ?? null,
+      project_kind: override.project_kind ?? 'project',
+      parent_project_id: override.parent_project_id ?? null,
+      visibility: override.visibility ?? 'primary',
       source_root: folder?.source_root ?? null,
       folder_path: folder?.folder_path ?? null,
-      folder_status: folder?.folder_status ?? null,
+      folder_status: override.folder_status ?? folder?.folder_status ?? null,
       registry_status: folder ? 'registered' : 'registered-missing-folder',
       source_updated_at: project.updatedAt ?? null,
       synced_at: syncedAt,
@@ -330,6 +363,9 @@ function readProjects(syncedAt: string): CanonicalProjectSnapshot[] {
       priority: null,
       current_phase: folder.folder_status === 'active-folder' ? 'Found in active project folders but not registered yet.' : 'Found in passive/decommissioned workspace folders.',
       next_step: folder.folder_status === 'active-folder' ? 'Decide whether this should be promoted into the canonical registry.' : 'Review whether this is reference material, parked work, or decommissioned.',
+      project_kind: folder.folder_status === 'decommissioned-folder' ? 'archive-item' : folder.folder_status === 'passive-folder' ? 'passive-item' : 'project',
+      parent_project_id: null,
+      visibility: folder.folder_status === 'active-folder' ? 'primary' : folder.folder_status === 'passive-folder' ? 'passive' : 'archived',
       source_root: folder.source_root,
       folder_path: folder.folder_path,
       folder_status: folder.folder_status,

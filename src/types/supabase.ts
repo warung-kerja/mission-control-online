@@ -11,6 +11,9 @@ export interface CanonicalProject {
   priority: string | null
   current_phase: string | null
   next_step: string | null
+  project_kind: string | null
+  parent_project_id: string | null
+  visibility: string | null
   source_root: string | null
   folder_path: string | null
   folder_status: string | null

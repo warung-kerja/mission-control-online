@@ -315,8 +315,14 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
   padding: 1rem;
 }
 
-.projectCard.registered {
+.projectCard.primary,
+.projectStageTile.primary {
   border-color: rgba(34, 197, 94, 0.2);
+}
+
+.projectCard.module,
+.projectStageTile.module {
+  border-color: rgba(217, 70, 239, 0.24);
 }
 
 .projectCard.unregistered,

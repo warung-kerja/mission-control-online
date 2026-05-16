@@ -308,10 +308,11 @@ function SyncPanel({ data, user, onRefreshRequested, requestState }: {
   )
 }
 
-type ProjectBucket = 'registered' | 'unregistered' | 'passive' | 'decommissioned' | 'missing-folder'
+type ProjectBucket = 'primary' | 'module' | 'unregistered' | 'passive' | 'decommissioned' | 'missing-folder'
 
 const projectBucketLabels: Record<ProjectBucket, string> = {
-  registered: 'Known',
+  primary: 'Primary',
+  module: 'Modules',
   unregistered: 'Unknown active',
   passive: 'Passive Engine',
   decommissioned: 'Decommissioned',
@@ -319,23 +320,26 @@ const projectBucketLabels: Record<ProjectBucket, string> = {
 }
 
 function getProjectBucket(project: CanonicalProject): ProjectBucket {
+  if (project.visibility === 'nested' || project.project_kind === 'internal-module') return 'module'
+  if (project.visibility === 'archived' || project.project_kind === 'cancelled-project') return 'decommissioned'
   if (project.registry_status === 'registered-missing-folder') return 'missing-folder'
-  if (project.folder_status === 'decommissioned-folder' || project.status === 'decommissioned') return 'decommissioned'
+  if (project.folder_status === 'decommissioned-folder' || project.status === 'decommissioned' || project.status === 'cancelled') return 'decommissioned'
   if (project.folder_status === 'passive-folder' || project.status === 'passive') return 'passive'
   if (project.registry_status === 'folder-only') return 'unregistered'
-  return 'registered'
+  return 'primary'
 }
 
 function getProjectBucketDescription(bucket: ProjectBucket) {
-  if (bucket === 'registered') return 'Known in the canonical registry and matched to a workspace folder.'
+  if (bucket === 'primary') return 'Canonical project work that should remain visible on the main board.'
+  if (bucket === 'module') return 'Internal module or substream nested under a parent project.'
   if (bucket === 'unregistered') return 'Exists in Active Projects but is not yet in the canonical registry.'
   if (bucket === 'passive') return 'Lives in Passive Engine as product, reference, parked, or low-touch material.'
-  if (bucket === 'decommissioned') return 'Found under archive/decommissioned storage.'
+  if (bucket === 'decommissioned') return 'Cancelled, archived, or decommissioned work.'
   return 'Known in the registry, but no matching current folder was found.'
 }
 
 function ProjectsPanel({ projects }: { projects: CanonicalProject[] }) {
-  const [bucketFilter, setBucketFilter] = useState<ProjectBucket | 'all'>('all')
+  const [bucketFilter, setBucketFilter] = useState<ProjectBucket | 'all'>('primary')
   const [search, setSearch] = useState('')
 
   const counts = useMemo(() => {
@@ -343,7 +347,7 @@ function ProjectsPanel({ projects }: { projects: CanonicalProject[] }) {
       const bucket = getProjectBucket(project)
       acc[bucket] += 1
       return acc
-    }, { registered: 0, unregistered: 0, passive: 0, decommissioned: 0, 'missing-folder': 0 })
+    }, { primary: 0, module: 0, unregistered: 0, passive: 0, decommissioned: 0, 'missing-folder': 0 })
   }, [projects])
 
   const filteredProjects = useMemo(() => {
@@ -362,6 +366,8 @@ function ProjectsPanel({ projects }: { projects: CanonicalProject[] }) {
         project.next_step,
         project.folder_path,
         project.source_root,
+        project.project_kind,
+        project.parent_project_id,
       ].some((value) => value?.toLowerCase().includes(query))
     })
   }, [bucketFilter, projects, search])
@@ -371,8 +377,8 @@ function ProjectsPanel({ projects }: { projects: CanonicalProject[] }) {
       <div className="panelHeader">
         <div>
           <p className="eyebrow">projects</p>
-          <h2>Project reality map</h2>
-          <p className="muted smallCopy">Known registry projects, unknown active folders, Passive Engine material, and decommissioned folders are separated so the project list stops blending everything together.</p>
+          <h2>Project staging map</h2>
+          <p className="muted smallCopy">Primary projects are separated from internal modules, unknown active folders, passive material, and cancelled work.</p>
         </div>
         <span className="countBadge">{filteredProjects.length} / {projects.length} shown</span>
       </div>
@@ -416,6 +422,8 @@ function ProjectsPanel({ projects }: { projects: CanonicalProject[] }) {
             <div className="projectMetaLine">
               <span>{project.priority ?? 'priority unset'}</span>
               <span>{project.owner || 'No owner'}</span>
+              <span>{project.project_kind ?? 'project'}</span>
+              {project.parent_project_id && <span>inside {project.parent_project_id}</span>}
             </div>
             <p>{project.next_step || 'No next step captured yet.'}</p>
             <div className="projectFolderLine">
