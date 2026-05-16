@@ -515,9 +515,22 @@ function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsage
       }
     })
 
+    // Stable parent order: baro → noona → obey → others
+    const parentOrder = new Map([
+      ['baro', 0],
+      ['noona', 1],
+      ['obey', 2],
+    ])
+    const sortedTotals = [...keyTotals.values()].sort((a, b) => {
+      const ao = parentOrder.get(a.key) ?? 99
+      const bo = parentOrder.get(b.key) ?? 99
+      if (ao !== bo) return ao - bo
+      return b.total - a.total
+    })
+
     return {
       days,
-      totals: [...keyTotals.values()].sort((a, b) => b.total - a.total),
+      totals: sortedTotals,
     }
   }, [groupedByParent, tokenUsage])
 
