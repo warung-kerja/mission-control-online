@@ -494,7 +494,7 @@ function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsage
       const segmentTotals = new Map<string, { key: string; total: number; turns: number }>()
 
       for (const row of rows) {
-        const key = groupedByParent ? row.parent_agent ?? 'Independent' : row.agent
+        const key = groupedByParent ? (row.parent_agent ?? row.agent) : row.agent
         const current = segmentTotals.get(key) ?? { key, total: 0, turns: 0 }
         current.total += row.total_tokens
         current.turns += row.turns
@@ -544,7 +544,7 @@ function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsage
   const drilldownRows = useMemo(() => {
     if (!selectedDate || !selectedParent || !groupedByParent) return []
     return tokenUsage
-      .filter((row) => row.date === selectedDate && (row.parent_agent ?? 'Independent') === selectedParent)
+      .filter((row) => row.date === selectedDate && (row.parent_agent ?? row.agent) === selectedParent)
       .sort((a, b) => b.total_tokens - a.total_tokens)
   }, [groupedByParent, selectedDate, selectedParent, tokenUsage])
 
