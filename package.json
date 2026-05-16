@@ -12,7 +12,8 @@
     "sync:dry": "tsx scripts/sync-bridge.ts --dry-run",
     "sync:once": "tsx scripts/sync-bridge.ts --once",
     "sync:poll": "tsx scripts/sync-bridge.ts --poll",
-    "supabase:verify": "tsx scripts/verify-supabase.ts"
+    "supabase:verify": "tsx scripts/verify-supabase.ts",
+    "token:audit": "tsx scripts/audit-token-usage.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.86.2",

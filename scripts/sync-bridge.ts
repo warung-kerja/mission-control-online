@@ -175,7 +175,7 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const workspaceRoot = process.env.WARUNG_KERJA_ROOT ?? '/mnt/d/Warung Kerja 1.0'
 const pollSeconds = Number(process.env.SYNC_REQUEST_POLL_SECONDS ?? 30)
 const syncIntervalMinutes = Number(process.env.SYNC_INTERVAL_MINUTES ?? 10)
-const tokenUsageDays = Math.min(Math.max(Number(process.env.TOKEN_USAGE_DAYS ?? 30), 1), 60)
+const tokenUsageDays = Math.min(Math.max(Number(process.env.TOKEN_USAGE_DAYS ?? 7), 1), 60)
 const tokenUsageTimeZone = process.env.TOKEN_USAGE_TIMEZONE ?? 'Australia/Sydney'
 const openClawAgentsDir = process.env.OPENCLAW_AGENTS_DIR ?? path.join(os.homedir(), '.openclaw', 'agents')
 const openClawCronDir = process.env.OPENCLAW_CRON_DIR ?? path.join(os.homedir(), '.openclaw', 'cron')
@@ -834,7 +834,7 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
   }
 
   if (dryRun || trigger === 'dry_run') {
-    console.log(JSON.stringify({ dryRun: true, summary, samples: { projects: projects.slice(0, 2), team: team.slice(0, 2), sourceHealth, cronJobs: cronJobs.slice(0, 3), tokenUsage: tokenUsage.slice(0, 5), workspaceSignals } }, null, 2))
+    console.log(JSON.stringify({ dryRun: true, summary, samples: { projects: projects.slice(0, 2), team: team.slice(0, 2), sourceHealth, cronJobs: cronJobs.slice(0, 3), tokenUsage, workspaceSignals } }, null, 2))
     return
   }
 
@@ -848,14 +848,11 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
 
   const syncRunId = await createSyncRun(client, trigger)
   try {
-    const tokenUsageDates = buildDateWindow(tokenUsageDays)
-    if (tokenUsageDates.length > 0) {
-      const deleteTokenUsage = await client
-        .from('agent_token_usage_daily')
-        .delete()
-        .in('date', tokenUsageDates)
-      if (deleteTokenUsage.error) throw deleteTokenUsage.error
-    }
+    const deleteTokenUsage = await client
+      .from('agent_token_usage_daily')
+      .delete()
+      .not('id', 'is', null)
+    if (deleteTokenUsage.error) throw deleteTokenUsage.error
 
     const writes = await Promise.all([
       client.from('canonical_projects').upsert(projects),
