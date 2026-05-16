@@ -308,32 +308,129 @@ function SyncPanel({ data, user, onRefreshRequested, requestState }: {
   )
 }
 
+type ProjectBucket = 'registered' | 'unregistered' | 'passive' | 'decommissioned' | 'missing-folder'
+
+const projectBucketLabels: Record<ProjectBucket, string> = {
+  registered: 'Known',
+  unregistered: 'Unknown active',
+  passive: 'Passive Engine',
+  decommissioned: 'Decommissioned',
+  'missing-folder': 'Registry only',
+}
+
+function getProjectBucket(project: CanonicalProject): ProjectBucket {
+  if (project.registry_status === 'registered-missing-folder') return 'missing-folder'
+  if (project.folder_status === 'decommissioned-folder' || project.status === 'decommissioned') return 'decommissioned'
+  if (project.folder_status === 'passive-folder' || project.status === 'passive') return 'passive'
+  if (project.registry_status === 'folder-only') return 'unregistered'
+  return 'registered'
+}
+
+function getProjectBucketDescription(bucket: ProjectBucket) {
+  if (bucket === 'registered') return 'Known in the canonical registry and matched to a workspace folder.'
+  if (bucket === 'unregistered') return 'Exists in Active Projects but is not yet in the canonical registry.'
+  if (bucket === 'passive') return 'Lives in Passive Engine as product, reference, parked, or low-touch material.'
+  if (bucket === 'decommissioned') return 'Found under archive/decommissioned storage.'
+  return 'Known in the registry, but no matching current folder was found.'
+}
+
 function ProjectsPanel({ projects }: { projects: CanonicalProject[] }) {
+  const [bucketFilter, setBucketFilter] = useState<ProjectBucket | 'all'>('all')
+  const [search, setSearch] = useState('')
+
+  const counts = useMemo(() => {
+    return projects.reduce<Record<ProjectBucket, number>>((acc, project) => {
+      const bucket = getProjectBucket(project)
+      acc[bucket] += 1
+      return acc
+    }, { registered: 0, unregistered: 0, passive: 0, decommissioned: 0, 'missing-folder': 0 })
+  }, [projects])
+
+  const filteredProjects = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return projects.filter((project) => {
+      const bucket = getProjectBucket(project)
+      if (bucketFilter !== 'all' && bucket !== bucketFilter) return false
+      if (!query) return true
+
+      return [
+        project.name,
+        project.owner,
+        project.status,
+        project.priority,
+        project.current_phase,
+        project.next_step,
+        project.folder_path,
+        project.source_root,
+      ].some((value) => value?.toLowerCase().includes(query))
+    })
+  }, [bucketFilter, projects, search])
+
   return (
     <section className="panel" id="projects">
       <div className="panelHeader">
         <div>
           <p className="eyebrow">projects</p>
-          <h2>Project movement board</h2>
+          <h2>Project reality map</h2>
+          <p className="muted smallCopy">Known registry projects, unknown active folders, Passive Engine material, and decommissioned folders are separated so the project list stops blending everything together.</p>
         </div>
-        <span className="countBadge">{projects.length} synced</span>
+        <span className="countBadge">{filteredProjects.length} / {projects.length} shown</span>
       </div>
+
+      <div className="projectControls">
+        <label className="projectSearch">
+          <span>Search</span>
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name, owner, folder, next step" />
+        </label>
+        <div className="projectFilterRail" aria-label="Project stage filters">
+          <button className={bucketFilter === 'all' ? 'projectFilter active' : 'projectFilter'} type="button" onClick={() => setBucketFilter('all')}>
+            All <span>{projects.length}</span>
+          </button>
+          {(Object.keys(projectBucketLabels) as ProjectBucket[]).map((bucket) => (
+            <button className={bucketFilter === bucket ? 'projectFilter active' : 'projectFilter'} type="button" onClick={() => setBucketFilter(bucket)} key={bucket}>
+              {projectBucketLabels[bucket]} <span>{counts[bucket]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="projectStageSummary">
+        {(Object.keys(projectBucketLabels) as ProjectBucket[]).map((bucket) => (
+          <div className={`projectStageTile ${bucket}`} key={bucket}>
+            <strong>{counts[bucket]}</strong>
+            <span>{projectBucketLabels[bucket]}</span>
+          </div>
+        ))}
+      </div>
+
       <div className="projectGrid">
-        {projects.map((project) => (
-          <article className="projectCard" key={project.id}>
+        {filteredProjects.map((project) => {
+          const bucket = getProjectBucket(project)
+          return (
+          <article className={`projectCard ${bucket}`} key={project.id}>
             <div className="cardTopline">
-              <span>{project.priority ?? 'priority unset'}</span>
+              <span>{projectBucketLabels[bucket]}</span>
               <span>{project.status ?? 'status unset'}</span>
             </div>
             <h3>{project.name}</h3>
-            <p>{project.next_step || 'No next step captured yet.'}</p>
-            <footer>
+            <div className="projectMetaLine">
+              <span>{project.priority ?? 'priority unset'}</span>
               <span>{project.owner || 'No owner'}</span>
-              <span>{formatRelative(project.synced_at)}</span>
+            </div>
+            <p>{project.next_step || 'No next step captured yet.'}</p>
+            <div className="projectFolderLine">
+              <strong>{project.source_root ?? 'no folder source'}</strong>
+              <span>{project.folder_path ?? getProjectBucketDescription(bucket)}</span>
+            </div>
+            <footer>
+              <span>{project.registry_status ?? 'registry unknown'}</span>
+              <span>{project.source_updated_at ? formatRelative(project.source_updated_at) : formatRelative(project.synced_at)}</span>
             </footer>
           </article>
-        ))}
+          )
+        })}
         {projects.length === 0 && <p className="emptyState">No projects synced yet. Run the local bridge after Supabase tables are created.</p>}
+        {projects.length > 0 && filteredProjects.length === 0 && <p className="emptyState">No projects match this filter.</p>}
       </div>
     </section>
   )

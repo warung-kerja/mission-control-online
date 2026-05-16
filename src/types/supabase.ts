@@ -11,6 +11,10 @@ export interface CanonicalProject {
   priority: string | null
   current_phase: string | null
   next_step: string | null
+  source_root: string | null
+  folder_path: string | null
+  folder_status: string | null
+  registry_status: string | null
   source_updated_at: string | null
   synced_at: string
 }

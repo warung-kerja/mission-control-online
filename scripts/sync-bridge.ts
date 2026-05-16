@@ -20,6 +20,31 @@ interface CanonicalProjectRegistry {
   }>
 }
 
+interface CanonicalProjectSnapshot {
+  id: string
+  name: string
+  owner: string | null
+  team: string[]
+  status: string | null
+  priority: string | null
+  current_phase: string | null
+  next_step: string | null
+  source_root: string | null
+  folder_path: string | null
+  folder_status: string | null
+  registry_status: string | null
+  source_updated_at: string | null
+  synced_at: string
+}
+
+interface ProjectFolderInventory {
+  id: string
+  name: string
+  source_root: string
+  folder_path: string
+  folder_status: 'active-folder' | 'passive-folder' | 'decommissioned-folder'
+}
+
 interface CanonicalTeamMember {
   id: string
   name: string
@@ -201,6 +226,8 @@ const openClawGatewayUrl = process.env.OPENCLAW_GATEWAY_URL?.trim()
 const openClawGatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN?.trim()
 
 const projectRegistryPath = path.join(workspaceRoot, '03_Active_Projects/_registry/projects.json')
+const activeProjectsRoot = path.join(workspaceRoot, '03_Active_Projects')
+const passiveEngineRoot = path.join(workspaceRoot, '01_Passive_Engine')
 const teamRosterPath = path.join(workspaceRoot, '06_Agents/_Shared_Memory/AGENTS_ROSTER.md')
 const workspaceSignalRepo = process.env.WORKSPACE_SIGNAL_REPO
   ?? process.env.MISSION_CONTROL_LOCAL_REPO
@@ -216,22 +243,102 @@ function slug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-function readProjects(syncedAt: string) {
+function relativeWorkspacePath(filePath: string) {
+  return path.relative(workspaceRoot, filePath).replace(/\\/g, '/')
+}
+
+function readChildDirectories(root: string) {
+  try {
+    return fs.readdirSync(root, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => ({ name: entry.name, fullPath: path.join(root, entry.name) }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  } catch {
+    return []
+  }
+}
+
+function folderInventoryEntry(name: string, fullPath: string, sourceRoot: string, folderStatus: ProjectFolderInventory['folder_status']): ProjectFolderInventory {
+  return {
+    id: slug(name),
+    name,
+    source_root: sourceRoot,
+    folder_path: relativeWorkspacePath(fullPath),
+    folder_status: folderStatus,
+  }
+}
+
+function readProjectFolderInventory(): ProjectFolderInventory[] {
+  const activeFolders = readChildDirectories(activeProjectsRoot)
+    .filter((folder) => folder.name !== '_registry')
+    .map((folder) => folderInventoryEntry(folder.name, folder.fullPath, '03_Active_Projects', 'active-folder'))
+
+  const passiveFolders = readChildDirectories(passiveEngineRoot)
+    .filter((folder) => !/^[_\W]*archive/i.test(folder.name))
+    .map((folder) => folderInventoryEntry(folder.name, folder.fullPath, '01_Passive_Engine', 'passive-folder'))
+
+  const passiveArchiveRoot = path.join(passiveEngineRoot, '_Archive')
+  const decommissionedFolders = readChildDirectories(passiveArchiveRoot)
+    .map((folder) => folderInventoryEntry(folder.name, folder.fullPath, '01_Passive_Engine/_Archive', 'decommissioned-folder'))
+
+  return [...activeFolders, ...passiveFolders, ...decommissionedFolders]
+}
+
+function resolveProjectFolder(projectName: string, folders: ProjectFolderInventory[]) {
+  const projectSlug = slug(projectName)
+  return folders.find((folder) => folder.id === projectSlug)
+    ?? folders.find((folder) => projectSlug.includes(folder.id) || folder.id.includes(projectSlug))
+    ?? null
+}
+
+function readProjects(syncedAt: string): CanonicalProjectSnapshot[] {
   const raw = fs.readFileSync(projectRegistryPath, 'utf8')
   const registry = JSON.parse(raw) as CanonicalProjectRegistry
+  const folders = readProjectFolderInventory()
+  const usedFolderIds = new Set<string>()
 
-  return registry.projects.map((project) => ({
-    id: project.id,
-    name: project.name,
-    owner: project.owner ?? null,
-    team: project.team ?? [],
-    status: project.status ?? null,
-    priority: project.priority ?? null,
-    current_phase: project.currentPhase ?? null,
-    next_step: project.nextStep ?? null,
-    source_updated_at: project.updatedAt ?? null,
-    synced_at: syncedAt,
-  }))
+  const registeredProjects = registry.projects.map((project) => {
+    const folder = resolveProjectFolder(project.name, folders)
+    if (folder) usedFolderIds.add(folder.id)
+
+    return {
+      id: project.id,
+      name: project.name,
+      owner: project.owner ?? null,
+      team: project.team ?? [],
+      status: project.status ?? null,
+      priority: project.priority ?? null,
+      current_phase: project.currentPhase ?? null,
+      next_step: project.nextStep ?? null,
+      source_root: folder?.source_root ?? null,
+      folder_path: folder?.folder_path ?? null,
+      folder_status: folder?.folder_status ?? null,
+      registry_status: folder ? 'registered' : 'registered-missing-folder',
+      source_updated_at: project.updatedAt ?? null,
+      synced_at: syncedAt,
+    }
+  })
+
+  const folderOnlyProjects = folders
+    .filter((folder) => !usedFolderIds.has(folder.id))
+    .map((folder) => ({
+      id: `folder-${folder.source_root}-${folder.id}`,
+      name: folder.name.replace(/[_-]+/g, ' '),
+      owner: null,
+      team: [],
+      status: folder.folder_status === 'decommissioned-folder' ? 'decommissioned' : folder.folder_status === 'passive-folder' ? 'passive' : 'unregistered',
+      priority: null,
+      current_phase: folder.folder_status === 'active-folder' ? 'Found in active project folders but not registered yet.' : 'Found in passive/decommissioned workspace folders.',
+      next_step: folder.folder_status === 'active-folder' ? 'Decide whether this should be promoted into the canonical registry.' : 'Review whether this is reference material, parked work, or decommissioned.',
+      source_root: folder.source_root,
+      folder_path: folder.folder_path,
+      folder_status: folder.folder_status,
+      registry_status: 'folder-only',
+      source_updated_at: null,
+      synced_at: syncedAt,
+    }))
+
+  return [...registeredProjects, ...folderOnlyProjects]
 }
 
 function parseTeamRoster(raw: string, syncedAt: string): CanonicalTeamMember[] {
@@ -285,6 +392,8 @@ function readTeam(syncedAt: string) {
 function readSourceHealth(syncedAt: string) {
   const sources = [
     { id: 'project-registry', label: 'Project registry', source_type: 'json', filePath: projectRegistryPath },
+    { id: 'active-projects-root', label: 'Active Projects root', source_type: 'directory', filePath: activeProjectsRoot },
+    { id: 'passive-engine-root', label: 'Passive Engine root', source_type: 'directory', filePath: passiveEngineRoot },
     { id: 'team-roster', label: 'Agent roster', source_type: 'markdown', filePath: teamRosterPath },
   ]
 
