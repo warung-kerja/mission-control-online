@@ -350,16 +350,16 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 
 .tokenChartShell {
   display: grid;
-  grid-template-columns: 4.2rem minmax(0, 1fr);
-  gap: 0.9rem;
-  min-height: 320px;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  gap: 1.2rem;
+  min-height: clamp(340px, 34vw, 460px);
   border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 24px;
   background:
     linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
     #0d0f13;
   background-size: 100% 33.333%;
-  padding: 1rem 1rem 0.85rem;
+  padding: 1.2rem 1.25rem 0.95rem;
   overflow-x: auto;
 }
 
@@ -375,7 +375,7 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 }
 
 .tokenPlot {
-  min-width: min(820px, 100%);
+  min-width: max(100%, 980px);
   display: flex;
   align-items: stretch;
 }
@@ -383,17 +383,17 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 .tokenBars {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(32px, 40px);
-  gap: 4px;
+  grid-auto-columns: minmax(38px, 1fr);
+  gap: 8px;
   width: 100%;
   align-items: end;
 }
 
 .tokenDay {
   display: grid;
-  grid-template-rows: minmax(220px, 1fr) 1.4rem;
+  grid-template-rows: minmax(260px, 1fr) 1.55rem;
   align-items: end;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .tokenStack {
@@ -1047,6 +1047,7 @@ body::before {
 }
 
 .dashboardGrid > #projects,
+.dashboardGrid > #tokens,
 .dashboardGrid > #workspace,
 .dashboardGrid > #history {
   grid-column: 1 / -1;
@@ -1149,6 +1150,7 @@ body::before {
   .dashboardGrid,
   .dashboardGrid > .panel,
   .dashboardGrid > #projects,
+  .dashboardGrid > #tokens,
   .dashboardGrid > #workspace,
   .dashboardGrid > #history { display: block; }
   .dashboardGrid > .panel { margin-top: 1rem; }
