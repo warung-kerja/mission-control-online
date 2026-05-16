@@ -44,10 +44,10 @@ const navSections: NavSection[] = [
   {
     title: 'Primary Surfaces',
     items: [
+      { href: '#tokens', label: 'Token Usage', tone: 'runtime', icon: '📊' },
       { href: '#projects', label: 'Projects', tone: 'canonical', icon: '📋' },
       { href: '#source-health', label: 'Source Health', tone: 'canonical', icon: '🔍' },
       { href: '#automation', label: 'Automation Pulse', tone: 'runtime', icon: '⚡' },
-      { href: '#tokens', label: 'Token Usage', tone: 'runtime', icon: '📊' },
     ],
   },
   {
@@ -483,7 +483,7 @@ function formatChartDate(value: string) {
 
 function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsageDaily[]; syncRuns: SyncRun[] }) {
   const latestSuccess = getLatestSuccessfulSync(syncRuns)
-  const [groupedByParent, setGroupedByParent] = useState(true)
+  const [groupedByParent, setGroupedByParent] = useState(false)
   const [drilldown, setDrilldown] = useState<{ date: string; parent: string } | null>(null)
 
   const chart = useMemo(() => {
@@ -707,7 +707,7 @@ function WorkspaceSignalsPanel({ signal, syncRuns }: { signal: WorkspaceSignalSn
   )
 }
 
-const panelAnchors = ['#projects', '#source-health', '#automation', '#tokens', '#workspace', '#team', '#history'] as const
+const panelAnchors = ['#tokens', '#projects', '#source-health', '#automation', '#workspace', '#team', '#history'] as const
 
 function Dashboard({ user }: { user: User }) {
   const [loadState, setLoadState] = useState<LoadState>('idle')
@@ -822,6 +822,7 @@ function Dashboard({ user }: { user: User }) {
       <ShellSidebar data={data} activeAnchor={activeAnchor} />
       <main className="dashboardShell">
         <ShellHeader data={data} user={user} activeAnchor={activeAnchor} />
+        {loadState === 'ready' && <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />}
         <SyncPanel data={data} user={user} onRefreshRequested={requestRefresh} requestState={requestState} />
         {loadState === 'loading' && (
           <div className="loadingShell">
@@ -835,7 +836,6 @@ function Dashboard({ user }: { user: User }) {
           <ProjectsPanel projects={data.projects} />
           <SourceHealthPanel sources={data.sourceHealth} syncRuns={data.syncRuns} />
           <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} />
-          <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />
           <WorkspaceSignalsPanel signal={data.workspaceSignal} syncRuns={data.syncRuns} />
           <TeamPanel teamMembers={data.teamMembers} />
           <section className="panel compactPanel" id="history">

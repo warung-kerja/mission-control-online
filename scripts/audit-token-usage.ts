@@ -133,7 +133,7 @@ async function main() {
   const badRows = supabaseRows.filter((row) => row.agent === 'main' || row.agent.startsWith('sub:') || String(row.parent_agent ?? '').startsWith('sub:'))
 
   console.log(JSON.stringify({
-    tokenUsageDays: Number(process.env.TOKEN_USAGE_DAYS ?? 7),
+    tokenUsageDays: Number(process.env.TOKEN_USAGE_DAYS ?? 14),
     local: {
       rowCount: localRows.length,
       dates: [...new Set(localRows.map((row) => row.date))].sort(),
