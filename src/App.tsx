@@ -45,17 +45,17 @@ const navSections: NavSection[] = [
     title: 'Primary Surfaces',
     items: [
       { href: '#tokens', label: 'Token Usage', tone: 'runtime', icon: '📊' },
-      { href: '#projects', label: 'Projects', tone: 'canonical', icon: '📋' },
-      { href: '#source-health', label: 'Source Health', tone: 'canonical', icon: '🔍' },
       { href: '#automation', label: 'Automation Pulse', tone: 'runtime', icon: '⚡' },
+      { href: '#projects', label: 'Projects', tone: 'canonical', icon: '📋' },
+      { href: '#team', label: 'Team', tone: 'canonical', icon: '👥' },
     ],
   },
   {
     title: 'System View',
     items: [
       { href: '#workspace', label: 'Workspace/Git', tone: 'runtime', icon: '🌿' },
-      { href: '#team', label: 'Team', tone: 'canonical', icon: '👥' },
-      { href: '#history', label: 'Bridge History', tone: 'fallback', icon: '📜' },
+      { href: '#source-health', label: 'Source Health', tone: 'canonical', icon: '🔍' },
+      { href: '#history', label: 'Last Sync Run', tone: 'fallback', icon: '📜' },
     ],
   },
 ]
@@ -708,7 +708,7 @@ function WorkspaceSignalsPanel({ signal, syncRuns }: { signal: WorkspaceSignalSn
   )
 }
 
-const panelAnchors = ['#tokens', '#projects', '#source-health', '#automation', '#workspace', '#team', '#history'] as const
+const panelAnchors = ['#tokens', '#automation', '#projects', '#team', '#workspace', '#source-health', '#history'] as const
 
 function Dashboard({ user }: { user: User }) {
   const [loadState, setLoadState] = useState<LoadState>('idle')
@@ -834,14 +834,14 @@ function Dashboard({ user }: { user: User }) {
         )}
         {loadState === 'error' && <p className="errorText loadNotice">{error}</p>}
         <div className="dashboardGrid">
-          <ProjectsPanel projects={data.projects} />
-          <SourceHealthPanel sources={data.sourceHealth} syncRuns={data.syncRuns} />
           <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} />
-          <WorkspaceSignalsPanel signal={data.workspaceSignal} syncRuns={data.syncRuns} />
+          <ProjectsPanel projects={data.projects} />
           <TeamPanel teamMembers={data.teamMembers} />
+          <WorkspaceSignalsPanel signal={data.workspaceSignal} syncRuns={data.syncRuns} />
+          <SourceHealthPanel sources={data.sourceHealth} syncRuns={data.syncRuns} />
           <section className="panel compactPanel" id="history">
             <div>
-              <p className="eyebrow">latest sync runs</p>
+              <p className="eyebrow">last sync run</p>
               <h2>Bridge history</h2>
             </div>
             <div className="runList">

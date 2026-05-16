@@ -1061,21 +1061,14 @@ body::before {
 
 .dashboardGrid {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   margin-top: 1rem;
 }
 
 .dashboardGrid > .panel {
-  grid-column: span 6;
-  margin-top: 0;
-}
-
-.dashboardGrid > #projects,
-.dashboardGrid > #tokens,
-.dashboardGrid > #workspace,
-.dashboardGrid > #history {
   grid-column: 1 / -1;
+  margin-top: 0;
 }
 
 .projectGrid,
