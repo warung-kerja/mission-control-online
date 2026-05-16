@@ -823,8 +823,8 @@ function Dashboard({ user }: { user: User }) {
       <ShellSidebar data={data} activeAnchor={activeAnchor} />
       <main className="dashboardShell">
         <ShellHeader data={data} user={user} activeAnchor={activeAnchor} />
-        {loadState === 'ready' && <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />}
         <SyncPanel data={data} user={user} onRefreshRequested={requestRefresh} requestState={requestState} />
+        {loadState === 'ready' && <TokenUsagePanel tokenUsage={data.tokenUsage} syncRuns={data.syncRuns} />}
         {loadState === 'loading' && (
           <div className="loadingShell">
             <div className="loadingSkeleton" />
