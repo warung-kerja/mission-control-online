@@ -430,6 +430,7 @@ function CronHealthPanel({ cronJobs, syncRuns, teamMembers }: { cronJobs: CronJo
   }, [teamMembers])
 
   // Filters
+  const [cronSearch, setCronSearch] = useState('')
   const [agentFilter, setAgentFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showAll, setShowAll] = useState(false)
@@ -446,6 +447,27 @@ function CronHealthPanel({ cronJobs, syncRuns, teamMembers }: { cronJobs: CronJo
   // Apply filters
   const filteredJobs = useMemo(() => {
     let jobs = visibleJobs
+    const query = cronSearch.trim().toLowerCase()
+
+    if (query) {
+      jobs = jobs.filter((job) => {
+        const inheritedModel = job.agent ? modelByAgent.get(job.agent.trim().toLowerCase()) : null
+        const searchable = [
+          job.name,
+          job.agent,
+          job.model,
+          inheritedModel,
+          job.model_source,
+          job.schedule,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+
+        return searchable.includes(query)
+      })
+    }
+
     if (agentFilter !== 'all') {
       jobs = jobs.filter((job) => job.agent === agentFilter)
     }
@@ -455,7 +477,7 @@ function CronHealthPanel({ cronJobs, syncRuns, teamMembers }: { cronJobs: CronJo
       jobs = jobs.filter((job) => job.enabled === false)
     }
     return jobs
-  }, [visibleJobs, agentFilter, statusFilter])
+  }, [visibleJobs, cronSearch, agentFilter, statusFilter, modelByAgent])
 
   const displayedJobs = showAll ? filteredJobs : filteredJobs.slice(0, 8)
   const hasMore = filteredJobs.length > 8
@@ -491,6 +513,14 @@ function CronHealthPanel({ cronJobs, syncRuns, teamMembers }: { cronJobs: CronJo
       {adapterStatus?.error && <p className="errorText">{adapterStatus.error}</p>}
 
       <div className="cronFilters">
+        <input
+          className="cronSearchInput"
+          type="search"
+          value={cronSearch}
+          onChange={(event) => { setCronSearch(event.target.value); setShowAll(false) }}
+          placeholder="Search agent, model, or cron job…"
+          aria-label="Search cron jobs by agent, model, or job name"
+        />
         <select className="cronFilterSelect" value={agentFilter} onChange={(e) => { setAgentFilter(e.target.value); setShowAll(false) }}>
           <option value="all">All agents</option>
           {agents.map((agent) => <option key={agent} value={agent}>{agent}</option>)}
