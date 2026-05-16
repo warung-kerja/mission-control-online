@@ -403,11 +403,42 @@ function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; 
   const latestSuccess = getLatestSuccessfulSync(syncRuns)
   const visibleJobs = cronJobs.filter((job) => job.id !== 'openclaw-cron-adapter')
   const adapterStatus = cronJobs.find((job) => job.id === 'openclaw-cron-adapter')
+
+  // Filters
+  const [agentFilter, setAgentFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [showAll, setShowAll] = useState(false)
+
+  // Derive unique agents from the data
+  const agents = useMemo(() => {
+    const set = new Set<string>()
+    for (const job of visibleJobs) {
+      if (job.agent) set.add(job.agent)
+    }
+    return [...set].sort()
+  }, [visibleJobs])
+
+  // Apply filters
+  const filteredJobs = useMemo(() => {
+    let jobs = visibleJobs
+    if (agentFilter !== 'all') {
+      jobs = jobs.filter((job) => job.agent === agentFilter)
+    }
+    if (statusFilter === 'enabled') {
+      jobs = jobs.filter((job) => job.enabled !== false)
+    } else if (statusFilter === 'disabled') {
+      jobs = jobs.filter((job) => job.enabled === false)
+    }
+    return jobs
+  }, [visibleJobs, agentFilter, statusFilter])
+
+  const displayedJobs = showAll ? filteredJobs : filteredJobs.slice(0, 8)
+  const hasMore = filteredJobs.length > 8
+
   const failedJobs = visibleJobs.filter((job) => job.status === 'failure')
   const runningJobs = visibleJobs.filter((job) => job.status === 'running')
   const disabledJobs = visibleJobs.filter((job) => job.status === 'disabled' || job.enabled === false)
   // Only flag system-level problems: adapter failure, or a high ratio of failing vs total.
-  // Single-digit transient failures (rate-limit, timeout) are normal operational noise.
   const adapterDown = adapterStatus?.status === 'failure'
   const failureRatio = visibleJobs.length > 0 ? failedJobs.length / visibleJobs.length : 0
   const hasProblems = adapterDown || failureRatio > 0.25
@@ -421,7 +452,7 @@ function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; 
           <p className="muted smallCopy">Read-only OpenClaw cron snapshots from the local bridge. This shows what was scheduled at the last sync, not a live browser connection to the gateway.</p>
         </div>
         <span className={hasProblems ? 'countBadge warningBadge' : 'countBadge okBadge'}>
-          {hasProblems ? 'Needs attention' : `${visibleJobs.length} jobs`}
+          {hasProblems ? 'Needs attention' : `${filteredJobs.length} jobs`}
         </span>
       </div>
 
@@ -434,8 +465,20 @@ function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; 
 
       {adapterStatus?.error && <p className="errorText">{adapterStatus.error}</p>}
 
+      <div className="cronFilters">
+        <select className="cronFilterSelect" value={agentFilter} onChange={(e) => { setAgentFilter(e.target.value); setShowAll(false) }}>
+          <option value="all">All agents</option>
+          {agents.map((agent) => <option key={agent} value={agent}>{agent}</option>)}
+        </select>
+        <select className="cronFilterSelect" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setShowAll(false) }}>
+          <option value="all">All statuses</option>
+          <option value="enabled">Enabled</option>
+          <option value="disabled">Disabled</option>
+        </select>
+      </div>
+
       <div className="cronGrid">
-        {visibleJobs.slice(0, 8).map((job) => (
+        {displayedJobs.map((job) => (
           <article className="cronCard" key={job.id}>
             <div className="sourceCardHeader">
               <span className={job.status === 'failure' ? 'miniStatus warning' : 'miniStatus ok'} />
@@ -444,6 +487,7 @@ function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; 
             <div className="cardTopline">
               <span>{job.status ?? 'unknown'}</span>
               <span>{job.enabled === false ? 'disabled' : 'enabled'}</span>
+              {job.agent && <span className="cronAgentLabel">{job.agent}</span>}
             </div>
             <p>{job.schedule || 'No schedule captured.'}</p>
             <dl>
@@ -454,8 +498,20 @@ function CronHealthPanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; 
             {job.error && <p className="errorText">{job.error}</p>}
           </article>
         ))}
-        {visibleJobs.length === 0 && !adapterStatus?.error && <p className="emptyState">No cron jobs synced yet.</p>}
+        {filteredJobs.length === 0 && !adapterStatus?.error && <p className="emptyState">No cron jobs match the current filters.</p>}
       </div>
+
+      {hasMore && !showAll && (
+        <button className="showMoreButton" type="button" onClick={() => setShowAll(true)}>
+          Show all {filteredJobs.length} jobs
+        </button>
+      )}
+      {showAll && hasMore && (
+        <button className="showMoreButton" type="button" onClick={() => setShowAll(false)}>
+          Show fewer
+        </button>
+      )}
+
       <p className="muted smallCopy">Latest successful bridge sync: {formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}.</p>
     </section>
   )

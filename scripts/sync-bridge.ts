@@ -32,6 +32,7 @@ interface CanonicalTeamMember {
 
 interface CronJobSnapshot {
   id: string
+  agent: string | null
   name: string
   schedule: string
   status: string
@@ -342,6 +343,7 @@ function normalizeCronJob(raw: RawCronJob, syncedAt: string): CronJobSnapshot {
 
   return {
     id: String(raw.id || raw.name || 'unknown-cron-job'),
+    agent: normalizeAgentId(String(raw.agentId ?? '')),
     name: String(raw.name || 'Unnamed cron job'),
     schedule: formatCronSchedule(raw.schedule),
     status: normalizeCronStatus(state.lastRunStatus || state.lastStatus, enabled),
@@ -357,6 +359,7 @@ function normalizeCronJob(raw: RawCronJob, syncedAt: string): CronJobSnapshot {
 function cronAdapterStatus(status: 'success' | 'failure', syncedAt: string, error: string | null): CronJobSnapshot {
   return {
     id: CRON_ADAPTER_STATUS_ID,
+    agent: null,
     name: 'OpenClaw cron adapter',
     schedule: 'bridge check',
     status,

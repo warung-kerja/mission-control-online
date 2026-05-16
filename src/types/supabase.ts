@@ -62,6 +62,7 @@ export interface SourceHealthSnapshot {
 
 export interface CronJobSnapshot {
   id: string
+  agent: string | null
   name: string | null
   schedule: string | null
   status: string | null
