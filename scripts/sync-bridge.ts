@@ -530,11 +530,19 @@ function applyUsageToEntry(entry: TokenUsageDailySnapshot, usage: Record<string,
   const cacheWrite = Number(usage.cacheWrite ?? usage.cache_write ?? 0)
   const totalTokens = Number(usage.totalTokens ?? usage.total ?? (input + output + cacheRead + cacheWrite))
 
-  entry.input_tokens += Number.isFinite(input) ? input : 0
-  entry.output_tokens += Number.isFinite(output) ? output : 0
-  entry.cache_read_tokens += Number.isFinite(cacheRead) ? cacheRead : 0
-  entry.cache_write_tokens += Number.isFinite(cacheWrite) ? cacheWrite : 0
-  entry.total_tokens += Number.isFinite(totalTokens) ? totalTokens : 0
+  const safeInput = Number.isFinite(input) ? input : 0
+  const safeOutput = Number.isFinite(output) ? output : 0
+  const safeCacheRead = Number.isFinite(cacheRead) ? cacheRead : 0
+  const safeCacheWrite = Number.isFinite(cacheWrite) ? cacheWrite : 0
+  const safeTotalTokens = Number.isFinite(totalTokens) ? totalTokens : 0
+
+  if (safeInput <= 0 && safeOutput <= 0 && safeCacheRead <= 0 && safeCacheWrite <= 0 && safeTotalTokens <= 0) return
+
+  entry.input_tokens += safeInput
+  entry.output_tokens += safeOutput
+  entry.cache_read_tokens += safeCacheRead
+  entry.cache_write_tokens += safeCacheWrite
+  entry.total_tokens += safeTotalTokens
   entry.turns += 1
 }
 
@@ -558,8 +566,8 @@ function readFirstLines(filePath: string, maxLines: number) {
 }
 
 // ---------------------------------------------------------------------------
-// Token report: reads sessions.json per agent (which tracks per-session
-// token totals) + enriches with cron jobs.json for sub-agent attribution.
+// Token report: reads per-turn usage from flat session .jsonl files and uses
+// sessions.json only as the attribution index from sessionId → sessionKey.
 // ---------------------------------------------------------------------------
 
 interface SessionsJsonSession {
@@ -568,6 +576,7 @@ interface SessionsJsonSession {
   totalTokens?: number
   inputTokens?: number
   outputTokens?: number
+  sessionFile?: string
 }
 
 type SessionsJson = Record<string, SessionsJsonSession>
@@ -684,9 +693,9 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
     return []
   }
 
-  // Primary source: sessions.json per agent (has per-session token totals + sessionKey metadata)
   for (const parentAgent of agentDirs) {
-    const sessionsJsonPath = path.join(openClawAgentsDir, parentAgent, 'sessions', 'sessions.json')
+    const sessionsDir = path.join(openClawAgentsDir, parentAgent, 'sessions')
+    const sessionsJsonPath = path.join(sessionsDir, 'sessions.json')
     let sessionsJson: SessionsJson = {}
     try {
       sessionsJson = JSON.parse(fs.readFileSync(sessionsJsonPath, 'utf8')) as SessionsJson
@@ -694,22 +703,52 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
       continue
     }
 
+    const sessionKeyById = new Map<string, string>()
     for (const [sessionKey, sessionInfo] of Object.entries(sessionsJson)) {
-      const updatedAt = sessionInfo.updatedAt ?? 0
-      const totalTokens = sessionInfo.totalTokens ?? 0
-      if (!updatedAt || !totalTokens) continue
+      if (sessionInfo.sessionId) sessionKeyById.set(sessionInfo.sessionId, sessionKey)
+      if (sessionInfo.sessionFile) sessionKeyById.set(path.basename(sessionInfo.sessionFile, '.jsonl'), sessionKey)
+    }
 
-      const timestamp = new Date(updatedAt)
-      if (Number.isNaN(timestamp.getTime())) continue
+    let files: string[] = []
+    try {
+      files = fs.readdirSync(sessionsDir)
+    } catch {
+      continue
+    }
 
-      const date = formatDateInZone(timestamp)
-      if (!allowedDates.has(date)) continue
-
+    for (const file of files) {
+      if (!file.endsWith('.jsonl') || file.endsWith('.trajectory.jsonl')) continue
+      const sessionId = path.basename(file, '.jsonl')
+      const sessionKey = sessionKeyById.get(sessionId) ?? `agent:${parentAgent}:main`
       const { agent, parent: parsedParent } = parseSessionAgent(sessionKey, parentAgent, cronAgentMap, subagentNameMap)
-      const entry = addTokenUsageEntry(usageByAgent, agent, date, syncedAt, parsedParent)
-      entry.total_tokens += totalTokens
-      entry.input_tokens += totalTokens
-      entry.turns += 1
+      const filePath = path.join(sessionsDir, file)
+
+      let lines: string[] = []
+      try {
+        lines = fs.readFileSync(filePath, 'utf8').split('\n')
+      } catch {
+        continue
+      }
+
+      for (const line of lines) {
+        if (!line.includes('"usage"')) continue
+        try {
+          const record = JSON.parse(line)
+          const usage = record?.message?.usage ?? record?.usage
+          if (!usage) continue
+
+          const rawTs = record?.message?.timestamp ?? record?.timestamp ?? record?.ts
+          const ts = typeof rawTs === 'number' ? new Date(rawTs) : new Date(String(rawTs))
+          if (Number.isNaN(ts.getTime())) continue
+
+          const date = formatDateInZone(ts)
+          if (!allowedDates.has(date)) continue
+
+          applyUsageToEntry(addTokenUsageEntry(usageByAgent, agent, date, syncedAt, parsedParent), usage)
+        } catch {
+          // skip malformed lines
+        }
+      }
     }
   }
 
