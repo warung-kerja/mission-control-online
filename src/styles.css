@@ -367,6 +367,7 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding-top: 1.75rem;
   padding-bottom: 1.65rem;
   color: #6f7d91;
   font-size: 0.72rem;
@@ -375,6 +376,8 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 }
 
 .tokenPlot {
+  position: relative;
+  z-index: 1;
   min-width: max(100%, 980px);
   display: flex;
   align-items: stretch;
@@ -390,13 +393,33 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 }
 
 .tokenDay {
+  position: relative;
+  z-index: 1;
   display: grid;
-  grid-template-rows: minmax(260px, 1fr) 1.55rem;
+  grid-template-rows: 1.3rem minmax(260px, 1fr) 1.55rem;
   align-items: end;
   gap: 0.45rem;
 }
 
+.tokenDay:hover,
+.tokenDay:focus-within {
+  z-index: 40;
+}
+
+.tokenDailyTotal {
+  align-self: start;
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .tokenStack {
+  position: relative;
+  z-index: 1;
   width: 100%;
   min-height: 2px;
   display: flex;
@@ -409,6 +432,7 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 
 .tokenSegment {
   position: relative;
+  z-index: 1;
   width: 100%;
   min-height: 2px;
   padding: 0;
@@ -421,6 +445,7 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 
 .tokenSegment:hover:not(:disabled),
 .tokenSegment.selected {
+  z-index: 50;
   filter: saturate(1.08) brightness(1.08);
   transform: scaleX(1.08) translateZ(0);
 }
@@ -434,7 +459,7 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
   position: absolute;
   left: 50%;
   bottom: calc(100% + 0.45rem);
-  z-index: 2;
+  z-index: 100;
   width: max-content;
   max-width: 12rem;
   transform: translate(-50%, 4px);

@@ -575,6 +575,7 @@ function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsage
               <div className="tokenBars">
                 {chart.days.map((day, dayIndex) => (
                   <div className="tokenDay" key={day.date}>
+                    <span className="tokenDailyTotal">{formatTokens(day.total)}</span>
                     <div className="tokenStack" style={{ height: `${Math.max((day.total / maxDailyTotal) * 100, day.total > 0 ? 2 : 0)}%` }}>
                       {day.segments.map((segment) => {
                         const height = day.total > 0 ? Math.max((segment.total / day.total) * 100, 2) : 0
