@@ -626,12 +626,14 @@ function parseSessionAgent(
   }
 
   if (kind === 'subagent' && subId) {
-    // Look up the human-readable name from subagent-names.json
+    // Look up the human-readable name from subagent-names.json. If the
+    // historical sub-agent was never named, roll it into the parent agent
+    // rather than exposing raw UUID fragments in the dashboard legend.
     const resolved = subagentNameMap.get(subId)
     if (resolved) {
       return { agent: resolved, parent: parentAgentDir }
     }
-    return { agent: `sub:${subId.slice(0, 8)}`, parent: parentAgentDir }
+    return { agent: parentAgentDir, parent: null }
   }
 
   return { agent: parentAgentDir, parent: null }
@@ -677,60 +679,6 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
       entry.total_tokens += totalTokens
       entry.input_tokens += totalTokens
       entry.turns += 1
-    }
-  }
-
-  // Fallback: also scan .jsonl files for detailed per-event usage (additive)
-  for (const parentAgent of agentDirs) {
-    const sessionsDir = path.join(openClawAgentsDir, parentAgent, 'sessions')
-    let files: string[] = []
-    try { files = fs.readdirSync(sessionsDir) } catch { continue }
-
-    for (const file of files) {
-      if (!file.endsWith('.jsonl')) continue
-      const isTrajectory = file.endsWith('.trajectory.jsonl')
-      const filePath = path.join(sessionsDir, file)
-
-      let lines: string[] = []
-      try {
-        lines = isTrajectory ? readFirstLines(filePath, 200) : fs.readFileSync(filePath, 'utf8').split('\n')
-      } catch { continue }
-
-      for (const line of lines) {
-        if (!line.includes('"usage"')) continue
-        try {
-          const record = JSON.parse(line)
-
-          if (isTrajectory) {
-            if (record?.type !== 'model.completed' && record?.event !== 'model.completed') continue
-            const sk = record?.sessionKey ?? record?.data?.sessionKey ?? ''
-            if (typeof sk !== 'string') continue
-            const usage = record?.data?.usage
-            if (!usage) continue
-
-            const rawTs = record?.ts ?? record?.timestamp ?? record?.data?.ts
-            const ts = typeof rawTs === 'number' ? new Date(rawTs) : new Date(String(rawTs))
-            if (Number.isNaN(ts.getTime())) continue
-            const date = formatDateInZone(ts)
-            if (!allowedDates.has(date)) continue
-
-            const { agent: a, parent: p } = parseSessionAgent(sk, parentAgent, cronAgentMap, subagentNameMap)
-            applyUsageToEntry(addTokenUsageEntry(usageByAgent, a, date, syncedAt, p), usage)
-            continue
-          }
-
-          const usage = record?.message?.usage
-          if (!usage) continue
-          const rawTs = record?.message?.timestamp ?? record?.timestamp
-          const ts = typeof rawTs === 'number' ? new Date(rawTs) : new Date(String(rawTs))
-          if (Number.isNaN(ts.getTime())) continue
-          const date = formatDateInZone(ts)
-          if (!allowedDates.has(date)) continue
-          applyUsageToEntry(addTokenUsageEntry(usageByAgent, parentAgent, date, syncedAt, null), usage)
-        } catch {
-          // skip malformed lines
-        }
-      }
     }
   }
 
@@ -869,12 +817,23 @@ async function runSync(trigger: 'scheduled' | 'manual' | 'dry_run' = dryRun ? 'd
 
   const syncRunId = await createSyncRun(client, trigger)
   try {
+    const tokenUsageDates = [...new Set(tokenUsage.map((entry) => entry.date))]
+    if (tokenUsageDates.length > 0) {
+      const deleteTokenUsage = await client
+        .from('agent_token_usage_daily')
+        .delete()
+        .in('date', tokenUsageDates)
+      if (deleteTokenUsage.error) throw deleteTokenUsage.error
+    }
+
     const writes = await Promise.all([
       client.from('canonical_projects').upsert(projects),
       client.from('canonical_team_members').upsert(team),
       client.from('source_health_snapshots').upsert(sourceHealth),
       client.from('cron_job_snapshots').upsert(cronJobs),
-      client.from('agent_token_usage_daily').upsert(tokenUsage),
+      tokenUsage.length > 0
+        ? client.from('agent_token_usage_daily').upsert(tokenUsage)
+        : Promise.resolve({ error: null }),
       client.from('workspace_signal_snapshots').insert(workspaceSignals),
     ])
 
