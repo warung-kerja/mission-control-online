@@ -593,16 +593,26 @@ function buildCronAgentMap(): Map<string, string> {
   return map
 }
 
+function buildSubagentNameMap(): Map<string, string> {
+  const map = new Map<string, string>()
+  try {
+    const raw = fs.readFileSync(path.join(openClawCronDir, 'subagent-names.json'), 'utf8')
+    const data = JSON.parse(raw) as Record<string, string>
+    for (const [uuid, name] of Object.entries(data)) {
+      if (uuid && name) map.set(uuid, name)
+    }
+  } catch { /* best-effort */ }
+  return map
+}
+
 function parseSessionAgent(
   sessionKey: string,
   parentAgentDir: string,
   cronAgentMap: Map<string, string>,
+  subagentNameMap: Map<string, string>,
 ): { agent: string; parent: string | null } {
   const parts = sessionKey.split(':')
   // Format: agent:<parentDir>:<kind>[:<subId>]
-  //   agent:main:cron:<cronJobId>    -> cron job, check cronAgentMap for attribution
-  //   agent:main:subagent:<uuid>     -> ad-hoc subagent, no name mapping available
-  //   agent:noona:telegram:direct:…  -> direct chat
 
   const kind = parts[2] ?? 'unknown'
   const subId = parts[3] ?? null
@@ -616,6 +626,11 @@ function parseSessionAgent(
   }
 
   if (kind === 'subagent' && subId) {
+    // Look up the human-readable name from subagent-names.json
+    const resolved = subagentNameMap.get(subId)
+    if (resolved) {
+      return { agent: resolved, parent: parentAgentDir }
+    }
     return { agent: `sub:${subId.slice(0, 8)}`, parent: parentAgentDir }
   }
 
@@ -626,6 +641,7 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
   const dates = buildDateWindow(tokenUsageDays)
   const allowedDates = new Set(dates)
   const cronAgentMap = buildCronAgentMap()
+  const subagentNameMap = buildSubagentNameMap()
   const usageByAgent = new Map<string, Map<string, TokenUsageDailySnapshot>>()
 
   let agentDirs: string[] = []
@@ -656,7 +672,7 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
       const date = formatDateInZone(timestamp)
       if (!allowedDates.has(date)) continue
 
-      const { agent, parent: parsedParent } = parseSessionAgent(sessionKey, parentAgent, cronAgentMap)
+      const { agent, parent: parsedParent } = parseSessionAgent(sessionKey, parentAgent, cronAgentMap, subagentNameMap)
       const entry = addTokenUsageEntry(usageByAgent, agent, date, syncedAt, parsedParent)
       entry.total_tokens += totalTokens
       entry.input_tokens += totalTokens
@@ -698,7 +714,7 @@ function readTokenUsage(syncedAt: string): TokenUsageDailySnapshot[] {
             const date = formatDateInZone(ts)
             if (!allowedDates.has(date)) continue
 
-            const { agent: a, parent: p } = parseSessionAgent(sk, parentAgent, cronAgentMap)
+            const { agent: a, parent: p } = parseSessionAgent(sk, parentAgent, cronAgentMap, subagentNameMap)
             applyUsageToEntry(addTokenUsageEntry(usageByAgent, a, date, syncedAt, p), usage)
             continue
           }
