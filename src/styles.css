@@ -3390,20 +3390,20 @@ button:active:not(:disabled),
 }
 
 .shellHeader {
-  grid-template-columns: minmax(0, 1fr) minmax(20rem, 31rem);
-  gap: clamp(2rem, 5vw, 4.5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
+  gap: clamp(1rem, 1.5vw, 1.5rem);
   margin-bottom: var(--mc-flow-gap);
-  padding: clamp(1.4rem, 2.2vw, 2rem);
+  padding: clamp(0.65rem, 1.2vw, 1rem);
 }
 
 .shellHeader h2 {
   max-width: 14ch;
-  font-size: clamp(2.55rem, 4.2vw, 4.85rem);
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
 }
 
 .shellHeader .muted {
   max-width: 58ch;
-  margin-top: 0.9rem;
+  margin-top: 0.35rem;
 }
 
 .headerStatusRail {
@@ -3424,23 +3424,23 @@ button:active:not(:disabled),
 }
 
 .heroPanel {
-  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
   border-color: var(--mc-border-muted);
 }
 
 .heroPanel > div {
   background: #151922;
-  padding: clamp(1.5rem, 2.4vw, 2.25rem);
+  padding: clamp(0.85rem, 1.4vw, 1.25rem);
 }
 
 .heroPanel h1 {
   max-width: 13ch;
-  font-size: clamp(3.15rem, 5.8vw, 5.9rem);
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
 }
 
 .syncCard {
   background: var(--mc-surface-alt);
-  padding: clamp(1.25rem, 2vw, 1.75rem);
+  padding: clamp(0.75rem, 1.2vw, 1rem);
 }
 
 .panel {

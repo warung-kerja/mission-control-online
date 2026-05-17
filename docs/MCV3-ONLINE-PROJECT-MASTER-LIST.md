@@ -1,9 +1,9 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-17 18:07 AEST_
+_Last updated: 2026-05-17 18:50 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
-_Status: V1 complete / V1.1 project-module updates + Mission Control styleguide UI overhaul merged to main_
+_Status: V1 complete / V1.1 UI overhaul merged — validation audit queued_
 _Mode: Private, read-only V1 online mirror_
 
 ---
@@ -12,16 +12,16 @@ _Mode: Private, read-only V1 online mirror_
 
 Use this section as the fast truth source for what is done and what is next. Detailed evidence remains in the progress updates below.
 
-### Current snapshot — 2026-05-17 18:07 AEST
+### Current snapshot — 2026-05-17 18:50 AEST
 
-- **Current phase:** V1.1 UI-overhaul verification + local dev/auth recovery.
-- **Done:** Current GitHub `main` now includes recent project-module visibility/search/folder inventory work plus the Mission Control styleguide UI overhaul. Backup branch `v1-backup` was pushed at `b6e0182`; UI branch `codex/ui-overhaul` remains at `d2cae23`; merged `main` is `fad565f`.
-- **In progress / queued:** Production visual verification of `fad565f`; local dev magic-link recovery because Windows localhost-to-WSL forwarding failed during the latest session.
-- **Ready for Noona review:** None pending from Jen. Any future UI work should start from `main` after `fad565f`.
-- **Next milestone:** Verify Vercel deployed `fad565f`, log in on production, and confirm the redesigned dark Mission Control UI plus all panels still read correctly.
-- **Blocked / caveats:** Local Vite worked inside WSL and via direct WSL IP (`http://172.17.157.28:5173/` during the session), but Windows `127.0.0.1:5173` failed. Supabase magic links may route to Vercel until a stable localhost callback is restored. Local Claude/MagicPath leftovers are preserved in `stash@{0}`.
-- **Validation state:** `wsl npm run type-check` and `wsl npm run build` passed before pushing merge commit `fad565f`.
-- **Release/readiness:** V1 remains released/usable. V1.1 UI overhaul is pushed to `main`; authenticated production visual verification is the next release confidence gate.
+- **Current phase:** V1.1 UI-overhaul validation audit queued (Jen MCO-049 pending).
+- **Done:** UI overhaul merged into `main` (`fad565f`), handoff docs refreshed (`b64eeaf`). `MCO-048` provenance audit accepted. Backup branch `v1-backup` at `b6e0182`. UI branch `codex/ui-overhaul` at `d2cae23`. Claude/MagicPath leftovers preserved in `stash@{0}`.
+- **In progress / queued:** `MCO-049` — Pending for Jen — merged UI-overhaul validation + regression audit (read-only). Noona should not commit further or refresh docs until this audit completes.
+- **Ready for Noona review:** None. MCO-049 is still Pending.
+- **Next milestone:** Review Jen's MCO-049 validation packet → decide whether to accept the UI overhaul baseline, assign hotfixes, or escalate to Raz.
+- **Blocked / caveats:** Local dev magic-link loop still broken (WSL Vite direct IP works, Windows localhost forwarding fails). Bridge durability remains Raz-gated. Authenticated production visual verification pending.
+- **Validation state:** `npm run type-check` ✅, `npm run build` ✅, `npm run supabase:verify` ✅ (303 sync runs, 66 cron, 53 token, 217 workspace rows, RLS intact) at 18:50 AEST. Worktree: dirty `src/styles.css` (header-sizing tweak) and `vite.config.ts` (host → 0.0.0.0).
+- **Release/readiness:** V1 released/usable. V1.1 UI overhaul is on `main` but not yet release-confident — blocked on MCO-049 audit + production visual verification.
 
 ### ✅ Completed / shipped
 
