@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap');
+@import "./styles/mission-control-tokens.css";
+
 :root {
   color-scheme: dark;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -417,6 +420,205 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
   color: #e8edf4;
 }
 
+.cronTimelinePanel {
+  overflow: hidden;
+}
+
+.cronTimelineSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.cronTimelineSummary div {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 18px;
+  background: rgba(2, 6, 12, 0.44);
+  padding: 0.9rem;
+}
+
+.cronTimelineSummary strong {
+  display: block;
+  color: #e8edf4;
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cronTimelineSummary span {
+  color: #95a3b8;
+  font-size: 0.78rem;
+}
+
+.cronTimelineFrame {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 22px;
+  background: rgba(2, 6, 12, 0.42);
+  padding: 1rem;
+}
+
+.cronTimelineRange {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #95a3b8;
+  font-size: 0.76rem;
+  margin-bottom: 1.15rem;
+}
+
+.cronTimelineTrack {
+  position: relative;
+  min-height: 8.5rem;
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08), rgba(148, 163, 184, 0.02)),
+    rgba(8, 11, 16, 0.62);
+  overflow: hidden;
+}
+
+.cronTimelineTrack::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  left: 1rem;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.cronTimelineTick,
+.cronTimelineNow,
+.cronTimelineMarker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+
+.cronTimelineTick {
+  width: 1px;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.cronTimelineTick span,
+.cronTimelineNow span {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #95a3b8;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.cronTimelineNow {
+  width: 2px;
+  background: rgba(88, 166, 255, 0.62);
+}
+
+.cronTimelineNow span {
+  top: auto;
+  bottom: 0.75rem;
+  color: #dbeafe;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cronTimelineMarker {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  pointer-events: auto;
+}
+
+.cronTimelineMarker span {
+  display: block;
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 2px solid rgba(8, 11, 16, 0.9);
+  border-radius: 999px;
+  background: #95a3b8;
+  box-shadow: 0 0 0 1px rgba(232, 237, 244, 0.2);
+}
+
+.cronTimelineMarker.last span {
+  background: #8fb3d9;
+}
+
+.cronTimelineMarker.next span {
+  background: #7dd3fc;
+}
+
+.cronTimelineMarker.failure span {
+  background: #f4a261;
+}
+
+.cronTimelineList {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.cronTimelineRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  padding-top: 0.65rem;
+}
+
+.cronTimelineRow strong,
+.cronTimelineRow span {
+  display: block;
+  min-width: 0;
+}
+
+.cronTimelineRow strong {
+  overflow: hidden;
+  color: #e8edf4;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cronTimelineRow div span {
+  overflow: hidden;
+  color: #95a3b8;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cronTimelineRow time {
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cronTimelineKind {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  padding: 0.22rem 0.5rem;
+  color: #95a3b8;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cronTimelineKind.next {
+  border-color: rgba(125, 211, 252, 0.24);
+  color: #7dd3fc;
+}
+
+.cronTimelineKind.failure {
+  border-color: rgba(244, 162, 97, 0.28);
+  color: #f4a261;
+}
+
 .tokenPanelHeader {
   align-items: flex-start;
 }
@@ -634,6 +836,563 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
   font-size: 0.82rem;
 }
 
+.mcTokenModule {
+  overflow: hidden;
+  margin-top: 1rem;
+  border: var(--mc-border-thin);
+  background: var(--mc-surface);
+  color: var(--mc-ink-soft);
+}
+
+.mcTokenTopBar {
+  min-height: var(--mc-header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mc-space-5);
+  border-bottom: var(--mc-border-thin);
+  padding: 0 var(--mc-space-5);
+  color: var(--mc-ink);
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: var(--mc-tracking-label);
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.mcTokenLayout {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+}
+
+.mcTokenRail {
+  position: relative;
+  min-height: 48rem;
+  border-right: var(--mc-border-thin);
+  background: var(--mc-charcoal);
+  color: var(--mc-stone);
+}
+
+.mcTokenRailLabel {
+  position: absolute;
+  left: var(--mc-space-5);
+  bottom: var(--mc-space-6);
+  transform: rotate(-90deg);
+  transform-origin: left center;
+  white-space: nowrap;
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.mcTokenPlus,
+.mcTokenDiagnosticPlus,
+.mcTokenCornerPlus {
+  font-family: var(--mc-font-mono);
+  color: currentColor;
+}
+
+.mcTokenPlus {
+  position: absolute;
+  top: var(--mc-space-4);
+  left: var(--mc-space-5);
+  font-size: 1.125rem;
+}
+
+.mcTokenMain {
+  padding: var(--mc-space-6);
+}
+
+.mcTokenHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14rem;
+  gap: var(--mc-space-7);
+  align-items: start;
+  border-bottom: var(--mc-border-thin);
+  padding-bottom: var(--mc-space-5);
+}
+
+.mcTokenLabel {
+  margin: 0 0 0.625rem;
+  color: var(--mc-accent-primary);
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: var(--mc-tracking-label);
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.mcTokenHeader h2 {
+  max-width: 52rem;
+  margin: 0;
+  color: var(--mc-ink);
+  font-family: var(--mc-font-display);
+  font-size: clamp(2.65rem, 5vw, 4.4rem);
+  font-weight: 700;
+  letter-spacing: var(--mc-tracking-display);
+  line-height: var(--mc-leading-display);
+}
+
+.mcTokenHeaderMeta {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  background: var(--mc-charcoal);
+  color: var(--mc-ink);
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: var(--mc-tracking-label);
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.mcTokenHeaderMeta button,
+.mcTokenHeaderMeta strong {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: var(--mc-surface);
+  color: var(--mc-ink);
+  padding: 0.7rem 0.75rem;
+  font: inherit;
+  font-weight: 400;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.mcTokenHeaderMeta button:hover,
+.mcTokenHeaderMeta button:focus-visible {
+  color: var(--mc-accent-primary);
+  filter: none;
+  transform: none;
+}
+
+.mcTokenHeaderMeta strong {
+  background: var(--mc-accent-primary);
+  color: var(--mc-warm-white);
+}
+
+.mcTokenIntro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14rem;
+  gap: var(--mc-space-7);
+  align-items: end;
+  margin: var(--mc-space-5) 0 var(--mc-space-6);
+}
+
+.mcTokenIntro p {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--mc-ink-soft);
+  font-family: var(--mc-font-display);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: var(--mc-leading-body);
+  text-align: justify;
+}
+
+.mcTokenIntro div {
+  border-left: var(--mc-border-thin);
+  padding-left: 0.875rem;
+  color: var(--mc-annotation);
+  font-family: var(--mc-font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.mcTokenIntro strong {
+  display: block;
+  margin-top: var(--mc-space-2);
+  color: var(--mc-ink);
+  font-weight: 400;
+}
+
+.mcTokenMetricStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: var(--mc-border-thin);
+  border-bottom: var(--mc-border-thin);
+  margin-bottom: var(--mc-space-6);
+  font-family: var(--mc-font-mono);
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.mcTokenMetricStrip > div {
+  min-height: 6rem;
+  display: grid;
+  align-content: space-between;
+  border-right: var(--mc-border-thin);
+  background: var(--mc-surface);
+  padding: 0.75rem 0.875rem;
+}
+
+.mcTokenMetricStrip > div:last-child {
+  border-right: 0;
+}
+
+.mcTokenMetricStrip span,
+.mcTokenMetricStrip small {
+  color: var(--mc-annotation);
+  font-size: 0.5rem;
+}
+
+.mcTokenMetricStrip strong {
+  overflow-wrap: anywhere;
+  color: var(--mc-ink);
+  font-size: clamp(1.05rem, 2vw, 1.85rem);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.mcTokenAnalysis {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14.375rem;
+  gap: 1px;
+  border: var(--mc-border-thin);
+  background: var(--mc-charcoal);
+}
+
+.mcTokenAnalysis > div,
+.mcTokenDiagnostic {
+  background: var(--mc-warm-white);
+}
+
+.mcTokenChartFrame {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  min-height: 22rem;
+  background: var(--mc-warm-white);
+}
+
+.mcTokenYAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: var(--mc-border-thin);
+  padding: 1.25rem 0.625rem 2.625rem;
+  color: var(--mc-annotation);
+  font-family: var(--mc-font-mono);
+  font-size: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.mcTokenPlot {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  background: var(--mc-charcoal);
+  padding: 1.125rem 1px 0;
+  overflow-x: auto;
+}
+
+.mcTokenRule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--mc-border-soft);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.mcTokenRule.top {
+  top: 33.33%;
+}
+
+.mcTokenRule.mid {
+  top: 66.66%;
+}
+
+.mcTokenBars {
+  position: relative;
+  z-index: 1;
+  min-width: max(100%, 46rem);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(2.75rem, 1fr);
+  gap: 1px;
+  align-items: end;
+  background: var(--mc-charcoal);
+}
+
+.mcTokenDay {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 1.375rem minmax(15rem, 1fr) 2.125rem;
+  background: var(--mc-warm-white);
+  padding: 0 var(--mc-space-2);
+}
+
+.mcTokenDailyTotal,
+.mcTokenXAxisLabel,
+.mcTokenLegend,
+.mcTokenDiagnostic,
+.mcTokenDrilldownTitle,
+.mcTokenDrilldownRow,
+.mcTokenFooter {
+  font-family: var(--mc-font-mono);
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.mcTokenDailyTotal {
+  color: var(--mc-ink-soft);
+  font-size: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.mcTokenBarTrack {
+  display: flex;
+  align-items: end;
+}
+
+.mcTokenStack {
+  width: 100%;
+  min-height: 2px;
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.mcTokenSegment {
+  position: relative;
+  width: 100%;
+  min-height: 2px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: inset 0 1px 0 var(--mc-warm-white);
+  transform: translateZ(0);
+}
+
+.mcTokenSegment:hover,
+.mcTokenSegment:focus-visible,
+.mcTokenSegment.selected {
+  outline: 1px solid var(--mc-charcoal);
+  outline-offset: -1px;
+  filter: saturate(1.08);
+}
+
+.mcTokenTooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.4rem);
+  z-index: 5;
+  width: max-content;
+  max-width: 12rem;
+  transform: translate(-50%, 4px);
+  opacity: 0;
+  pointer-events: none;
+  border: var(--mc-border-thin);
+  background: var(--mc-charcoal);
+  color: var(--mc-stone);
+  padding: 0.45rem 0.55rem;
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  line-height: 1.25;
+  text-transform: uppercase;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.mcTokenSegment:hover .mcTokenTooltip,
+.mcTokenSegment:focus-visible .mcTokenTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.mcTokenXAxisLabel {
+  align-self: center;
+  color: var(--mc-annotation);
+  font-size: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.mcTokenLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 1px;
+  border-top: var(--mc-border-thin);
+  background: var(--mc-charcoal);
+  font-size: 0.625rem;
+}
+
+.mcTokenLegend span {
+  min-height: 2.625rem;
+  display: flex;
+  align-items: center;
+  gap: var(--mc-space-2);
+  background: var(--mc-surface);
+  padding: 0 var(--mc-space-3);
+}
+
+.mcTokenLegend span.dominant {
+  color: var(--mc-accent-primary);
+}
+
+.mcTokenLegend i {
+  width: var(--mc-space-2);
+  height: var(--mc-space-2);
+  display: block;
+}
+
+.mcTokenLegend strong {
+  margin-left: auto;
+  color: var(--mc-annotation);
+  font-weight: 400;
+}
+
+.mcTokenDiagnostic {
+  position: relative;
+  display: grid;
+  align-content: space-between;
+  padding: 1.125rem;
+}
+
+.mcTokenDiagnosticPlus {
+  position: absolute;
+  top: 0.875rem;
+  right: 1rem;
+}
+
+.mcTokenDiagnostic p {
+  margin: 0;
+  color: var(--mc-annotation);
+  font-size: 0.5625rem;
+}
+
+.mcTokenDiagnostic > strong {
+  display: block;
+  margin: var(--mc-space-7) 0;
+  color: var(--mc-accent-primary);
+  font-family: var(--mc-font-display);
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: var(--mc-tracking-display);
+  line-height: 0.95;
+}
+
+.mcTokenDiagnostic dl {
+  display: grid;
+  margin: 0;
+  border-top: var(--mc-border-thin);
+}
+
+.mcTokenDiagnostic div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mc-space-3);
+  border-bottom: var(--mc-border-muted);
+  padding: 0.55rem 0;
+}
+
+.mcTokenDiagnostic dt,
+.mcTokenDiagnostic dd {
+  margin: 0;
+  font-size: 0.5625rem;
+}
+
+.mcTokenDiagnostic dd {
+  color: var(--mc-annotation);
+}
+
+.mcTokenDrilldown {
+  margin-top: var(--mc-space-6);
+  border: var(--mc-border-thin);
+  background: var(--mc-surface-alt);
+}
+
+.mcTokenDrilldownTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mc-space-4);
+  border-bottom: var(--mc-border-thin);
+  padding: 0.65rem 0.75rem;
+  color: var(--mc-ink);
+  font-size: 0.625rem;
+}
+
+.mcTokenDrilldownTitle strong {
+  font-weight: 400;
+}
+
+.mcTokenDrilldownRows {
+  display: grid;
+}
+
+.mcTokenDrilldownRow {
+  display: grid;
+  grid-template-columns: minmax(13.75rem, 0.8fr) minmax(0, 1fr) 4rem;
+  gap: var(--mc-space-4);
+  align-items: center;
+  border-bottom: var(--mc-border-muted);
+  padding: 0.625rem 0.75rem;
+  color: var(--mc-ink-soft);
+  font-size: 0.625rem;
+}
+
+.mcTokenDrilldownRow:last-child {
+  border-bottom: 0;
+}
+
+.mcTokenDrilldownRow div {
+  height: 0.5625rem;
+  border: var(--mc-border-thin);
+  background: var(--mc-surface);
+}
+
+.mcTokenDrilldownRow i {
+  display: block;
+  height: 100%;
+}
+
+.mcTokenDrilldownRow strong {
+  text-align: right;
+  font-weight: 400;
+}
+
+.mcTokenEmpty {
+  border: var(--mc-border-thin);
+  background: var(--mc-surface-alt);
+  color: var(--mc-annotation);
+  margin: 0;
+  padding: var(--mc-space-5);
+  font-family: var(--mc-font-display);
+  line-height: var(--mc-leading-body);
+}
+
+.mcTokenFooter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mc-space-5);
+  border-top: var(--mc-border-thin);
+  margin-top: var(--mc-space-6);
+  padding-top: 0.875rem;
+  color: var(--mc-annotation);
+  font-size: 0.625rem;
+}
+
+.mcTokenFooter strong {
+  color: var(--mc-ink);
+  font-weight: 400;
+}
+
+.mcTokenCornerPlus {
+  position: absolute;
+  right: 0;
+  bottom: -1.125rem;
+  color: var(--mc-ink);
+}
+
 .usageList {
   display: grid;
   gap: 0.85rem;
@@ -771,12 +1530,44 @@ dd { margin: 0; text-align: right; color: #e8edf4; font-weight: 650; }
 
 @media (max-width: 900px) {
   .heroPanel, .compactPanel { grid-template-columns: 1fr; }
-  .projectGrid, .sourceGrid, .teamColumns, .cronGrid, .cronSummaryGrid { grid-template-columns: 1fr; }
+  .projectGrid, .sourceGrid, .teamColumns, .cronGrid, .cronSummaryGrid, .cronTimelineSummary { grid-template-columns: 1fr; }
+  .cronTimelineRange, .cronTimelineRow { grid-template-columns: 1fr; }
+  .cronTimelineRange { display: grid; }
+  .cronTimelineRow { align-items: start; }
   .workspaceColumns { grid-template-columns: 1fr; }
   .usageRow, .tokenDrilldownRow { grid-template-columns: 1fr; }
   .tokenPanelHeader, .tokenHeaderActions { display: block; }
   .tokenHeaderActions .countBadge { display: inline-block; margin-top: 0.65rem; }
   .tokenChartShell { grid-template-columns: 3.4rem minmax(0, 1fr); }
+  .mcTokenLayout,
+  .mcTokenHeader,
+  .mcTokenIntro,
+  .mcTokenAnalysis,
+  .mcTokenChartFrame {
+    grid-template-columns: 1fr;
+  }
+  .mcTokenRail {
+    min-height: var(--mc-header-height);
+    border-right: 0;
+    border-bottom: var(--mc-border-thin);
+  }
+  .mcTokenRailLabel {
+    position: static;
+    display: block;
+    transform: none;
+    padding: 1.125rem var(--mc-space-5);
+  }
+  .mcTokenPlus {
+    right: var(--mc-space-5);
+    left: auto;
+  }
+  .mcTokenYAxis {
+    display: none;
+  }
+  .mcTokenHeaderMeta,
+  .mcTokenIntro div {
+    max-width: 18rem;
+  }
 }
 
 /* V3 visual shell port — first safe slice */
@@ -1263,4 +2054,1436 @@ body::before {
   .dashboardGrid > #history { display: block; }
   .dashboardGrid > .panel { margin-top: 1rem; }
   .heroPanel { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .mcTokenMain {
+    padding: var(--mc-space-5);
+  }
+  .mcTokenMetricStrip,
+  .mcTokenLegend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mcTokenDrilldownRow {
+    grid-template-columns: 1fr;
+  }
+  .mcTokenFooter {
+    display: grid;
+    justify-content: stretch;
+  }
+}
+
+/* Mission Control operating page composition */
+:root {
+  color-scheme: light;
+  background: var(--mc-bg);
+  color: var(--mc-ink-soft);
+}
+
+body {
+  background: var(--mc-bg);
+  color: var(--mc-ink-soft);
+  font-family: var(--mc-font-display);
+}
+
+body::before,
+.controlRoomShell::before,
+.heroPanel::before,
+.heroPanel::after,
+.panel::before,
+.panel::after {
+  display: none;
+}
+
+button,
+select,
+input {
+  font-family: var(--mc-font-mono);
+}
+
+button {
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-charcoal);
+  color: var(--mc-stone);
+  font-weight: 400;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+  transition: opacity 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+button:hover:not(:disabled),
+button:active:not(:disabled) {
+  transform: none;
+  filter: none;
+  opacity: 0.78;
+}
+
+.controlRoomShell {
+  display: grid;
+  grid-template-columns: 18rem minmax(0, 1fr);
+  min-height: 100dvh;
+  background: var(--mc-bg);
+  color: var(--mc-ink-soft);
+}
+
+.shellSidebar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mc-space-5);
+  overflow-y: auto;
+  border-right: var(--mc-border-thin);
+  background: var(--mc-surface);
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: var(--mc-space-5);
+}
+
+.brandBlock {
+  border-bottom: var(--mc-border-thin);
+  padding-bottom: var(--mc-space-5);
+}
+
+.brandPill,
+.truthPill,
+.headerStatusRail > span:not(.truthPill),
+.cronAgentLabel,
+.cronTimelineKind {
+  border-radius: var(--mc-radius-none);
+  font-family: var(--mc-font-mono);
+  font-weight: 400;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.brandPill {
+  border: var(--mc-border-thin);
+  background: var(--mc-charcoal);
+  color: var(--mc-stone);
+}
+
+.brandBlock h1,
+.shellHeader h2,
+.heroPanel h1,
+.panel h2 {
+  color: var(--mc-ink);
+  font-family: var(--mc-font-display);
+  font-weight: 700;
+  letter-spacing: var(--mc-tracking-display);
+  line-height: var(--mc-leading-display);
+}
+
+.brandBlock h1 {
+  font-size: 1.8rem;
+}
+
+.brandBlock p,
+.truthLegend p,
+.sidebarSync,
+.muted,
+.smallCopy,
+.emptyState {
+  color: var(--mc-annotation);
+  font-family: var(--mc-font-display);
+}
+
+.shellNav {
+  display: grid;
+  gap: var(--mc-space-5);
+}
+
+.navSection {
+  display: grid;
+  gap: 1px;
+  background: var(--mc-charcoal);
+  border: var(--mc-border-thin);
+}
+
+.navLabel {
+  margin: 0;
+  background: var(--mc-charcoal);
+  color: var(--mc-stone);
+  padding: 0.7rem var(--mc-space-3);
+  font-family: var(--mc-font-mono);
+  font-size: 0.56rem;
+  font-weight: 400;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.navLink {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0;
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface);
+  color: var(--mc-ink);
+  padding: 0;
+  text-decoration: none;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.navLink:hover,
+.navLink.active {
+  transform: none;
+  background: var(--mc-warm-white);
+  color: var(--mc-accent-primary);
+  box-shadow: none;
+}
+
+.navIcon {
+  width: auto;
+  height: 2.5rem;
+  border: 0;
+  border-right: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: transparent;
+  color: inherit;
+  font-family: var(--mc-font-mono);
+  font-size: 0.55rem;
+  letter-spacing: var(--mc-tracking-label);
+}
+
+.navIcon.active,
+.navIcon.runtime.active,
+.navIcon.fallback.active {
+  border-color: var(--mc-charcoal);
+  background: var(--mc-accent-primary);
+  color: var(--mc-warm-white);
+  box-shadow: none;
+}
+
+.navLinkLabel {
+  padding: 0 var(--mc-space-3);
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.navDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: var(--mc-space-3);
+  border-radius: var(--mc-radius-none);
+  box-shadow: none;
+}
+
+.navDot.canonical { background: var(--mc-chart-teal); color: var(--mc-chart-teal); }
+.navDot.runtime { background: var(--mc-chart-blue); color: var(--mc-chart-blue); }
+.navDot.fallback { background: var(--mc-chart-amber); color: var(--mc-chart-amber); }
+
+.truthLegend,
+.operatorCard {
+  overflow: visible;
+  border: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface-alt);
+  box-shadow: none;
+  padding: var(--mc-space-4);
+}
+
+.truthPills,
+.headerStatusRail {
+  gap: 1px;
+  background: var(--mc-charcoal);
+}
+
+.truthPill,
+.headerStatusRail > span:not(.truthPill) {
+  border: 0;
+  background: var(--mc-surface);
+  color: var(--mc-ink);
+}
+
+.truthPill.canonical { color: var(--mc-chart-teal); }
+.truthPill.runtime { color: var(--mc-chart-blue); }
+.truthPill.fallback { color: var(--mc-chart-amber); }
+
+.operatorAvatar {
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-charcoal);
+  color: var(--mc-stone);
+  font-family: var(--mc-font-mono);
+}
+
+.operatorCard span:not(.statusDot) {
+  color: var(--mc-annotation);
+}
+
+.statusDot,
+.miniStatus,
+.cronTimelineMarker span {
+  border-radius: var(--mc-radius-none);
+  box-shadow: none;
+}
+
+.statusDot.ok,
+.miniStatus.ok { background: var(--mc-status-ok); color: var(--mc-status-ok); }
+.statusDot.warning,
+.miniStatus.warning { background: var(--mc-status-warning); color: var(--mc-status-warning); }
+
+.dashboardShell {
+  width: auto;
+  max-width: min(100%, 1400px);
+  margin: 0 auto;
+  padding: var(--mc-layout-margin);
+}
+
+.shellHeader,
+.heroPanel,
+.panel {
+  overflow: hidden;
+  border: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface);
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: none;
+  transition: none;
+}
+
+.shellHeader:hover,
+.heroPanel:hover,
+.panel:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--mc-charcoal);
+}
+
+.shellHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 34rem);
+  gap: var(--mc-space-7);
+  align-items: start;
+  border-bottom: var(--mc-border-thin);
+  margin-bottom: var(--mc-space-4);
+  padding: var(--mc-space-5);
+}
+
+.eyebrow {
+  color: var(--mc-accent-primary);
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.shellHeader h2 {
+  font-size: clamp(2.4rem, 4vw, 4.2rem);
+}
+
+.headerStatusRail {
+  justify-content: stretch;
+  max-width: none;
+  border: var(--mc-border-thin);
+}
+
+.heroPanel {
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem);
+  gap: 1px;
+  background: var(--mc-charcoal);
+  padding: 0;
+}
+
+.heroPanel > div {
+  background: var(--mc-warm-white);
+  padding: var(--mc-space-6);
+}
+
+.heroPanel h1 {
+  max-width: 48rem;
+  font-size: clamp(3rem, 6vw, 5.6rem);
+}
+
+.syncCard {
+  border: 0;
+  border-left: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface);
+  padding: var(--mc-space-5);
+}
+
+.syncHeader strong,
+.sourceCardHeader strong,
+.projectCard h3,
+.teamGroup h3,
+.workspaceList h3 {
+  color: var(--mc-ink);
+}
+
+.syncHeader p,
+.projectCard p,
+.cronCard p,
+.teamRow span,
+.teamRow small,
+.workspaceRow span,
+.workspaceRow small,
+.cronTimelineRow div span,
+.cronTimelineRange,
+.cronTimelineSummary span,
+.cronSummaryGrid span,
+.cardTopline {
+  color: var(--mc-annotation);
+}
+
+dt,
+dd {
+  color: var(--mc-ink-soft);
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.secondaryButton,
+.logoutButton,
+.showMoreButton,
+.cronFilterSelect {
+  border: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-charcoal);
+  color: var(--mc-stone);
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.logoutButton {
+  width: 100%;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mc-space-4);
+  margin-top: var(--mc-space-4);
+}
+
+.dashboardGrid > .panel,
+.mcTokenModule,
+#models.panel {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+.panel {
+  padding: var(--mc-space-5);
+}
+
+.panelHeader {
+  align-items: start;
+  border-bottom: var(--mc-border-thin);
+  margin-bottom: var(--mc-space-5);
+  padding-bottom: var(--mc-space-5);
+}
+
+.panel h2 {
+  font-size: clamp(2rem, 3vw, 3.5rem);
+}
+
+.countBadge,
+.okBadge,
+.warningBadge {
+  border: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface-alt);
+  color: var(--mc-ink);
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.okBadge { color: var(--mc-status-ok); }
+.warningBadge { color: var(--mc-status-warning); }
+
+.projectGrid,
+.sourceGrid,
+.teamColumns,
+.cronGrid,
+.workspaceColumns,
+.cronTimelineList,
+.runList {
+  gap: 1px;
+  background: var(--mc-charcoal);
+  border: var(--mc-border-thin);
+}
+
+.projectCard,
+.teamGroup,
+.sourceCard,
+.cronCard,
+.workspaceList,
+.runRow,
+.cronTimelineRow {
+  border: 0;
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface-alt);
+  color: var(--mc-ink-soft);
+}
+
+.projectCard,
+.teamGroup,
+.sourceCard,
+.cronCard,
+.workspaceList {
+  padding: var(--mc-space-4);
+}
+
+.projectCard footer,
+.sourceCard dl div,
+.syncCard dl div,
+.cronCard dl div,
+.teamRow,
+.workspaceRow,
+.runRow,
+.cronTimelineRow {
+  border-color: var(--mc-border-soft);
+}
+
+.cardTopline,
+.projectCard footer,
+.runRow,
+.cronTimelineRow,
+.workspaceRow {
+  font-family: var(--mc-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+.cronSummaryGrid,
+.cronTimelineSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  border: var(--mc-border-thin);
+  background: var(--mc-charcoal);
+}
+
+.cronSummaryGrid div,
+.cronTimelineSummary div {
+  border: 0;
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface-alt);
+  padding: var(--mc-space-4);
+}
+
+.cronSummaryGrid strong,
+.cronTimelineSummary strong {
+  color: var(--mc-ink);
+  font-family: var(--mc-font-mono);
+  font-size: clamp(1.1rem, 2vw, 1.85rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.cronSummaryGrid span,
+.cronTimelineSummary span {
+  font-family: var(--mc-font-mono);
+  font-size: 0.5rem;
+  letter-spacing: var(--mc-tracking-label);
+  text-transform: uppercase;
+}
+
+#models .tokenChartShell {
+  border: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-warm-white);
+}
+
+#models .tokenYAxis,
+#models .tokenDailyTotal,
+#models .tokenXAxisLabel,
+#models .tokenLegend,
+#models .tokenLegendItem {
+  color: var(--mc-ink-soft);
+  font-family: var(--mc-font-mono);
+}
+
+#models .tokenLegend {
+  gap: 1px;
+  border: var(--mc-border-thin);
+  background: var(--mc-charcoal);
+}
+
+#models .tokenLegendItem {
+  border: 0;
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface);
+}
+
+#models .tokenLegendItem i {
+  border-radius: var(--mc-radius-none);
+  box-shadow: none;
+}
+
+.cronFilters {
+  gap: 1px;
+  border: var(--mc-border-thin);
+  background: var(--mc-charcoal);
+}
+
+.cronFilterSelect {
+  min-height: 2.5rem;
+  border: 0;
+  background-color: var(--mc-surface-alt);
+  color: var(--mc-ink);
+}
+
+.cronModelLine {
+  border: var(--mc-border-muted);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface);
+  color: var(--mc-annotation);
+}
+
+.cronModelLine strong,
+.cronTimelineRow strong,
+.cronTimelineRow time {
+  color: var(--mc-ink);
+}
+
+.cronModelLabel {
+  color: var(--mc-chart-blue);
+  font-family: var(--mc-font-mono);
+  font-weight: 400;
+}
+
+.cronTimelineFrame {
+  border: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-warm-white);
+}
+
+.cronTimelineTrack {
+  border: var(--mc-border-thin);
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface);
+}
+
+.cronTimelineNow {
+  background: var(--mc-accent-primary);
+}
+
+.cronTimelineNow span,
+.cronTimelineKind.next {
+  color: var(--mc-accent-primary);
+}
+
+.cronTimelineMarker span {
+  border: var(--mc-border-thin);
+  background: var(--mc-chart-slate);
+}
+
+.cronTimelineMarker.last span { background: var(--mc-chart-blue); }
+.cronTimelineMarker.next span { background: var(--mc-accent-primary); }
+.cronTimelineMarker.failure span { background: var(--mc-status-error); }
+.cronTimelineKind.failure { color: var(--mc-status-error); }
+
+.usageBar,
+.mcTokenDrilldownRow div {
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-surface);
+}
+
+.usageBar span {
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-accent-primary);
+}
+
+.teamGroup h3,
+.workspaceList h3,
+.runRow span {
+  color: var(--mc-accent-primary);
+}
+
+.errorText { color: var(--mc-status-error); }
+.successText { color: var(--mc-status-ok); }
+
+.loadingShell {
+  border: var(--mc-border-thin);
+  background: var(--mc-surface);
+  padding: var(--mc-space-5);
+}
+
+.loadingSkeleton {
+  border-radius: var(--mc-radius-none);
+  background: var(--mc-border-soft);
+  animation: none;
+}
+
+@media (max-width: 1180px) {
+  .controlRoomShell {
+    grid-template-columns: 1fr;
+  }
+  .shellSidebar {
+    position: relative;
+    height: auto;
+    border-right: 0;
+    border-bottom: var(--mc-border-thin);
+  }
+  .shellNav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  }
+  .operatorCard {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboardShell {
+    padding: var(--mc-space-4);
+  }
+  .shellHeader,
+  .heroPanel,
+  .syncCard,
+  .cronSummaryGrid,
+  .cronTimelineSummary,
+  .projectGrid,
+  .sourceGrid,
+  .teamColumns,
+  .cronGrid,
+  .workspaceColumns,
+  .compactPanel {
+    grid-template-columns: 1fr;
+  }
+  .syncCard {
+    border-left: 0;
+    border-top: var(--mc-border-thin);
+  }
+}
+
+/* Dark operating ratio pass */
+:root {
+  color-scheme: dark;
+  --mc-warm-white: #101216;
+  --mc-off-white: #1d2027;
+  --mc-border-muted: #3d444f;
+  --mc-muted: #bdb5aa;
+  --mc-dark-text: #e7dfd5;
+  --mc-bg: #101216;
+  --mc-surface: #171a20;
+  --mc-surface-alt: #1f232b;
+  --mc-ink: #f6efe6;
+  --mc-ink-soft: #e7dfd5;
+  --mc-annotation: #bdb5aa;
+  --mc-border: #59616d;
+  --mc-border-soft: #333943;
+  --mc-signal-orange: #ff6a3d;
+  --mc-chart-dominant: var(--mc-signal-orange);
+  --mc-chart-coral: #ff7a66;
+  --mc-chart-amber: #f5b84b;
+  --mc-chart-green: #65d17b;
+  --mc-chart-teal: #35c6c0;
+  --mc-chart-cyan: #4fc3e8;
+  --mc-chart-blue: #7ca7ff;
+  --mc-chart-indigo: #a5a4ff;
+  --mc-chart-violet: #c39cff;
+  --mc-chart-rose: #ff8eb3;
+  --mc-chart-slate: #a8b3c5;
+}
+
+body,
+.controlRoomShell {
+  background: var(--mc-bg);
+  color: var(--mc-ink-soft);
+}
+
+.shellSidebar,
+.shellHeader,
+.panel,
+.truthLegend,
+.operatorCard,
+.syncCard,
+.projectCard,
+.teamGroup,
+.sourceCard,
+.cronCard,
+.workspaceList,
+.runRow,
+.cronTimelineRow,
+.cronSummaryGrid div,
+.cronTimelineSummary div,
+.mcTokenModule,
+.mcTokenAnalysis > div,
+.mcTokenDiagnostic,
+.mcTokenChartFrame,
+.mcTokenDay,
+.mcTokenLegend span,
+.mcTokenDrilldown,
+.mcTokenEmpty,
+.loadingShell {
+  background: var(--mc-surface);
+  color: var(--mc-ink-soft);
+}
+
+.sourceCard,
+.projectCard,
+.teamGroup,
+.cronCard,
+.workspaceList,
+.runRow,
+.cronTimelineRow,
+.cronSummaryGrid div,
+.cronTimelineSummary div,
+.mcTokenLegend span,
+.mcTokenDrilldown,
+.mcTokenEmpty {
+  background: var(--mc-surface-alt);
+}
+
+.brandBlock h1,
+.shellHeader h2,
+.heroPanel h1,
+.panel h2,
+.mcTokenHeader h2,
+.syncHeader strong,
+.sourceCardHeader strong,
+.projectCard h3,
+.teamGroup h3,
+.workspaceList h3,
+.cronSummaryGrid strong,
+.cronTimelineSummary strong,
+.cronTimelineRow strong,
+.cronTimelineRow time,
+.workspaceRow strong,
+.teamRow strong,
+.mcTokenMetricStrip strong,
+.mcTokenIntro strong,
+.mcTokenFooter strong,
+.mcTokenDrilldownTitle,
+.mcTokenDrilldownRow strong {
+  color: var(--mc-ink);
+}
+
+.brandBlock p,
+.truthLegend p,
+.sidebarSync,
+.muted,
+.smallCopy,
+.emptyState,
+.syncHeader p,
+.projectCard p,
+.cronCard p,
+.teamRow span,
+.teamRow small,
+.workspaceRow span,
+.workspaceRow small,
+.cronTimelineRow div span,
+.cronTimelineRange,
+.cronTimelineSummary span,
+.cronSummaryGrid span,
+.cardTopline,
+.mcTokenIntro p,
+.mcTokenIntro div,
+.mcTokenMetricStrip span,
+.mcTokenMetricStrip small,
+.mcTokenYAxis,
+.mcTokenXAxisLabel,
+.mcTokenLegend strong,
+.mcTokenDiagnostic p,
+.mcTokenDiagnostic dd,
+.mcTokenFooter {
+  color: var(--mc-annotation);
+}
+
+.eyebrow,
+.mcTokenLabel,
+.teamGroup h3,
+.workspaceList h3,
+.runRow span,
+.cronTimelineNow span,
+.cronTimelineKind.next,
+.mcTokenLegend span.dominant,
+.mcTokenDiagnostic > strong {
+  color: var(--mc-accent-primary);
+}
+
+.heroPanel,
+.navSection,
+.truthPills,
+.headerStatusRail,
+.projectGrid,
+.sourceGrid,
+.teamColumns,
+.cronGrid,
+.workspaceColumns,
+.cronTimelineList,
+.runList,
+.cronSummaryGrid,
+.cronTimelineSummary,
+.mcTokenAnalysis,
+.mcTokenLegend,
+.cronFilters,
+.mcTokenPlot,
+.mcTokenBars {
+  background: var(--mc-charcoal);
+}
+
+.heroPanel > div,
+.navLink {
+  background: var(--mc-surface);
+}
+
+.navLink {
+  color: var(--mc-ink-soft);
+}
+
+.navLink:hover,
+.navLink.active {
+  background: var(--mc-surface-alt);
+  color: var(--mc-accent-primary);
+}
+
+.countBadge,
+.okBadge,
+.warningBadge,
+.headerStatusRail > span:not(.truthPill),
+.truthPill,
+.cronFilterSelect,
+.mcTokenHeaderMeta button,
+.mcTokenHeaderMeta strong {
+  background: var(--mc-surface-alt);
+  color: var(--mc-ink);
+}
+
+.brandPill,
+button,
+.secondaryButton,
+.logoutButton,
+.showMoreButton {
+  background: var(--mc-ink);
+  color: var(--mc-bg);
+}
+
+.mcTokenTopBar,
+.mcTokenRail {
+  display: none;
+}
+
+.mcTokenLayout {
+  display: block;
+}
+
+.mcTokenModule {
+  margin-top: 0;
+}
+
+.mcTokenModule .mcTokenMain {
+  padding: 0;
+}
+
+.mcTokenHeader {
+  border-bottom: var(--mc-border-thin);
+  margin-bottom: var(--mc-space-5);
+  padding-bottom: var(--mc-space-5);
+}
+
+.mcTokenIntro {
+  margin-top: 0;
+}
+
+.mcTokenHeaderMeta {
+  background: var(--mc-charcoal);
+}
+
+.mcTokenHeaderMeta strong {
+  background: var(--mc-accent-primary);
+  color: #1b120f;
+}
+
+.mcTokenMetricStrip,
+.mcTokenChartFrame,
+.mcTokenDrilldown,
+.cronTimelineFrame,
+.cronTimelineTrack,
+#models .tokenChartShell {
+  background: var(--mc-surface);
+}
+
+.mcTokenBarTrack,
+.usageBar,
+.mcTokenDrilldownRow div {
+  background: #111318;
+}
+
+.mcTokenSegment {
+  box-shadow: inset 0 1px 0 rgba(16, 18, 22, 0.72);
+}
+
+.mcTokenTooltip {
+  background: var(--mc-ink);
+  color: var(--mc-bg);
+}
+
+/* Taste polish pass: calibrated dark control-room finish */
+:root {
+  --mc-bg: #0f1115;
+  --mc-surface: #171a20;
+  --mc-surface-alt: #20242c;
+  --mc-surface-raised: #242933;
+  --mc-ink: #fbf3ea;
+  --mc-ink-soft: #ece2d8;
+  --mc-annotation: #c9bfb3;
+  --mc-border: #4c5563;
+  --mc-border-soft: #323944;
+  --mc-border-muted: #3b4350;
+  --mc-charcoal: #0b0d11;
+  --mc-signal-orange: #ff754f;
+  --mc-accent-primary: var(--mc-signal-orange);
+  --mc-layout-margin: clamp(1.25rem, 2.4vw, 2.25rem);
+  --mc-panel-pad: clamp(1.25rem, 2vw, 1.875rem);
+  --mc-flow-gap: clamp(1rem, 1.5vw, 1.35rem);
+  --mc-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+body {
+  background:
+    linear-gradient(90deg, rgba(251, 243, 234, 0.025) 1px, transparent 1px),
+    linear-gradient(180deg, #11141a 0%, var(--mc-bg) 38%, #0c0e12 100%);
+  background-size: 72px 100%, 100% 100%;
+}
+
+a,
+button,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+.navLink,
+.showMoreButton,
+.secondaryButton,
+.logoutButton,
+.cronFilterSelect {
+  transition:
+    background-color 280ms var(--mc-ease),
+    border-color 280ms var(--mc-ease),
+    color 280ms var(--mc-ease),
+    opacity 280ms var(--mc-ease),
+    transform 280ms var(--mc-ease);
+}
+
+button:hover:not(:disabled),
+.secondaryButton:hover,
+.logoutButton:hover,
+.showMoreButton:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled),
+.secondaryButton:active,
+.logoutButton:active,
+.showMoreButton:active {
+  transform: translateY(0) scale(0.99);
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mc-accent-primary) 82%, white 18%);
+  outline-offset: 3px;
+}
+
+.controlRoomShell {
+  grid-template-columns: 19rem minmax(0, 1fr);
+}
+
+.shellSidebar {
+  gap: var(--mc-flow-gap);
+  border-right-color: var(--mc-border-soft);
+  background:
+    linear-gradient(180deg, rgba(255, 117, 79, 0.035), transparent 18rem),
+    var(--mc-charcoal);
+  padding: clamp(1rem, 1.6vw, 1.45rem);
+}
+
+.brandBlock {
+  border-bottom-color: var(--mc-border-muted);
+  padding-bottom: var(--mc-flow-gap);
+}
+
+.brandPill {
+  border-color: rgba(255, 117, 79, 0.42);
+  background: rgba(255, 117, 79, 0.12);
+  color: #ffd1c2;
+  padding: 0.38rem 0.55rem;
+}
+
+.brandBlock h1 {
+  margin-top: 0.85rem;
+  font-size: 1.95rem;
+  letter-spacing: -0.055em;
+}
+
+.brandBlock p,
+.truthLegend p,
+.sidebarSync {
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.navSection,
+.truthLegend,
+.operatorCard,
+.headerStatusRail,
+.projectGrid,
+.sourceGrid,
+.teamColumns,
+.cronGrid,
+.workspaceColumns,
+.cronTimelineList,
+.runList,
+.cronSummaryGrid,
+.cronTimelineSummary,
+.mcTokenAnalysis,
+.mcTokenLegend,
+.cronFilters {
+  border-color: var(--mc-border-muted);
+  background: var(--mc-border-muted);
+}
+
+.navLabel {
+  background: #11141a;
+  color: var(--mc-annotation);
+  padding: 0.72rem 0.8rem;
+}
+
+.navLink {
+  min-height: 2.75rem;
+  background: #151922;
+  color: var(--mc-ink-soft);
+}
+
+.navLink:hover,
+.navLink.active {
+  background: var(--mc-surface-raised);
+  color: var(--mc-ink);
+}
+
+.navLink.active {
+  box-shadow: inset 3px 0 0 var(--mc-accent-primary);
+}
+
+.navIcon {
+  height: 2.75rem;
+  border-right-color: var(--mc-border-muted);
+  color: var(--mc-annotation);
+}
+
+.navIcon.active,
+.navIcon.runtime.active,
+.navIcon.fallback.active {
+  background: var(--mc-accent-primary);
+  color: #1b120f;
+}
+
+.navLinkLabel {
+  font-size: 0.64rem;
+}
+
+.navDot {
+  opacity: 0.88;
+}
+
+.truthLegend,
+.operatorCard {
+  background: #151922;
+}
+
+.truthPill,
+.headerStatusRail > span:not(.truthPill) {
+  background: #1b2029;
+}
+
+.operatorAvatar {
+  background: var(--mc-accent-primary);
+  color: #1b120f;
+}
+
+.dashboardShell {
+  max-width: min(100%, 1480px);
+  padding: var(--mc-layout-margin);
+}
+
+.shellHeader,
+.heroPanel,
+.panel {
+  border-color: var(--mc-border-muted);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 10rem), var(--mc-surface);
+}
+
+.shellHeader {
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 31rem);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  margin-bottom: var(--mc-flow-gap);
+  padding: clamp(1.4rem, 2.2vw, 2rem);
+}
+
+.shellHeader h2 {
+  max-width: 14ch;
+  font-size: clamp(2.55rem, 4.2vw, 4.85rem);
+}
+
+.shellHeader .muted {
+  max-width: 58ch;
+  margin-top: 0.9rem;
+}
+
+.headerStatusRail {
+  align-self: stretch;
+}
+
+.headerStatusRail > span,
+.truthPill {
+  min-height: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+}
+
+.dashboardGrid {
+  gap: var(--mc-flow-gap);
+  margin-top: var(--mc-flow-gap);
+}
+
+.heroPanel {
+  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+  border-color: var(--mc-border-muted);
+}
+
+.heroPanel > div {
+  background: #151922;
+  padding: clamp(1.5rem, 2.4vw, 2.25rem);
+}
+
+.heroPanel h1 {
+  max-width: 13ch;
+  font-size: clamp(3.15rem, 5.8vw, 5.9rem);
+}
+
+.syncCard {
+  background: var(--mc-surface-alt);
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+}
+
+.panel {
+  padding: var(--mc-panel-pad);
+}
+
+.panelHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1rem, 2vw, 2rem);
+  border-bottom-color: var(--mc-border-muted);
+  margin-bottom: var(--mc-panel-pad);
+  padding-bottom: var(--mc-panel-pad);
+}
+
+.panel h2 {
+  max-width: 17ch;
+  font-size: clamp(2.15rem, 3.25vw, 3.75rem);
+}
+
+.eyebrow {
+  margin-bottom: 0.78rem;
+  color: #ff9678;
+}
+
+.muted,
+.smallCopy,
+.emptyState {
+  line-height: 1.62;
+}
+
+.countBadge,
+.okBadge,
+.warningBadge,
+.cronFilterSelect,
+.mcTokenHeaderMeta button,
+.mcTokenHeaderMeta strong {
+  border-color: var(--mc-border-muted);
+  background: var(--mc-surface-raised);
+}
+
+.projectCard,
+.teamGroup,
+.sourceCard,
+.cronCard,
+.workspaceList,
+.runRow,
+.cronTimelineRow,
+.cronSummaryGrid div,
+.cronTimelineSummary div,
+.mcTokenLegend span,
+.mcTokenDrilldown,
+.mcTokenEmpty {
+  background: var(--mc-surface-alt);
+}
+
+.projectCard,
+.teamGroup,
+.sourceCard,
+.cronCard,
+.workspaceList {
+  padding: clamp(1rem, 1.4vw, 1.35rem);
+}
+
+.projectCard h3,
+.teamGroup h3,
+.workspaceList h3,
+.sourceCardHeader strong {
+  letter-spacing: -0.025em;
+}
+
+.cronSummaryGrid div,
+.cronTimelineSummary div,
+.mcTokenMetricStrip > div {
+  min-height: 6.5rem;
+  align-content: space-between;
+}
+
+.cronSummaryGrid strong,
+.cronTimelineSummary strong,
+.mcTokenMetricStrip strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.mcTokenModule {
+  background: linear-gradient(180deg, rgba(255, 117, 79, 0.035), transparent 14rem), var(--mc-surface);
+}
+
+.mcTokenHeader {
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 16rem);
+}
+
+.mcTokenIntro {
+  gap: clamp(1.5rem, 4vw, 4rem);
+  margin-bottom: var(--mc-panel-pad);
+}
+
+.mcTokenIntro p {
+  max-width: 52rem;
+  font-size: 1rem;
+  letter-spacing: -0.015em;
+  text-align: left;
+}
+
+.mcTokenMetricStrip {
+  border-color: var(--mc-border-muted);
+  margin-bottom: var(--mc-panel-pad);
+}
+
+.mcTokenMetricStrip > div {
+  border-right-color: var(--mc-border-muted);
+  background: var(--mc-surface-alt);
+}
+
+.mcTokenChartFrame {
+  background: var(--mc-surface-alt);
+}
+
+.mcTokenYAxis {
+  border-right-color: var(--mc-border-muted);
+}
+
+.mcTokenPlot,
+.mcTokenBars {
+  background: var(--mc-charcoal);
+}
+
+.mcTokenDay {
+  background: #181c23;
+}
+
+.mcTokenRule {
+  background: rgba(201, 191, 179, 0.22);
+}
+
+.mcTokenLegend span {
+  min-height: 2.9rem;
+}
+
+.mcTokenDiagnostic {
+  background: var(--mc-surface-alt);
+  padding: clamp(1rem, 1.5vw, 1.4rem);
+}
+
+.mcTokenDiagnostic > strong {
+  color: #ff9678;
+}
+
+.mcTokenDrilldownRow {
+  border-bottom-color: var(--mc-border-soft);
+}
+
+.cronTimelineTrack,
+#models .tokenChartShell {
+  background:
+    linear-gradient(rgba(201, 191, 179, 0.08) 1px, transparent 1px),
+    #151922;
+  background-size: 100% 25%;
+}
+
+.usageBar,
+.mcTokenDrilldownRow div,
+.mcTokenBarTrack {
+  background: #0f1218;
+}
+
+.loginCard {
+  border-color: var(--mc-border-muted);
+  background: var(--mc-surface);
+}
+
+.loginCard h1 {
+  color: var(--mc-ink);
+}
+
+.loginForm input {
+  border-color: var(--mc-border-muted);
+  background: var(--mc-charcoal);
+  color: var(--mc-ink);
+}
+
+@media (max-width: 1180px) {
+  .controlRoomShell {
+    grid-template-columns: 1fr;
+  }
+
+  .shellSidebar {
+    height: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboardShell {
+    padding: 1rem;
+  }
+
+  .shellHeader,
+  .panelHeader,
+  .heroPanel,
+  .mcTokenHeader,
+  .mcTokenIntro,
+  .mcTokenAnalysis {
+    grid-template-columns: 1fr;
+  }
+
+  .shellHeader h2,
+  .heroPanel h1,
+  .panel h2 {
+    max-width: none;
+  }
 }

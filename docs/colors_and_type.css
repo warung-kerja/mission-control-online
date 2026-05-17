@@ -1,0 +1,225 @@
+/* ============================================================
+   SPINE GROUP — Design Tokens
+   colors_and_type.css
+   ============================================================ */
+
+@font-face {
+  font-family: "KH Teka";
+  src: url("assets/fonts/KH-Teka/KHTeka-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: "KH Teka";
+  src: url("assets/fonts/KH-Teka/KHTeka-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "KH Teka";
+  src: url("assets/fonts/KH-Teka/KHTeka-RegularItalic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+}
+@font-face {
+  font-family: "KH Teka";
+  src: url("assets/fonts/KH-Teka/KHTeka-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "KH Teka";
+  src: url("assets/fonts/KH-Teka/KHTeka-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "KH Teka";
+  src: url("assets/fonts/KH-Teka/KHTeka-BoldItalic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+}
+@font-face {
+  font-family: "KH Teka";
+  src: url("assets/fonts/KH-Teka/KHTeka-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+}
+@font-face {
+  font-family: "PP Supply Mono";
+  src: url("assets/fonts/PP-Supply/PPSupplyMono-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "PP Supply Mono";
+  src: url("assets/fonts/PP-Supply/PPSupplyMono-Ultralight.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+}
+
+:root {
+  --sg-orange: #FF4319;
+  --sg-purple: #6944E8;
+  --sg-charcoal: #252525;
+  --sg-near-black: #171717;
+  --sg-dark-text: #1E1F20;
+  --sg-mid: #333333;
+  --sg-muted: #B6B2AD;
+  --sg-muted-2: #A8A29E;
+  --sg-mid-gray: #797979;
+  --sg-stone: #EEE9E3;
+  --sg-stone-2: #EEE9E4;
+  --sg-warm-white: #FBF8F5;
+  --sg-off-white: #FAFAF9;
+  --sg-white: #FFFFFF;
+  --sg-red: #DE0046;
+  --sg-amber: #F7A34B;
+  --sg-blue: #0098FD;
+  --sg-magenta: #FF00EE;
+
+  --color-bg: var(--sg-stone);
+  --color-bg-dark: var(--sg-charcoal);
+  --color-bg-light: var(--sg-warm-white);
+  --color-surface: var(--sg-stone);
+  --color-surface-dark: var(--sg-charcoal);
+  --color-fg: var(--sg-charcoal);
+  --color-fg-dark: var(--sg-near-black);
+  --color-fg-muted: var(--sg-muted);
+  --color-fg-muted2: var(--sg-muted-2);
+  --color-fg-on-dark: var(--sg-stone);
+  --color-border: var(--sg-charcoal);
+  --color-border-muted: var(--sg-muted);
+  --color-divider: var(--sg-muted);
+  --color-accent: var(--sg-orange);
+  --color-accent-2: var(--sg-purple);
+
+  --font-display: "KH Teka", sans-serif;
+  --font-mono: "PP Supply Mono", monospace;
+  --font-code: "Geist Mono", monospace;
+
+  --text-display-xl: clamp(48px, 5vw, 70px);
+  --text-display-lg: clamp(34px, 3.5vw, 48px);
+  --text-display-md: clamp(28px, 2.8vw, 38px);
+  --text-display-sm: clamp(18px, 2vw, 24px);
+  --text-body-lg: 18px;
+  --text-body: 16px;
+  --text-body-sm: 14px;
+  --text-body-xs: 12px;
+  --text-mono-lg: 12px;
+  --text-mono: 10px;
+  --text-mono-sm: 8px;
+  --text-mono-xs: 4px;
+
+  --tracking-tight: -0.04em;
+  --tracking-tighter: -0.03em;
+  --tracking-normal: -0.02em;
+  --tracking-mono: -0.02em;
+  --tracking-label: 0.05em;
+
+  --leading-display: 1.02;
+  --leading-tight: 1.2;
+  --leading-body: 1.6;
+  --leading-mono: 1.2;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  --layout-margin: 31px;
+  --layout-header-h: 52px;
+  --layout-max-w: 1920px;
+
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 20px;
+
+  --border-thin: 1px solid var(--color-border);
+  --border-muted: 1px solid var(--color-border-muted);
+  --border-hairline: 0.5px solid var(--color-border);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.18);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.25);
+}
+
+.sg-display-xl {
+  font-family: var(--font-display);
+  font-size: var(--text-display-xl);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-display);
+}
+
+.sg-display-lg {
+  font-family: var(--font-display);
+  font-size: var(--text-display-lg);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-display);
+}
+
+.sg-display-md {
+  font-family: var(--font-display);
+  font-size: var(--text-display-md);
+  font-weight: 400;
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-tight);
+}
+
+.sg-body {
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-body);
+}
+
+.sg-body-sm {
+  font-family: var(--font-display);
+  font-size: var(--text-body-sm);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-body);
+}
+
+.sg-label,
+.sg-label-sm {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  letter-spacing: var(--tracking-label);
+  line-height: var(--leading-mono);
+  text-transform: uppercase;
+}
+
+.sg-label {
+  font-size: var(--text-mono);
+}
+
+.sg-label-sm {
+  font-size: var(--text-mono-sm);
+}
+
+.sg-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-lg);
+  font-weight: 400;
+  letter-spacing: var(--tracking-mono);
+  line-height: var(--leading-mono);
+}
+
+.sg-mono-xl {
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: 200;
+  letter-spacing: -0.08em;
+  line-height: 1;
+}

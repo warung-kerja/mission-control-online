@@ -1,0 +1,80 @@
+:root {
+  /* Mission Control Operating Style */
+  --mc-font-display: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mc-font-mono: "PP Supply Mono", "Geist Mono", "SFMono-Regular", Consolas, monospace;
+
+  --mc-warm-white: #FBF8F5;
+  --mc-off-white: #FAFAF9;
+  --mc-stone: #EEE9E3;
+  --mc-border-muted: #B6B2AD;
+  --mc-muted: #A8A29E;
+  --mc-mid-gray: #797979;
+  --mc-dark-text: #1E1F20;
+  --mc-charcoal: #252525;
+  --mc-near-black: #171717;
+
+  --mc-bg: var(--mc-warm-white);
+  --mc-surface: var(--mc-stone);
+  --mc-surface-alt: var(--mc-off-white);
+  --mc-ink: var(--mc-charcoal);
+  --mc-ink-soft: var(--mc-dark-text);
+  --mc-annotation: var(--mc-muted);
+  --mc-border: var(--mc-charcoal);
+  --mc-border-soft: var(--mc-border-muted);
+
+  --mc-signal-orange: #FF4319;
+  --mc-accent-primary: var(--mc-signal-orange);
+
+  /* Colorful graph palette. Orange is reserved for dominant/selected/urgent series. */
+  --mc-chart-dominant: var(--mc-signal-orange);
+  --mc-chart-coral: #E23D28;
+  --mc-chart-amber: #F59E0B;
+  --mc-chart-green: #2F9E44;
+  --mc-chart-teal: #007C89;
+  --mc-chart-cyan: #0891B2;
+  --mc-chart-blue: #2563EB;
+  --mc-chart-indigo: #4F46E5;
+  --mc-chart-violet: #8B5CF6;
+  --mc-chart-rose: #D9466F;
+  --mc-chart-slate: #64748B;
+
+  --mc-chart-1: var(--mc-chart-dominant);
+  --mc-chart-2: var(--mc-chart-blue);
+  --mc-chart-3: var(--mc-chart-teal);
+  --mc-chart-4: var(--mc-chart-green);
+  --mc-chart-5: var(--mc-chart-violet);
+  --mc-chart-6: var(--mc-chart-rose);
+  --mc-chart-7: var(--mc-chart-amber);
+  --mc-chart-8: var(--mc-chart-indigo);
+  --mc-chart-9: var(--mc-chart-cyan);
+  --mc-chart-10: var(--mc-chart-slate);
+
+  --mc-status-ok: var(--mc-chart-green);
+  --mc-status-warning: var(--mc-chart-amber);
+  --mc-status-error: var(--mc-chart-coral);
+  --mc-status-info: var(--mc-chart-blue);
+
+  --mc-space-1: 4px;
+  --mc-space-2: 8px;
+  --mc-space-3: 12px;
+  --mc-space-4: 16px;
+  --mc-space-5: 24px;
+  --mc-space-6: 32px;
+  --mc-space-7: 48px;
+  --mc-space-8: 64px;
+  --mc-space-9: 96px;
+
+  --mc-layout-margin: 31px;
+  --mc-header-height: 52px;
+  --mc-layout-max: 1284px;
+
+  --mc-radius-none: 0;
+  --mc-radius-tight-ui: 4px;
+  --mc-border-thin: 1px solid var(--mc-border);
+  --mc-border-muted: 1px solid var(--mc-border-soft);
+
+  --mc-tracking-display: -0.055em;
+  --mc-tracking-label: 0.05em;
+  --mc-leading-display: 0.98;
+  --mc-leading-body: 1.55;
+}
