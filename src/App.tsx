@@ -46,19 +46,19 @@ const navSections: NavSection[] = [
   {
     title: 'Primary Surfaces',
     items: [
-      { href: '#tokens', label: 'Token Usage', tone: 'runtime', icon: '📊' },
-      { href: '#models', label: 'Model Usage', tone: 'runtime', icon: '🧠' },
-      { href: '#automation', label: 'Automation Pulse', tone: 'runtime', icon: '⚡' },
-      { href: '#projects', label: 'Projects', tone: 'canonical', icon: '📋' },
-      { href: '#team', label: 'Team', tone: 'canonical', icon: '👥' },
+      { href: '#tokens', label: 'Token Usage', tone: 'runtime', icon: 'TKN' },
+      { href: '#models', label: 'Model Usage', tone: 'runtime', icon: 'MOD' },
+      { href: '#automation', label: 'Automation Pulse', tone: 'runtime', icon: 'AUT' },
+      { href: '#projects', label: 'Projects', tone: 'canonical', icon: 'PRJ' },
+      { href: '#team', label: 'Team', tone: 'canonical', icon: 'AGT' },
     ],
   },
   {
     title: 'System View',
     items: [
-      { href: '#workspace', label: 'Workspace/Git', tone: 'runtime', icon: '🌿' },
-      { href: '#source-health', label: 'Source Health', tone: 'canonical', icon: '🔍' },
-      { href: '#history', label: 'Last Sync Run', tone: 'fallback', icon: '📜' },
+      { href: '#workspace', label: 'Workspace/Git', tone: 'runtime', icon: 'GIT' },
+      { href: '#source-health', label: 'Source Health', tone: 'canonical', icon: 'SRC' },
+      { href: '#history', label: 'Last Sync Run', tone: 'fallback', icon: 'SYN' },
     ],
   },
 ]
@@ -105,6 +105,21 @@ function getModelSourceLabel(value: string | null | undefined) {
 
 function getLatestSuccessfulSync(syncRuns: SyncRun[]) {
   return syncRuns.find((run) => run.status === 'success') ?? null
+}
+
+function formatClockTime(value: Date) {
+  return new Intl.DateTimeFormat('en-AU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(value)
+}
+
+function formatTimelineDate(value: Date) {
+  return new Intl.DateTimeFormat('en-AU', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(value)
 }
 
 const sectionMetaByAnchor: Record<string, { eyebrow: string; question: string }> = {
@@ -688,13 +703,148 @@ function CronHealthPanel({ cronJobs, syncRuns, teamMembers }: { cronJobs: CronJo
   )
 }
 
+interface CronTimelineEvent {
+  id: string
+  job: CronJobSnapshot
+  date: Date
+  kind: 'last' | 'next'
+  position: number
+}
+
+function CronTimelinePanel({ cronJobs, syncRuns }: { cronJobs: CronJobSnapshot[]; syncRuns: SyncRun[] }) {
+  const latestSuccess = getLatestSuccessfulSync(syncRuns)
+  const now = useMemo(() => new Date(), [cronJobs, syncRuns])
+  const start = useMemo(() => new Date(now.getTime() - 12 * 60 * 60 * 1000), [now])
+  const end = useMemo(() => new Date(now.getTime() + 12 * 60 * 60 * 1000), [now])
+  const activeJobs = useMemo(
+    () => cronJobs.filter((job) => job.id !== 'openclaw-cron-adapter' && job.enabled !== false),
+    [cronJobs],
+  )
+  const events = useMemo<CronTimelineEvent[]>(() => {
+    const windowMs = end.getTime() - start.getTime()
+
+    return activeJobs
+      .flatMap((job) => {
+        const candidates: Array<{ kind: 'last' | 'next'; date: Date | null }> = [
+          { kind: 'last', date: parseDate(job.last_run_at) },
+          { kind: 'next', date: parseDate(job.next_run_at) },
+        ]
+
+        return candidates.flatMap(({ kind, date }) => {
+          if (!date) return []
+          if (date < start || date > end) return []
+
+          return [{
+            id: `${job.id}-${kind}`,
+            job,
+            date,
+            kind,
+            position: ((date.getTime() - start.getTime()) / windowMs) * 100,
+          }]
+        })
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+  }, [activeJobs, end, start])
+  const upcomingEvents = events.filter((event) => event.kind === 'next')
+  const completedEvents = events.filter((event) => event.kind === 'last')
+  const tickMarks = useMemo(() => {
+    return Array.from({ length: 7 }, (_, index) => {
+      const position = (index / 6) * 100
+      const date = new Date(start.getTime() + ((end.getTime() - start.getTime()) * index) / 6)
+      return { date, position }
+    })
+  }, [end, start])
+
+  return (
+    <section className="panel cronTimelinePanel" id="automation-timeline">
+      <div className="panelHeader">
+        <div>
+          <p className="eyebrow">automation timeline</p>
+          <h2>24-hour activity window</h2>
+          <p className="muted smallCopy">Active cron jobs mapped from their captured last and next run times. Repeating future slots will come in a later schedule-expansion pass.</p>
+        </div>
+        <span className="countBadge">{events.length} markers</span>
+      </div>
+
+      <div className="cronTimelineSummary">
+        <div><strong>{activeJobs.length}</strong><span>active jobs</span></div>
+        <div><strong>{completedEvents.length}</strong><span>just ran</span></div>
+        <div><strong>{upcomingEvents.length}</strong><span>up next</span></div>
+        <div><strong>{formatClockTime(now)}</strong><span>current time</span></div>
+      </div>
+
+      <div className="cronTimelineFrame">
+        <div className="cronTimelineRange">
+          <span>{formatTimelineDate(start)} · {formatClockTime(start)}</span>
+          <span>{formatTimelineDate(end)} · {formatClockTime(end)}</span>
+        </div>
+
+        <div className="cronTimelineTrack" aria-label="24 hour cron timeline">
+          {tickMarks.map((tick) => (
+            <div className="cronTimelineTick" key={tick.position} style={{ left: `${tick.position}%` }}>
+              <span>{formatClockTime(tick.date)}</span>
+            </div>
+          ))}
+          <div className="cronTimelineNow" style={{ left: '50%' }}>
+            <span>now</span>
+          </div>
+          {events.map((event) => {
+            const isFailure = event.job.status === 'failure'
+            const tone = isFailure ? 'failure' : event.kind
+
+            return (
+              <div
+                className={`cronTimelineMarker ${tone}`}
+                key={event.id}
+                style={{ left: `${event.position}%` }}
+                title={`${event.job.name ?? 'Unnamed job'} · ${event.kind === 'last' ? 'last ran' : 'next run'} · ${formatDate(event.date.toISOString())}`}
+              >
+                <span />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="cronTimelineList">
+        {events.map((event) => (
+          <article className="cronTimelineRow" key={`${event.id}-row`}>
+            <span className={`cronTimelineKind ${event.job.status === 'failure' ? 'failure' : event.kind}`}>
+              {event.kind === 'last' ? 'last' : 'next'}
+            </span>
+            <div>
+              <strong>{event.job.name ?? 'Unnamed job'}</strong>
+              <span>{event.job.agent ?? 'agent unknown'} · {event.job.schedule || 'No schedule captured'}</span>
+            </div>
+            <time>{formatClockTime(event.date)}</time>
+          </article>
+        ))}
+        {events.length === 0 && <p className="emptyState">No active cron jobs have last or next run markers inside this 24-hour window.</p>}
+      </div>
+
+      <p className="muted smallCopy">Latest successful bridge sync: {formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}.</p>
+    </section>
+  )
+}
+
 function formatTokens(value: number) {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1)}M`
   if (value >= 1_000) return `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}k`
   return value.toLocaleString()
 }
 
-const tokenPalette = ['#f4a261', '#58a6ff', '#86efac', '#fbbf24', '#fda4af', '#67e8f9', '#c4b5fd', '#fdba74', '#93c5fd', '#bef264']
+const tokenPalette = [
+  'var(--mc-chart-dominant)',
+  'var(--mc-chart-blue)',
+  'var(--mc-chart-teal)',
+  'var(--mc-chart-green)',
+  'var(--mc-chart-violet)',
+  'var(--mc-chart-rose)',
+  'var(--mc-chart-amber)',
+  'var(--mc-chart-indigo)',
+  'var(--mc-chart-cyan)',
+  'var(--mc-chart-slate)',
+]
 
 function getTokenColor(name: string) {
   let hash = 0
@@ -879,9 +1029,11 @@ function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsage
   const totalTurns = chart.totals.reduce((sum, row) => sum + row.turns, 0)
   const maxDailyTotal = Math.max(...chart.days.map((day) => day.total), 1)
   const latestDate = chart.days.at(-1)?.date
+  const firstDate = chart.days[0]?.date
   const yTicks = [maxDailyTotal, Math.round(maxDailyTotal * 0.66), Math.round(maxDailyTotal * 0.33), 0]
   const selectedParent = drilldown?.parent ?? null
   const selectedDate = drilldown?.date ?? null
+  const topAgent = chart.totals[0] ?? null
   const drilldownRows = useMemo(() => {
     if (!selectedDate || !selectedParent || !groupedByParent) return []
     return tokenUsage
@@ -890,105 +1042,144 @@ function TokenUsagePanel({ tokenUsage, syncRuns }: { tokenUsage: AgentTokenUsage
   }, [groupedByParent, selectedDate, selectedParent, tokenUsage])
 
   return (
-    <section className="panel" id="tokens">
-      <div className="panelHeader tokenPanelHeader">
-        <div>
-          <p className="eyebrow">token usage</p>
-          <h2>Agent token burn</h2>
-          <p className="muted smallCopy">Where are the tokens going? Daily aggregate tokens from local OpenClaw session logs. No raw transcripts or prompts are synced.</p>
-        </div>
-        <div className="tokenHeaderActions">
-          <button
-            className="tokenToggleButton"
-            type="button"
-            onClick={() => {
-              setGroupedByParent((value) => !value)
-              setDrilldown(null)
-            }}
-          >
-            {groupedByParent ? 'Group by parent' : 'Flat list'}
-          </button>
-          <span className="countBadge">{formatTokens(totalTokens)} tokens</span>
-        </div>
-      </div>
-
-      <div className="cronSummaryGrid">
-        <div><strong>{formatTokens(totalTokens)}</strong><span>tokens</span></div>
-        <div><strong>{totalTurns}</strong><span>turns</span></div>
-        <div><strong>{chart.totals[0]?.key ?? '-'}</strong><span>top agent</span></div>
-        <div><strong>{latestDate ?? '-'}</strong><span>latest day</span></div>
-      </div>
-
-      {chart.days.length > 0 ? (
-        <>
-          <div className="tokenChartShell">
-            <div className="tokenYAxis" aria-hidden="true">
-              {yTicks.map((tick, index) => <span key={`${tick}-${index}`}>{formatTokens(tick)}</span>)}
+    <section className="panel mcTokenModule" id="tokens">
+      <div className="mcTokenMain">
+          <div className="panelHeader mcTokenHeader">
+            <div>
+              <p className="eyebrow">Agent token usage</p>
+              <h2>Token burn by operating surface</h2>
+              <p className="muted smallCopy">
+                Daily aggregate from local OpenClaw sessions. No raw transcripts or prompts are synced.
+              </p>
             </div>
-            <div className="tokenPlot" role="img" aria-label="Stacked daily token usage by agent">
-              <div className="tokenBars">
-                {chart.days.map((day, dayIndex) => (
-                  <div className="tokenDay" key={day.date}>
-                    <span className="tokenDailyTotal">{formatTokens(day.total)}</span>
-                    <div className="tokenStack" style={{ height: `${Math.max((day.total / maxDailyTotal) * 100, day.total > 0 ? 2 : 0)}%` }}>
-                      {day.segments.map((segment) => {
-                        const height = day.total > 0 ? Math.max((segment.total / day.total) * 100, 2) : 0
-                        const isSelected = selectedDate === day.date && selectedParent === segment.key
-                        return (
-                          <button
-                            className={isSelected ? 'tokenSegment selected' : 'tokenSegment'}
-                            key={`${day.date}-${segment.key}`}
-                            type="button"
-                            style={{ backgroundColor: getTokenColor(segment.key), height: `${height}%` }}
-                            onClick={() => groupedByParent && setDrilldown({ date: day.date, parent: segment.key })}
-                            aria-disabled={!groupedByParent}
-                            aria-label={`${segment.key}, ${formatTokens(segment.total)} tokens on ${day.date}`}
-                          >
-                            <span className="tokenTooltip">{segment.key}: {formatTokens(segment.total)} tokens</span>
-                          </button>
-                        )
-                      })}
+            <div className="mcTokenHeaderMeta">
+              <button
+                type="button"
+                onClick={() => {
+                  setGroupedByParent((value) => !value)
+                  setDrilldown(null)
+                }}
+              >
+                {groupedByParent ? 'Grouping / parent' : 'Grouping / agent'}
+              </button>
+              <strong>{formatTokens(totalTokens)} total</strong>
+            </div>
+          </div>
+
+          <div className="mcTokenIntro">
+            <p>
+              The orange register marks the dominant agent path; the remaining surfaces stay structural so graph color remains useful instead of decorative.
+            </p>
+            <div>
+              <span>Window</span>
+              <strong>{firstDate && latestDate ? `${formatChartDate(firstDate)} - ${formatChartDate(latestDate)}` : '-'}</strong>
+            </div>
+          </div>
+
+          <div className="mcTokenMetricStrip" aria-label="Token usage summary">
+            <div><span>Tokens</span><strong>{formatTokens(totalTokens)}</strong><small>{topAgent ? `${formatTokens(topAgent.total)} top surface` : 'no surface'}</small></div>
+            <div><span>Turns</span><strong>{totalTurns.toLocaleString()}</strong><small>captured turns</small></div>
+            <div><span>Top agent</span><strong>{topAgent?.key ?? '-'}</strong><small>{topAgent ? `${Math.round((topAgent.total / Math.max(totalTokens, 1)) * 100)}% share` : 'waiting for data'}</small></div>
+            <div><span>Latest day</span><strong>{latestDate ?? '-'}</strong><small>{latestDate ? 'latest capture' : 'not synced'}</small></div>
+          </div>
+
+          {chart.days.length > 0 ? (
+            <>
+              <div className="mcTokenAnalysis">
+                <div>
+                  <div className="mcTokenChartFrame">
+                    <div className="mcTokenYAxis" aria-hidden="true">
+                      {yTicks.map((tick, index) => <span key={`${tick}-${index}`}>{formatTokens(tick)}</span>)}
                     </div>
-                    <span className="tokenXAxisLabel">{dayIndex % 3 === 0 || dayIndex === chart.days.length - 1 ? formatChartDate(day.date) : ''}</span>
+                    <div className="mcTokenPlot" role="img" aria-label="Stacked daily token usage by agent">
+                      <span className="mcTokenRule top" />
+                      <span className="mcTokenRule mid" />
+                      <div className="mcTokenBars">
+                        {chart.days.map((day, dayIndex) => (
+                          <div className="mcTokenDay" key={day.date}>
+                            <span className="mcTokenDailyTotal">{formatTokens(day.total)}</span>
+                            <div className="mcTokenBarTrack">
+                              <div className="mcTokenStack" style={{ height: `${Math.max((day.total / maxDailyTotal) * 100, day.total > 0 ? 2 : 0)}%` }}>
+                                {day.segments.map((segment) => {
+                                  const height = day.total > 0 ? Math.max((segment.total / day.total) * 100, 2) : 0
+                                  const isSelected = selectedDate === day.date && selectedParent === segment.key
+                                  return (
+                                    <button
+                                      className={isSelected ? 'mcTokenSegment selected' : 'mcTokenSegment'}
+                                      key={`${day.date}-${segment.key}`}
+                                      type="button"
+                                      style={{ backgroundColor: getTokenColor(segment.key), height: `${height}%` }}
+                                      onClick={() => groupedByParent && setDrilldown({ date: day.date, parent: segment.key })}
+                                      aria-disabled={!groupedByParent}
+                                      aria-label={`${segment.key}, ${formatTokens(segment.total)} tokens on ${day.date}`}
+                                    >
+                                      <span className="mcTokenTooltip">{segment.key}: {formatTokens(segment.total)} tokens</span>
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                            <span className="mcTokenXAxisLabel">{dayIndex % 3 === 0 || dayIndex === chart.days.length - 1 ? formatChartDate(day.date) : ''}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          <div className="tokenLegend" aria-label="Token chart legend">
-            {chart.totals.map((row) => (
-              <span className="tokenLegendItem" key={row.key}>
-                <i style={{ backgroundColor: getTokenColor(row.key) }} />
-                {row.key}
-                <strong>{formatTokens(row.total)}</strong>
-              </span>
-            ))}
-          </div>
-
-          {drilldownRows.length > 0 && (
-            <div className="tokenDrilldown">
-              <div className="sourceCardHeader">
-                <span className="miniStatus ok" />
-                <strong>{selectedParent} children on {selectedDate}</strong>
-              </div>
-              <div className="tokenDrilldownRows">
-                {drilldownRows.map((row) => (
-                  <div className="tokenDrilldownRow" key={`${row.id}-${row.parent_agent ?? 'root'}`}>
-                    <span>{row.agent}</span>
-                    <div className="usageBar"><span style={{ width: `${Math.max((row.total_tokens / Math.max(...drilldownRows.map((item) => item.total_tokens), 1)) * 100, 3)}%`, background: getTokenColor(row.agent) }} /></div>
-                    <strong>{formatTokens(row.total_tokens)}</strong>
+                  <div className="mcTokenLegend" aria-label="Token chart legend">
+                    {chart.totals.map((row) => (
+                      <span className={row.key === topAgent?.key ? 'dominant' : ''} key={row.key}>
+                        <i style={{ backgroundColor: getTokenColor(row.key) }} />
+                        {row.key}
+                        <strong>{formatTokens(row.total)}</strong>
+                      </span>
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                <aside className="mcTokenDiagnostic" aria-label="Dominant token surface">
+                  <span className="mcTokenDiagnosticPlus">+</span>
+                  <p>Dominant surface</p>
+                  <strong>{topAgent?.key ?? '-'}</strong>
+                  <dl>
+                    {chart.totals.slice(0, 6).map((row) => (
+                      <div key={row.key}>
+                        <dt>{row.key}</dt>
+                        <dd>{Math.round((row.total / Math.max(totalTokens, 1)) * 100)}%</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </aside>
               </div>
-            </div>
+
+              {drilldownRows.length > 0 && (
+                <div className="mcTokenDrilldown">
+                  <div className="mcTokenDrilldownTitle">
+                    <span>+</span>
+                    <strong>{selectedParent} children / {selectedDate}</strong>
+                  </div>
+                  <div className="mcTokenDrilldownRows">
+                    {drilldownRows.map((row) => (
+                      <div className="mcTokenDrilldownRow" key={`${row.id}-${row.parent_agent ?? 'root'}`}>
+                        <span>{row.agent}</span>
+                        <div><i style={{ width: `${Math.max((row.total_tokens / Math.max(...drilldownRows.map((item) => item.total_tokens), 1)) * 100, 3)}%`, background: getTokenColor(row.agent) }} /></div>
+                        <strong>{formatTokens(row.total_tokens)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="mcTokenEmpty">No token usage rows synced yet. New OpenClaw runs will appear after session logs include usage data.</p>
           )}
-        </>
-      ) : (
-        <p className="emptyState">No token usage rows synced yet. New OpenClaw runs will appear after session logs include usage data.</p>
-      )}
 
-      <p className="muted smallCopy">Latest successful bridge sync: {formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}.</p>
+          <footer className="mcTokenFooter">
+            <span>Bridge sync</span>
+            <strong>{formatDate(latestSuccess?.finished_at ?? latestSuccess?.started_at)}</strong>
+            <span className="mcTokenCornerPlus">+</span>
+          </footer>
+      </div>
     </section>
   )
 }
@@ -1192,6 +1383,7 @@ function Dashboard({ user }: { user: User }) {
         {loadState === 'error' && <p className="errorText loadNotice">{error}</p>}
         <div className="dashboardGrid">
           <CronHealthPanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} teamMembers={data.teamMembers} />
+          <CronTimelinePanel cronJobs={data.cronJobs} syncRuns={data.syncRuns} />
           <ProjectsPanel projects={data.projects} />
           <TeamPanel teamMembers={data.teamMembers} />
           <WorkspaceSignalsPanel signal={data.workspaceSignal} syncRuns={data.syncRuns} />
