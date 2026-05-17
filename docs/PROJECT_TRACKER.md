@@ -1,12 +1,12 @@
 # Project Tracker - Mission Control Online
 
-_Last updated: 2026-05-15 18:15 AEST_
-_Current phase: V1.1 operational visibility_
-_Current status: V1 complete; V3 shell/panel/nav polish shipped; bridge durability packet reviewed, awaiting Raz approval_
+_Last updated: 2026-05-17 18:07 AEST_
+_Current phase: V1.1 UI overhaul merged to main_
+_Current status: V1 complete; project-module visibility/search work and Mission Control styleguide UI overhaul are pushed to `main`; V1 backup branch preserved_
 
 ## Current Priority
 
-Keep Mission Control Online stable and read-only, finish bridge durability with Raz approval, and complete authenticated production visual verification.
+Keep Mission Control Online stable and read-only after the UI overhaul merge, verify the deployed Vercel build visually after Supabase auth, and clean up/quarantine local Claude/MagicPath scratch leftovers only after review.
 
 ## Current State Summary
 
@@ -18,14 +18,15 @@ Keep Mission Control Online stable and read-only, finish bridge durability with 
 | Supabase migration | Run successfully | Raz ran `supabase/migrations/001_initial_private_mirror.sql` in Supabase |
 | Frontend scaffold | Done | React/Vite dashboard exists and builds |
 | Supabase env | Local only | `.env.local` and `.env.sync` are gitignored |
-| Sync bridge | V1.1 expanded | Bridge syncs Projects, Team, Source Health, Cron snapshots, Token Usage, and Workspace/Git signals |
+| Sync bridge | V1.1 expanded | Bridge syncs Projects, Team, Source Health, Cron snapshots, Token Usage, Model Token Usage, Workspace/Git signals, project registry, and folder inventory metadata |
 | Cron Health | Done | Bridge syncs 61 real cron jobs from local OpenClaw cron state files |
 | Token Usage | Done | Bridge syncs daily OpenClaw aggregate token rows; online panel reads `agent_token_usage_daily` |
 | Workspace/Git Signals | Shipped | Commit `d114515` pushed; Vercel serves the matching built assets; online panel reads latest `workspace_signal_snapshots` row |
-| V3 Visual Match | Shell + panel + nav polish shipped | Shell, panel polish, and nav/scroll-active metadata slices are pushed through `4f0a1d3` |
-| Validation | Passing | 2026-05-15 18:15 AEST read-only bridge durability review passed; `npm run supabase:verify` passed |
+| V3 Visual Match | Styleguide overhaul merged | Mission Control styleguide/tokens, dark polished dashboard, Token Usage redesign, Inter headline direction, and whole-page polish merged to `main` at `fad565f` |
+| Validation | Passing | 2026-05-17 merge gate passed: `wsl npm run type-check` and `wsl npm run build` |
 | Git repo | Published and push verified | Remote switched to SSH; `main` tracks `origin/main` |
 | Vercel deploy | Online access verified | Raz confirmed page works from a different computer; magic-link login works |
+| Branch safety | Backup created | `v1-backup` pushed at `b6e0182` before merging UI overhaul into `main` |
 
 ## Known Blockers / Caveats
 
@@ -45,11 +46,29 @@ Next fix:
 - Verify the online panel shows real jobs.
 - Optionally investigate the gateway event-loop starvation separately.
 
-### BRIDGE-001 - Bridge Not Reboot-Proof
+### DEV-001 - Windows localhost to WSL forwarding is currently unreliable
 
-Status: Planning accepted - waiting on Raz approval before persistent scheduler/startup changes
+Status: Open - workaround identified
 
-The bridge works as a single process, but it is not yet managed by Windows Task Scheduler or an equivalent startup wrapper. Jen `MCO-044` produced a reviewed no-edit implementation packet covering candidate Task Scheduler command, PID-lock behavior, health checks, rollback, and approval points.
+Vite runs successfully inside WSL and responds at the WSL IP, but Windows `127.0.0.1:5173` failed during the latest session. Direct WSL URL worked:
+
+```text
+http://172.17.157.28:5173/
+```
+
+This creates a Supabase auth wrinkle: magic-link redirects may prefer the configured Vercel Site URL unless a localhost callback is reachable and allowed. If local auth is needed, restore a stable Windows localhost path first: Windows Node dev server, admin `netsh portproxy`, or a user-level TCP relay.
+
+### LOCAL-001 - Claude/MagicPath scratch leftovers are stashed
+
+Status: Preserved - do not drop without Raz approval
+
+Before merging UI overhaul to `main`, local dirty/untracked leftovers were saved in:
+
+```text
+stash@{0}: On ui-overhaul: pre-main-ui-overhaul-merge-local-leftovers
+```
+
+The stash includes local Claude/MagicPath scratch work and docs drift that was intentionally excluded from the clean merge.
 
 ## Closed Blockers
 
@@ -107,22 +126,28 @@ Resolved by adding Vite env typings and loosening sync bridge Supabase client ty
 | MCO-042 | 2026-05-15 | Jen + Noona | V3 nav polish + scroll-active metadata | Done | Commit `4f0a1d3`; validation passed |
 | MCO-043 | 2026-05-15 | Jen | Bridge durability packet first attempt | Blocked | Stale/incomplete; superseded by `MCO-044` |
 | MCO-044 | 2026-05-15 | Jen + Noona | Bridge durability implementation packet | Done - No Changes | Packet reviewed; no scheduler changes without Raz approval; `npm run supabase:verify` passed |
+| MCO-045 | 2026-05-17 | Codex | Project module visibility/search updates reached main | Done | `origin/main` advanced through `32873e7`, `74c12b2`, `14a000b`, `b6e0182` before UI merge |
+| MCO-046 | 2026-05-17 | Codex | Learned/saved Mission Control styleguide and tokens | Done | `docs/DESIGN.md`, `docs/colors_and_type.css`, `docs/MISSION_CONTROL_STYLEGUIDE.md`, `src/styles/mission-control-tokens.css` |
+| MCO-047 | 2026-05-17 | Codex | Dashboard UI overhaul with Token Usage redesign | Done | Commit `d2cae23` on `codex/ui-overhaul`; `wsl npm run type-check` and `wsl npm run build` passed |
+| MCO-048 | 2026-05-17 | Codex | Created V1 backup branch before main merge | Done | `v1-backup` pushed at `b6e0182` |
+| MCO-049 | 2026-05-17 | Codex | Merged UI overhaul into main and pushed | Done | Merge commit `fad565f`; `main` pushed to GitHub; validation passed |
+| MCO-050 | 2026-05-17 | Codex | Local dev/auth troubleshooting | Open | WSL Vite works; Windows localhost forwarding failed; direct WSL IP works but Supabase magic-link callback may route to Vercel |
 
 ## Next Recommended Tasks
 
-### V1.1 Task A - Commit, Push, And Verify Production
+### V1.1 Task A - Verify UI Overhaul Deployment
 
 Owner: Noona
 
-Status: Mostly done - commit/push complete and Vercel static asset verified; authenticated visual panel verification still needs browser login
+Status: Main push complete; authenticated visual verification still needs browser login after Vercel deployment
 
 Steps:
 
-1. Review current diff. ✅
-2. Commit MCO-036 Workspace/Git Signals changes. ✅ `d114515`
-3. Push `main` to GitHub. ✅
-4. Wait for Vercel deployment. ✅ static asset hash matches local build
-5. Verify Automation Pulse and Workspace/Git Signals on production. Partial - Supabase rows and static Vercel assets verified; authenticated visual check still pending
+1. Confirm Vercel deployed `main` commit `fad565f`.
+2. Log in with Supabase magic link on production.
+3. Verify the new dark Mission Control UI, Token Usage module, Model Usage, project visibility/search, cron search, and existing panels.
+4. Confirm no sensitive local values are visible.
+5. Record visual verification result in tracker/worklog/master list.
 
 Acceptance criteria:
 
@@ -130,21 +155,18 @@ Acceptance criteria:
 - Supabase rows still read correctly from the live dashboard.
 - No secrets or local raw file contents are visible.
 
-### V1.1 Task B - V3 Visual Shell Port
+### V1.1 Task B - Styleguide UI Overhaul Follow-Up
 
 Owner: Jen audit, then Noona implementation
 
-Status: Shell slice, panel polish, and nav polish shipped through MCO-042
+Status: Styleguide overhaul merged to `main` at `fad565f`
 
 Steps:
 
-1. Read local V3 UI code/screens for reference only. ✅
-2. Identify shell patterns: nav, dashboard grid, panel hierarchy, status header, colors, typography, spacing. ✅
-3. Apply the first shell slice to the online app without changing data contracts. ✅
-4. Keep the app read-only. ✅
-5. Validate desktop/mobile layouts with WSL build checks. ✅
-6. Continue panel-by-panel polish after Jen follow-up audit. ✅ MCO-041 shipped
-7. Add nav grouping, scroll-active state, and dynamic header metadata. ✅ MCO-042 shipped
+1. Keep `docs/MISSION_CONTROL_STYLEGUIDE.md` and `src/styles/mission-control-tokens.css` as the source of style direction.
+2. Run future UI passes on branches, not directly on `main`.
+3. Clean old/duplicated CSS layers only after screenshot/browser verification.
+4. Decide whether to keep or discard the stashed Claude/MagicPath leftovers.
 
 Acceptance criteria:
 
@@ -152,37 +174,37 @@ Acceptance criteria:
 - Existing panels keep working.
 - No local V3 files are modified.
 
-### V1.1 Task C - Windows Task Scheduler Durability Wrapper
+### V1.1 Task C - Local Dev Auth Recovery
 
-Owner: Noona + Raz
+Owner: Codex/Noona + Raz
 
 Steps:
 
-1. Review and approve the Task Scheduler plan. ✅ MCO-044 packet accepted by Noona
-2. Create a Windows Task Scheduler entry or equivalent startup wrapper after Raz approval.
-3. Ensure it runs the WSL `npm run sync:poll` command from this repo.
-4. Confirm only one bridge process runs.
-5. Confirm sync resumes after restart/sign-in.
+1. Restore browser access through `http://127.0.0.1:5173/`, not only direct WSL IP.
+2. Options: install/use Windows Node, add admin `netsh portproxy`, or run a user-level TCP relay.
+3. Confirm Supabase magic links redirect back to local dev.
+4. Only then continue local authenticated UI verification.
 
 Acceptance criteria:
 
-- Bridge survives normal host/session restart.
-- Manual refresh requests are still processed.
+- Local browser can open `127.0.0.1:5173`.
+- Magic-link callback returns to local dev rather than Vercel.
 
-### V1.1 Task B - Live Dashboard Verification
+### V1.1 Task D - Live Dashboard Verification
 
 Owner: Raz + Codex/Noona
 
 Steps:
 
-1. Open the Vercel dashboard after deployment.
-2. Confirm Automation Pulse shows real cron jobs.
-3. Confirm Git signal shows branch/head/working-tree/recent commits.
-4. Confirm no sensitive local values are visible.
+1. Open the Vercel dashboard after deployment of `fad565f`.
+2. Confirm the dark styleguide UI loads.
+3. Confirm Automation Pulse shows real cron jobs.
+4. Confirm Token Usage, Model Usage, Project visibility/search, and Git signal still read real Supabase data.
+5. Confirm no sensitive local values are visible.
 
 Acceptance criteria:
 
-- Cron and Workspace/Git panels are visible on production.
+- New UI and all core data panels are visible on production.
 - Panels clearly indicate snapshot freshness.
 
 ## Definition Of Done For Any Agent Task

@@ -1,9 +1,9 @@
 # Mission Control Online — Project Master List
 
-_Last updated: 2026-05-16 06:50 AEST_
+_Last updated: 2026-05-17 18:07 AEST_
 _Owner: Raz_
 _Tech lead: Noona_
-_Status: V1 complete / V1.1 visual shell + panel/nav polish shipped; bridge durability packet reviewed and recorded, awaiting Raz approval_
+_Status: V1 complete / V1.1 project-module updates + Mission Control styleguide UI overhaul merged to main_
 _Mode: Private, read-only V1 online mirror_
 
 ---
@@ -12,16 +12,16 @@ _Mode: Private, read-only V1 online mirror_
 
 Use this section as the fast truth source for what is done and what is next. Detailed evidence remains in the progress updates below.
 
-### Current snapshot — 2026-05-16 06:50 AEST
+### Current snapshot — 2026-05-17 18:07 AEST
 
-- **Current phase:** V1.1 operational visibility + V3 visual polish/durability.
-- **Done:** V1 private read-only online mirror is complete; operational panels are online; V3 shell, panel polish, and nav polish slices are committed/pushed through `4f0a1d3`; bridge durability review docs were recorded in `c6fa817`.
-- **In progress / queued:** Persistent Windows Task Scheduler/startup changes are waiting on Raz approval; no Jen task is currently pending.
-- **Ready for Noona review:** None. `MCO-043` remains Blocked as stale/incomplete; `MCO-044` is accepted as planning input with no repo source changes.
-- **Next milestone:** Get Raz approval for the Windows Task Scheduler bridge wrapper, then Noona can apply/test durability. Authenticated production visual verification of `4f0a1d3` remains needed.
-- **Blocked / caveats:** Bridge is still not reboot-proof; no active bridge process was detected during the latest planning check; authenticated production visual verification for latest shell/panel/nav polish is still pending.
-- **Validation state:** Latest Noona review gate at 06:15 AEST found no Jen review work; scoped compliance search was clean and `npm run supabase:verify` passed with RLS checks intact.
-- **Release/readiness:** V1 is released/usable. V1.1 visual polish is shipped to `main` and validation-passing; project is **not fully durability-ready** until the bridge survives restart/sign-in.
+- **Current phase:** V1.1 UI-overhaul verification + local dev/auth recovery.
+- **Done:** Current GitHub `main` now includes recent project-module visibility/search/folder inventory work plus the Mission Control styleguide UI overhaul. Backup branch `v1-backup` was pushed at `b6e0182`; UI branch `codex/ui-overhaul` remains at `d2cae23`; merged `main` is `fad565f`.
+- **In progress / queued:** Production visual verification of `fad565f`; local dev magic-link recovery because Windows localhost-to-WSL forwarding failed during the latest session.
+- **Ready for Noona review:** None pending from Jen. Any future UI work should start from `main` after `fad565f`.
+- **Next milestone:** Verify Vercel deployed `fad565f`, log in on production, and confirm the redesigned dark Mission Control UI plus all panels still read correctly.
+- **Blocked / caveats:** Local Vite worked inside WSL and via direct WSL IP (`http://172.17.157.28:5173/` during the session), but Windows `127.0.0.1:5173` failed. Supabase magic links may route to Vercel until a stable localhost callback is restored. Local Claude/MagicPath leftovers are preserved in `stash@{0}`.
+- **Validation state:** `wsl npm run type-check` and `wsl npm run build` passed before pushing merge commit `fad565f`.
+- **Release/readiness:** V1 remains released/usable. V1.1 UI overhaul is pushed to `main`; authenticated production visual verification is the next release confidence gate.
 
 ### ✅ Completed / shipped
 
@@ -52,6 +52,11 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Jen `MCO-039` no-edit visual shell audit accepted as planning input for next polish slice.
 - [x] V3 panel polish slice reviewed, validated, committed, and pushed as `91a0906`.
 - [x] V3 nav polish + scroll-active metadata slice reviewed, validated, committed, and pushed as `4f0a1d3`.
+- [x] Project module model assignments/search/registry/folder inventory work reached `origin/main` through `b6e0182`.
+- [x] Mission Control styleguide and CSS tokens saved in docs/source.
+- [x] Dashboard UI overhaul committed on `codex/ui-overhaul` as `d2cae23`.
+- [x] Backup branch `v1-backup` created and pushed at `b6e0182`.
+- [x] UI overhaul merged into `main` and pushed as `fad565f`.
 - [x] Manual Refresh button works through `sync_requests`.
 - [x] Local sync bridge runs scheduled 10-minute syncs.
 - [x] Bridge runbook added.
@@ -63,7 +68,7 @@ Use this section as the fast truth source for what is done and what is next. Det
 
 - [x] Configure local cron state sync so real cron jobs appear instead of relying on the unstable gateway CLI path.
 - [x] Add Workspace/Git signal snapshots.
-- [ ] Add Windows Task Scheduler wrapper or equivalent reboot-proof bridge durability.
+- [ ] Add Windows Task Scheduler wrapper or equivalent reboot-proof bridge durability after Raz approval.
 - [x] Commit/push current Workspace/Git Signals changes and verify Vercel static deployment.
 - [ ] Authenticated visual verification of Cron Health + Workspace/Git panels after login.
 - [x] Start V3 Visual Shell Port implementation using local V3 as read-only reference.
@@ -72,14 +77,17 @@ Use this section as the fast truth source for what is done and what is next. Det
 - [x] Complete/review/ship Jen `MCO-042` V3 nav polish + scroll-active metadata slice.
 - [x] Complete/review Jen `MCO-044` bridge durability implementation packet. (`MCO-043` blocked as stale/incomplete.)
 - [ ] Ask Raz to approve the Windows Task Scheduler bridge wrapper before any persistent startup automation is created.
-- [ ] Authenticated production visual verification for the latest V3 shell/panel/nav polish.
+- [ ] Authenticated production visual verification for `fad565f` UI overhaul.
+- [ ] Restore local `127.0.0.1:5173` dev/auth loop for Supabase magic links.
+- [ ] Decide whether to inspect/apply/drop `stash@{0}` (`pre-main-ui-overhaul-merge-local-leftovers`).
 - [ ] Decide whether V1.1 needs Supabase Realtime for faster manual refresh.
 - [ ] Do not start V2 remote actions until Raz explicitly approves.
 
 ### ⚠️ Current caveat
 
-- [ ] The bridge is functional, but not yet reboot-proof. If the host/session restarts, restart it using the bridge runbook.
+- [ ] Bridge durability remains gated on Raz approval for persistent scheduler/startup changes.
 - [ ] Gateway cron CLI access remains unstable, but Cron Health now uses local cron state files for normal sync.
+- [ ] Local dev auth is temporarily awkward: WSL Vite direct IP works, Windows localhost forwarding failed, and Supabase magic-link callback may route to Vercel until localhost is restored.
 
 ---
 
@@ -2032,4 +2040,3 @@ V1 remains released and usable. V1.1 visual polish is shipped; bridge durability
 - Latest review evidence: scoped compliance search clean; `npm run supabase:verify` passed with RLS checks intact at the 06:15 AEST review gate.
 - This refresh did not run a new build because there are no source changes to validate.
 - V1 is release-ready/usable. V1.1 is visually shipped but not durability-ready until bridge restart/sign-in behavior is solved and authenticated production visual verification passes.
-

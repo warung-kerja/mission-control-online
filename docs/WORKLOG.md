@@ -1442,3 +1442,62 @@ Next action:
 
 - Ask Raz to approve the Task Scheduler bridge wrapper before creating any persistent startup automation.
 
+---
+
+## 2026-05-17 18:07 AEST — UI overhaul merged, backup branch created, handoff refreshed
+
+Agent: Codex
+
+Task IDs: MCO-045, MCO-046, MCO-047, MCO-048, MCO-049, MCO-050
+
+Files changed:
+
+- `docs/DESIGN.md`
+- `docs/colors_and_type.css`
+- `docs/MISSION_CONTROL_STYLEGUIDE.md`
+- `docs/PROJECT_TRACKER.md`
+- `docs/AGENT_HANDOFF.md`
+- `docs/WORKLOG.md`
+- `docs/MCV3-ONLINE-PROJECT-MASTER-LIST.md`
+- `src/App.tsx`
+- `src/styles.css`
+- `src/styles/mission-control-tokens.css`
+
+Summary:
+
+- Learned the supplied design reference files and saved the Mission Control styleguide/token direction into the repo.
+- Used MagicPath/taste-skill exploration to redesign the dashboard around a dark Mission Control operating style.
+- Reworked Token Usage so it matches the rest of the page structure instead of keeping the earlier isolated sidebar/top-bar module.
+- Added page-level dark theme polish, accessible text colors, graph/token palette, sharper navigation states, and better panel spacing/hierarchy.
+- Committed the UI work on `codex/ui-overhaul` as `d2cae23` (`Redesign dashboard with Mission Control styleguide`) and pushed the branch.
+- Preserved messy local Claude/MagicPath leftovers in `stash@{0}` before touching `main`.
+- Created and pushed `v1-backup` from current GitHub `main` at `b6e0182`.
+- Fast-forwarded local `main` to `origin/main`, merged `codex/ui-overhaul`, and pushed merge commit `fad565f` to GitHub.
+- Troubleshot local dev: Vite works inside WSL and direct WSL IP access worked, but Windows `127.0.0.1:5173` forwarding failed; Supabase local magic-link callback may route to Vercel until localhost is restored.
+
+Validation:
+
+```bash
+wsl npm run type-check
+wsl npm run build
+```
+
+Result: passed before the `codex/ui-overhaul` commit and again after merging into `main`.
+
+Git evidence:
+
+- `main`: `fad565f` (`Merge UI overhaul into main`)
+- `codex/ui-overhaul`: `d2cae23` (`Redesign dashboard with Mission Control styleguide`)
+- `v1-backup`: `b6e0182` (`Classify project module visibility`)
+- Preserved local leftovers: `stash@{0}: On ui-overhaul: pre-main-ui-overhaul-merge-local-leftovers`
+
+Risks/blockers:
+
+- Production authenticated visual verification of `fad565f` is still pending after Vercel deploys.
+- Local dev auth is not fully restored: direct WSL URL worked (`http://172.17.157.28:5173/` during this session), but Windows localhost failed and the WSL IP can change.
+- Do not drop or apply `stash@{0}` blindly; inspect it first if Raz wants to recover Claude/MagicPath scratch work.
+- Bridge durability remains a separate approval-gated task.
+
+Next action:
+
+- Verify Vercel production after deployment, restore stable local `127.0.0.1:5173` magic-link flow if local authenticated UI review is needed, then decide what to do with `stash@{0}`.
